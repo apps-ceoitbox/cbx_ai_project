@@ -12,7 +12,6 @@ export interface PromptInterface {
   knowledgeBase: string[];
   promptTemplate: string;
   defaultAiProvider: DefaultAiProvider;
-  // createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

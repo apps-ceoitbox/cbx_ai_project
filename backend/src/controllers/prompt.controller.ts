@@ -43,16 +43,66 @@ export default class PromptController {
         const prompt = await Prompt.findOne({ _id: req.body.toolId });
         const apiProvider = await AiSettings.findOne({ name: prompt.defaultAiProvider.name });
 
+
+        const genPrompt = generatePrompt(questions, prompt);
+
         const ai = new AI({
-            name: apiProvider.name as ApiProvider["name"],
+            name: apiProvider?.name as ApiProvider["name"],
             model: prompt.defaultAiProvider.model,
             apiKey: apiProvider.apiKey,
             temperature: apiProvider.temperature,
             maxTokens: apiProvider.maxTokens
         });
-        const response = await ai.generateResponse("hi how are you");
 
+        const response = await ai.generateResponse(genPrompt);
 
+        res.status(HttpStatusCodes.OK).json({ message: 'Response generated successfully', data: response });
 
     })
+}
+
+
+function generatePrompt(userAnswers, promptData) {
+    // Step 1: Format user answers
+    let formattedAnswers = Object.entries(userAnswers)
+        .map(([question, answer]) => `${question}: ${answer}`)
+        .join("\n");
+
+    // Step 2: Construct the AI prompt
+    const prompt = `
+        ${promptData.initialGreetingsMessage}
+
+        Objective: ${promptData.objective}
+
+        User Responses:
+        ${formattedAnswers}
+
+        Additional Knowledge Base:
+        ${promptData.knowledgeBase}
+
+        Additional Details :
+        ${promptData.promptTemplate}
+
+        Based on the above information, generate a structured JSON response with multiple sections, following this format:
+        Do not include any other text or comments in your response.
+
+        {
+          "title": "${promptData.heading}",
+          "sections": [
+            {
+              "title": "<Section Title 1>",
+              "content": "<Detailed content based on user responses and the knowledge base>"
+            },
+            {
+              "title": "<Section Title 2>",
+              "content": "<Another detailed content>"
+            },
+            ...
+          ]
+        }
+
+        The number of sections should be relevant to the user responses and knowledge base. Ensure the response is valid JSON.
+    `;
+
+    return prompt;
 }

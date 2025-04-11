@@ -9,102 +9,24 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowLeft, Download, Mail, FileText, Loader2 } from "lucide-react"
 import { toolsData } from "@/lib/tools"
 import { useToast } from "@/components/ui/use-toast"
-import { Toaster } from "@/components/ui/toaster"
 import { useData } from "@/context/AppContext"
 
 // Sample report data
-const generateSampleReport = (toolId: string) => {
-  switch (toolId) {
-    case "business-plan":
-      return {
-        title: "Business Plan",
-        sections: [
-          {
-            title: "Executive Summary",
-            content:
-              "This business plan outlines the strategy and roadmap for growth and success. The company aims to provide innovative solutions in the technology sector, targeting small to medium-sized businesses.",
-          },
-          {
-            title: "Company Description",
-            content:
-              "The company is a technology solutions provider focused on delivering high-quality software and services to help businesses streamline their operations and increase efficiency.",
-          },
-          {
-            title: "Market Analysis",
-            content:
-              "The target market consists of small to medium-sized businesses in need of technology solutions. The market is growing at a rate of 15% annually, with increasing demand for digital transformation services.",
-          },
-          {
-            title: "Organization & Management",
-            content:
-              "The company is led by an experienced management team with expertise in technology, business development, and customer service. The organizational structure is designed to be agile and responsive to market changes.",
-          },
-          {
-            title: "Financial Projections",
-            content:
-              "Based on market analysis and growth projections, the company is expected to achieve profitability within 18 months. Revenue is projected to grow by 25% year-over-year for the first three years.",
-          },
-        ],
-      }
-    case "weekly-schedule":
-      return {
-        title: "Weekly Schedule",
-        sections: [
-          {
-            title: "Monday",
-            content:
-              "8:00 AM - 10:00 AM: Deep work session\n10:30 AM - 12:00 PM: Team meeting\n1:00 PM - 3:00 PM: Client calls\n3:30 PM - 5:00 PM: Project planning",
-          },
-          {
-            title: "Tuesday",
-            content:
-              "8:00 AM - 11:00 AM: Deep work session\n11:30 AM - 12:30 PM: Department meeting\n1:30 PM - 4:00 PM: Product development\n4:00 PM - 5:00 PM: Email and administrative tasks",
-          },
-          {
-            title: "Wednesday",
-            content:
-              "8:00 AM - 9:00 AM: Weekly review\n9:30 AM - 12:00 PM: Client meetings\n1:00 PM - 3:00 PM: Deep work session\n3:30 PM - 5:00 PM: Team collaboration",
-          },
-          {
-            title: "Thursday",
-            content:
-              "8:00 AM - 10:00 AM: Strategic planning\n10:30 AM - 12:00 PM: Team check-in\n1:00 PM - 4:00 PM: Deep work session\n4:00 PM - 5:00 PM: Progress review",
-          },
-          {
-            title: "Friday",
-            content:
-              "8:00 AM - 10:00 AM: Client follow-ups\n10:30 AM - 12:00 PM: Team meeting\n1:00 PM - 3:00 PM: Project wrap-up\n3:30 PM - 5:00 PM: Weekly reflection and planning",
-          },
-        ],
-      }
-    default:
-      return {
-        title: toolsData[toolId]?.title || "Report",
-        sections: [
-          {
-            title: "Section 1",
-            content:
-              "This is a sample report generated based on your inputs. The actual report would contain detailed information and analysis tailored to your specific needs and requirements.",
-          },
-          {
-            title: "Section 2",
-            content:
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, eget ultricies nisl nisl eget nisl.",
-          },
-          {
-            title: "Section 3",
-            content:
-              "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-          },
-        ],
-      }
-  }
+function formatBoldText(text) {
+  // Replace **bold** text with <strong>bold</strong>
+  return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
 }
+
 
 export default function ReportPage() {
   const nav = useNavigate()
   const params = useParams()
-  const { userAuth } = useData()
+  const { userAuth, generateResponse } = useData()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [report, setReport] = useState<any>(null)
@@ -115,7 +37,8 @@ export default function ReportPage() {
   useEffect(() => {
     // Simulate API call to get report
     const timer = setTimeout(() => {
-      setReport(generateSampleReport(toolId))
+      setReport(generateResponse)
+      // setReport(generateSampleReport(toolId))
       setIsLoading(false)
     }, 1500)
 
@@ -152,7 +75,6 @@ export default function ReportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Toaster />
       <header className="bg-black text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <Logo size="sm" />
@@ -187,7 +109,7 @@ export default function ReportPage() {
             <p className="text-lg">Generating your report...</p>
           </div>
         ) : report ? (
-          <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full max-w-4xl mx-auto" >
             <Card className="mb-6 border-2">
               <CardHeader className="bg-primary-red text-white rounded-t-lg">
                 <CardTitle className="text-2xl">{report.title}</CardTitle>
@@ -199,8 +121,8 @@ export default function ReportPage() {
               <CardContent className="pt-6">
                 {report.sections.map((section: any, index: number) => (
                   <div key={index} className="mb-6">
-                    <h3 className="text-xl font-semibold mb-2">{section.title}</h3>
-                    <p className="whitespace-pre-line">{section.content}</p>
+                    <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
+                    <p className="whitespace-pre-line">{formatBoldText(section.content)}</p>
                   </div>
                 ))}
               </CardContent>
