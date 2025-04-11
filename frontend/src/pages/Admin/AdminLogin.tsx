@@ -10,10 +10,13 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
+import { useAxios, useData } from "@/context/AppContext"
 
 export default function AdminLoginPage() {
   const nav = useNavigate()
   const { toast } = useToast()
+  const { setAdminAuth } = useData()
+  const axios = useAxios("admin")
   const [credentials, setCredentials] = useState({
     email: "",
     password: "",
@@ -51,23 +54,32 @@ export default function AdminLoginPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
       // For demo purposes, hardcoded admin credentials
       // In a real app, this would be a server-side authentication
-      if (credentials.email === "admin@ceoitbox.com" && credentials.password === "admin123") {
-        // Set admin session
-        localStorage.setItem("adminAuthenticated", "true")
-        nav("/admin")
-      } else {
+
+      setAdminAuth(p => ({ ...p, isLoading: true }))
+      const response = await axios.post("/auth/admin/login", credentials);
+      if (response.status != 200) {
+        setAdminAuth(p => ({ ...p, isLoading: false }))
         toast({
           title: "Authentication Failed",
           description: "Invalid email or password",
           variant: "destructive",
         })
+        return
       }
+      setAdminAuth({
+        token: response.data.token,
+        user: response.data.user,
+        isLoading: false,
+      })
+      console.log(response)
+      localStorage.setItem("adminToken", response.data.token)
+      nav("/admin")
     }
   }
 
@@ -76,7 +88,7 @@ export default function AdminLoginPage() {
       <Toaster />
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <Logo />
+          <Logo size="sm" />
         </div>
 
         <Card className="border-primary-red">
