@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model";
+import Admin from "../models/admin.model";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
@@ -15,6 +16,7 @@ export const authenticateToken = async (
 ): Promise<void> => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
+
   if (!token) {
     res.status(401).json({ message: "Access token is missing or invalid" });
     return; // Ensure no further code execution
@@ -22,10 +24,16 @@ export const authenticateToken = async (
 
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
+
     const user = await User.findById(decoded.userId, { password: 0, googleRefreshToken: 0, isApproved: 0 }).lean();
     if (!user) {
-      res.status(403).json({ message: "User not found" });
-      return
+      const admin = await Admin.findOne({ _id: decoded.userId }); 
+      console.log(admin, decoded.userId)
+      if (!admin) {
+        res.status(403).json({ message: "User not found" });
+        return
+      }
+      req.user = admin;
     }
     req.user = user; // Attach decoded token to request
     next(); // Proceed to the next middleware or route

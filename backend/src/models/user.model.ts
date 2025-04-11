@@ -3,15 +3,15 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface UserInterface {
   userName: string;
   email: string;
-  password: string;
-  // posts: mongoose.Types.ObjectId[];
+  companyName: string;
+  mobile: string;
 }
 
 const userSchema: Schema = new Schema({
   userName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  // tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'task' }],
+  companyName: { type: String, required: true },
+  mobile: { type: Number, required: true },
 }, { timestamps: true });
 
 const User = mongoose.model<UserInterface & Document>("user", userSchema);

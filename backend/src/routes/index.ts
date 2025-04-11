@@ -1,50 +1,9 @@
 import { Router } from "express";
 import userRoutes from "./user.routes";
 import authRoutes from "./auth.routes";
-import taskRoutes from "./task.routes";
 import { authenticateToken } from "../middlewares/authMiddleware";
-
-/**
- * @swagger
- * components:
- *   securitySchemes:
- *     BearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: Bearer  # Indicating it's a generic Bearer token (no JWT specifics)
- *   schemas:
- *     RegisterRequest:
- *       type: object
- *       properties:
- *         name:
- *           type: string
- *         email:
- *           type: string
- *         password:
- *           type: string
- *       required:
- *         - name
- *         - email
- *         - password
- *     LoginRequest:
- *       type: object
- *       properties:
- *         email:
- *           type: string
- *         password:
- *           type: string
- *       required:
- *         - email
- *         - password
- *     AuthResponse:
- *       type: object
- *       properties:
- *         token:
- *           type: string
- * 
- * security:
- *   - BearerAuth: []  # This applies the BearerAuth globally to all routes
- */
+import aiSettingsRoutes from "./aiSettings.routes";
+import promptRoutes from "./prompt.routes";
 
 const router = Router();
 
@@ -56,6 +15,8 @@ router.use(authenticateToken);
 
 // Routes that require authentication
 router.use("/users", userRoutes);
-router.use("/tasks", taskRoutes);
+router.use("/aiSettings", aiSettingsRoutes);
+router.use("/prompt", promptRoutes);
+
 
 export default router;
