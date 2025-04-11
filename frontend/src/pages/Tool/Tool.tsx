@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -16,11 +16,14 @@ import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { useAxios, useData } from "@/context/AppContext"
+import { PromptInterface } from "../Admin/Admin"
 
 export default function ToolQuestionsPage() {
-  const nav = useNavigate()
-  const params = useParams()
-  const { isAuthenticated, user } = useAuth()
+  const axios = useAxios("user");
+  const nav = useNavigate();
+  const params = useParams();
+  const { userAuth } = useData()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -28,29 +31,23 @@ export default function ToolQuestionsPage() {
   const [showConfirmation, setShowConfirmation] = useState(false)
 
   const toolId = params.toolId as string
-  const tool = toolsData[toolId]
+  const [tool, setTool] = useState<PromptInterface | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      nav("/login")
+    const fetchTool = async () => {
+      const response = await axios.get(`/prompt/${toolId}`)
+      setTool(response.data.data)
     }
+    fetchTool()
+  }, [toolId])
 
-    if (!tool) {
-      nav("/dashboard")
-    }
-  }, [isAuthenticated, tool, nav])
-
-  if (!isAuthenticated || !user || !tool) {
-    return null
-  }
-
-  const currentQuestion = tool.questions[currentQuestionIndex]
+  const currentQuestion = tool?.questions[currentQuestionIndex]
 
   const handleNext = () => {
-    const questionId = currentQuestion.id
+    const questionId = currentQuestion
 
     // Validate current question
-    if (currentQuestion.required && !answers[questionId]) {
+    if (!answers[questionId]) {
       setErrors({ [questionId]: "This field is required" })
       return
     }
@@ -83,8 +80,16 @@ export default function ToolQuestionsPage() {
   }
 
   const handleSubmit = () => {
-    setIsSubmitting(true)
+    // setIsSubmitting(true)
 
+    axios.post(`/prompt/generate`, {
+      questions: answers,
+      toolId: toolId
+    }).then((res) => {
+      console.log(res.data.data)
+    })
+    console.log(answers)
+    return 
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false)
@@ -97,109 +102,21 @@ export default function ToolQuestionsPage() {
     }, 1500)
   }
 
-  const renderQuestionInput = (question: Question) => {
-    const questionId = question.id
-
-    switch (question.type) {
-      case "text":
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={questionId}>{question.label}</Label>
-            <Input
-              id={questionId}
-              value={answers[questionId] || ""}
-              onChange={(e) => handleChange(questionId, e.target.value)}
-              className={errors[questionId] ? "border-red-500" : ""}
-            />
-            {errors[questionId] && <p className="text-red-500 text-sm">{errors[questionId]}</p>}
-          </div>
-        )
-
-      case "dropdown":
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={questionId}>{question.label}</Label>
-            <Select value={answers[questionId] || ""} onValueChange={(value) => handleChange(questionId, value)}>
-              <SelectTrigger id={questionId} className={errors[questionId] ? "border-red-500" : ""}>
-                <SelectValue placeholder="Select an option" />
-              </SelectTrigger>
-              <SelectContent>
-                {question.options?.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors[questionId] && <p className="text-red-500 text-sm">{errors[questionId]}</p>}
-          </div>
-        )
-
-      case "date":
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={questionId}>{question.label}</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id={questionId}
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !answers[questionId] && "text-muted-foreground",
-                    errors[questionId] && "border-red-500",
-                  )}
-                >
-                  {answers[questionId] ? format(new Date(answers[questionId]), "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={answers[questionId] ? new Date(answers[questionId]) : undefined}
-                  onSelect={(date) => handleChange(questionId, date ? date.toISOString() : "")}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            {errors[questionId] && <p className="text-red-500 text-sm">{errors[questionId]}</p>}
-          </div>
-        )
-
-      case "radio":
-        return (
-          <div className="space-y-2">
-            <Label htmlFor={questionId}>{question.label}</Label>
-            <RadioGroup
-              value={answers[questionId] || ""}
-              onValueChange={(value) => handleChange(questionId, value)}
-              className="flex flex-col space-y-1"
-            >
-              {question.options?.map((option) => (
-                <div key={option} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={`${questionId}-${option}`} />
-                  <Label htmlFor={`${questionId}-${option}`}>{option}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-            {errors[questionId] && <p className="text-red-500 text-sm">{errors[questionId]}</p>}
-          </div>
-        )
-
-      default:
-        return null
-    }
+  if (!userAuth.user) {
+    return <Navigate to="/login" />
   }
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-black text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <Logo />
+          <Logo size="sm" />
           <div className="flex items-center gap-4">
             <div className="text-sm">
-              <div className="font-medium">{user.name}</div>
-              <div className="text-gray-300">{user.company}</div>
+              <div className="font-medium">{userAuth?.user?.name}</div>
+              <div className="text-gray-300">{userAuth?.user?.company}</div>
             </div>
             <Button
               variant="outline"
@@ -218,7 +135,7 @@ export default function ToolQuestionsPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Button>
-          <h1 className="text-2xl font-bold">{tool.title}</h1>
+          <h1 className="text-2xl font-bold">{tool?.heading}</h1>
         </div>
 
         <div className="w-full max-w-2xl mx-auto">
@@ -226,16 +143,16 @@ export default function ToolQuestionsPage() {
           <div className="mb-6">
             <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-500">
-                Question {currentQuestionIndex + 1} of {tool.questions.length}
+                Question {currentQuestionIndex + 1} of {tool?.questions.length}
               </span>
               <span className="text-sm text-gray-500">
-                {Math.round(((currentQuestionIndex + 1) / tool.questions.length) * 100)}% complete
+                {Math.round(((currentQuestionIndex + 1) / tool?.questions.length) * 100)}% complete
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-primary-red h-2 rounded-full"
-                style={{ width: `${((currentQuestionIndex + 1) / tool.questions.length) * 100}%` }}
+                style={{ width: `${((currentQuestionIndex + 1) / tool?.questions.length) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -243,13 +160,24 @@ export default function ToolQuestionsPage() {
           {/* Question card */}
           <Card className="border-2">
             <CardHeader>
-              <CardTitle>{currentQuestion.label}</CardTitle>
+              <CardTitle>{currentQuestion}</CardTitle>
               <CardDescription>
-                Question {currentQuestionIndex + 1} of {tool.questions.length}
+                Question {currentQuestionIndex + 1} of {tool?.questions.length}
               </CardDescription>
             </CardHeader>
 
-            <CardContent>{renderQuestionInput(currentQuestion)}</CardContent>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor={currentQuestion}>{currentQuestion}</Label>
+                <Input
+                  id={currentQuestion}
+                  value={answers[currentQuestion] || ""}
+                  onChange={(e) => handleChange(currentQuestion, e.target.value)}
+                  className={errors[currentQuestion] ? "border-red-500" : ""}
+                />
+                  {errors[currentQuestion] && <p className="text-red-500 text-sm">{errors[currentQuestion]}</p>}
+              </div>
+            </CardContent>
 
             <CardFooter className="flex justify-between">
               <Button variant="outline" onClick={handlePrevious} disabled={currentQuestionIndex === 0}>
@@ -258,7 +186,7 @@ export default function ToolQuestionsPage() {
               </Button>
 
               <Button onClick={handleNext} className="bg-primary-red hover:bg-red-700">
-                {currentQuestionIndex < tool.questions.length - 1 ? (
+                {currentQuestionIndex < tool?.questions?.length - 1 ? (
                   <>
                     Next
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -278,7 +206,7 @@ export default function ToolQuestionsPage() {
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">Thank you!</CardTitle>
                 <CardDescription className="text-lg">
-                  Your {tool.title.toLowerCase()} is being generated...
+                  Your {tool.heading.toLowerCase()} is being generated...
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex justify-center py-6">

@@ -1,7 +1,7 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +12,7 @@ import { toast } from "sonner"
 
 export default function LoginPage() {
   const nav = useNavigate();
-  const { userAuth } = useData();
+  const { userAuth, setUserAuth } = useData();
   const axios = useAxios("user");
   const [formData, setFormData] = useState({
     userName: "",
@@ -69,12 +69,18 @@ export default function LoginPage() {
 
     try {
       if (validateForm()) {
+        setUserAuth(p => ({ ...p, isLoading: true }))
         let res = await axios.post("/auth/user/login", formData)
-        console.log("res", res)
-
+        setUserAuth(p => {
+          return {
+            ...p,
+            token: res?.data?.token,
+            user: res?.data?.data,
+            isLoading: false
+          }
+        })
         localStorage.setItem("userToken", res?.data?.token);
         toast(res?.data?.message)
-        nav("/dashboard");
       }
     } catch (error) {
       console.log(error);
@@ -87,6 +93,10 @@ export default function LoginPage() {
       nav("/login")
     }
   }, [userAuth.user])
+
+  if (userAuth.user) {
+    return <Navigate to="/dashboard" />
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
