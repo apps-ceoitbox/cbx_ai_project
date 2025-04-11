@@ -69,7 +69,7 @@ export default function Dashboard() {
               <div className="font-medium">{user.name}</div>
               <div className="text-gray-300">{user.company}</div>
             </div>
-            <Button variant="outline" className="text-white border-white hover:bg-primary-red" onClick={() => logout()}>
+            <Button variant="outline" className="text-black border-white hover:bg-primary-red" onClick={() => logout()}>
               Logout
             </Button>
           </div>

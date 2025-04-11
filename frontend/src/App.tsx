@@ -5,25 +5,32 @@ import Login from "./pages/Login/Login"
 import Dashboard from "./pages/Dashboard/Dashboard"
 import Tool from "./pages/Tool/Tool"
 import Report from "./pages/Report/Report"
+import HomePage from "./pages/Home/HomePage"
+import Footer from "./pages/Home/Footer"
+import NotFound from "./pages/NotFound"
 
 function App() {
 
   return (
     <>
       <Routes>
+        <Route path="/" element={<HomePage />} />
+
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/reports/:toolId" element={<Report />} />
+        <Route path="/tools/:toolId" element={<Tool />} />
+
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/login" element={<AdminLogin />} />
 
-        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
-
-        <Route path="/reports/:toolId" element={<Report />} />
-
-        <Route path="/tools/:toolId" element={<Tool />} />
       </Routes>
+      <Footer />
     </>
   )
 }
 
 export default App
+
