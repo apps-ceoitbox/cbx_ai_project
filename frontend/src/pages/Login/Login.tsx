@@ -1,23 +1,26 @@
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Logo } from "@/components/logo"
+import { useAxios, useData } from "@/context/AppContext"
+import { toast } from "sonner"
 
 export default function LoginPage() {
-  const nav = useNavigate()
-  const { login } = useAuth()
+  const nav = useNavigate();
+  const { userAuth } = useData();
+  const axios = useAxios("user");
   const [formData, setFormData] = useState({
-    name: "",
+    userName: "",
     email: "",
-    company: "",
+    companyName: "",
     mobile: "",
   })
+
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,8 +40,8 @@ export default function LoginPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required"
+    if (!formData.userName.trim()) {
+      newErrors.userName = "Name is required"
     }
 
     if (!formData.email.trim()) {
@@ -47,8 +50,8 @@ export default function LoginPage() {
       newErrors.email = "Email is invalid"
     }
 
-    if (!formData.company.trim()) {
-      newErrors.company = "Company name is required"
+    if (!formData.companyName.trim()) {
+      newErrors.companyName = "Company name is required"
     }
 
     if (!formData.mobile.trim()) {
@@ -61,20 +64,35 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (validateForm()) {
-      login(formData)
-      nav("/dashboard")
+    try {
+      if (validateForm()) {
+        let res = await axios.post("/auth/user/login", formData)
+        console.log("res", res)
+
+        localStorage.setItem("userToken", res?.data?.token);
+        toast(res?.data?.message)
+        nav("/dashboard");
+      }
+    } catch (error) {
+      console.log(error);
+      toast("Something went wrong");
     }
   }
+
+  useEffect(() => {
+    if (!userAuth.user) {
+      nav("/login")
+    }
+  }, [userAuth.user])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <Logo />
+          <Logo size="lg" />
         </div>
 
         <Card className="border-primary-red">
@@ -88,13 +106,13 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
+                  id="userName"
+                  name="userName"
+                  value={formData.userName}
                   onChange={handleChange}
-                  className={errors.name ? "border-red-500" : ""}
+                  className={errors.userName ? "border-red-500" : ""}
                 />
-                {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+                {errors.userName && <p className="text-red-500 text-sm">{errors.userName}</p>}
               </div>
 
               <div className="space-y-2">
@@ -113,13 +131,13 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Label htmlFor="company">Company Name</Label>
                 <Input
-                  id="company"
-                  name="company"
-                  value={formData.company}
+                  id="companyName"
+                  name="companyName"
+                  value={formData.companyName}
                   onChange={handleChange}
-                  className={errors.company ? "border-red-500" : ""}
+                  className={errors.companyName ? "border-red-500" : ""}
                 />
-                {errors.company && <p className="text-red-500 text-sm">{errors.company}</p>}
+                {errors.companyName && <p className="text-red-500 text-sm">{errors.companyName}</p>}
               </div>
 
               <div className="space-y-2">

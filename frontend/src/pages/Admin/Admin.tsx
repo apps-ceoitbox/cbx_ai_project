@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
+import { toast } from "sonner"
 
 export interface AiSettingsInterface {
   _id: string;
@@ -114,18 +115,6 @@ const submissionsData = [
   },
 ]
 
-// Sample API providers
-// const apiProviders = [
-//   { id: "openai", name: "ChatGPT (OpenAI)" },
-//   { id: "anthropic", name: "Claude (Anthropic)" },
-//   { id: "google", name: "Gemini (Google)" },
-//   { id: "xai", name: "Grok (xAI)" },
-//   { id: "deepseek", name: "Deepseek" },
-//   { id: "ollama", name: "Ollama (Self-hosted)" },
-//   { id: "perplexity", name: "Perplexity" },
-//   { id: "mistral", name: "Mistral" },
-// ]
-
 // Sample tools
 const tools = [
   { id: "business-plan", name: "Business Plan Generator" },
@@ -135,74 +124,6 @@ const tools = [
   { id: "core-values", name: "Core Values Generator" },
 ]
 
-// Sample prompts data
-// const promptsData = [
-//   {
-//     id: "1",
-//     name: "Business Plan Generator",
-//     objective: "Create comprehensive business plans",
-//     defaultAI: "ChatGPT",
-//     defaultModel: "GPT-4o",
-//     created: "2023-04-10",
-//     modified: "2024-03-15",
-//     greeting:
-//       "Welcome to the Business Plan Generator! I'll help you create a comprehensive business plan tailored to your needs.",
-//     questions: [
-//       "What's your business name?",
-//       "What industry are you in?",
-//       "Describe your target market",
-//       "Explain your business model",
-//       "Who are your main competitors?",
-//     ],
-//     knowledgeBase:
-//       "Business plans typically include executive summary, company description, market analysis, organization structure, product/service line, marketing strategy, financial projections, and funding requests.",
-//     promptTemplate:
-//       "Create a comprehensive business plan for {{business_name}} in the {{industry}} industry. Their target market is {{target_market}} and their business model is {{business_model}}. Their main competitors are {{competitors}}.",
-//   },
-//   {
-//     id: "2",
-//     name: "Weekly Schedule Creator",
-//     objective: "Generate optimized weekly schedules",
-//     defaultAI: "Claude",
-//     defaultModel: "Claude 3 Sonnet",
-//     created: "2023-05-22",
-//     modified: "2024-02-28",
-//     greeting: "Welcome to the Weekly Schedule Creator! I'll help you organize your week efficiently.",
-//     questions: [
-//       "What are your typical working hours?",
-//       "What are your top 3 priorities this week?",
-//       "How many hours do you want to allocate for meetings?",
-//       "How many hours do you need for deep work?",
-//       "When should this schedule start?",
-//     ],
-//     knowledgeBase:
-//       "Effective schedules balance deep work, meetings, breaks, and personal time. The Pomodoro technique suggests working in 25-minute focused sessions with 5-minute breaks.",
-//     promptTemplate:
-//       "Create a weekly schedule starting on {{start_date}} with working hours of {{work_hours}}. Allocate {{meetings}} hours for meetings and {{deep_work}} hours for deep work. The top priorities are {{priorities}}.",
-//   },
-//   {
-//     id: "3",
-//     name: "Lead Nurturing Creator",
-//     objective: "Create lead nurturing strategies",
-//     defaultAI: "Gemini",
-//     defaultModel: "Gemini Pro",
-//     created: "2023-06-15",
-//     modified: "2024-01-10",
-//     greeting:
-//       "Welcome to the Lead Nurturing Creator! I'll help you develop effective strategies to nurture and convert your leads.",
-//     questions: [
-//       "What type of business do you run?",
-//       "Where do most of your leads come from?",
-//       "How long is your typical sales cycle?",
-//       "What are the main pain points of your customers?",
-//       "Do you currently have a follow-up process?",
-//     ],
-//     knowledgeBase:
-//       "Lead nurturing involves developing relationships with buyers at every stage of the sales funnel. Effective strategies include personalized emails, content marketing, social media engagement, and targeted offers.",
-//     promptTemplate:
-//       "Create a lead nurturing strategy for a {{business_type}} business where leads primarily come from {{lead_source}}. The sales cycle is {{sales_cycle}} and customer pain points include {{pain_points}}. They {{follow_up}} currently have a follow-up process.",
-//   },
-// ]
 
 export default function AdminDashboard() {
   const nav = useNavigate()
@@ -222,6 +143,7 @@ export default function AdminDashboard() {
     search: "",
   })
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
+
   const handleInputChange = (index, field, value) => {
     setApiProviders(prevState => {
       const temp = [...prevState]
@@ -236,16 +158,27 @@ export default function AdminDashboard() {
 
   };
 
-  const getApiProviders = () => {
-    axios.get("/aiSettings").then((res) => {
-      setApiProviders(res.data.data)
-    })
+  const getApiProviders = async () => {
+    try {
+      let res = await axios.get("/aiSettings");
+      setApiProviders(res?.data?.data)
+    } catch (error) {
+      console.log(error)
+    }
+
   }
 
   const updateApiProviders = async () => {
-    await axios.patch("/aiSettings", apiProviders).then((res) => {
-      console.log(res)
-    })
+    try {
+      await axios.patch("/aiSettings", apiProviders)
+      toast("Ai Provider Settings Updated");
+      setActiveTab('ai-settings');
+      getApiProviders();
+    } catch (error) {
+      console.log(error)
+      toast("Something went wrong")
+    }
+
   }
 
   const getPrompts = () => {
@@ -255,15 +188,22 @@ export default function AdminDashboard() {
   }
 
   const handleSaveOrCreatePrompt = async () => {
-    if (currentPrompt?._id) {
-      await axios.patch("/prompt/" + currentPrompt?._id, currentPrompt).then((res) => {
-        console.log(res)
-      })
-    } else {
-      await axios.post("/prompt", currentPrompt).then((res) => {
-        console.log(res)
-      })
+    try {
+      if (currentPrompt?._id) {
+        await axios.patch("/prompt/" + currentPrompt?._id, currentPrompt)
+        toast("Prompt Update Successfully!")
+
+      } else {
+        await axios.post("/prompt", currentPrompt)
+        toast("Prompt Saved Successfully!")
+      }
+      setActiveTab('manage-prompts');
+      getPrompts();
+    } catch (error) {
+      console.log(error)
+      toast("Something went wrong")
     }
+
   }
 
   useEffect(() => {
@@ -430,7 +370,7 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="dashboard" className="flex items-center">
               <Users className="mr-2 h-4 w-4" />
               Submissions
@@ -443,10 +383,7 @@ export default function AdminDashboard() {
               <FileText className="mr-2 h-4 w-4" />
               Manage Templates
             </TabsTrigger>
-            <TabsTrigger value="admin-settings" className="flex items-center">
-              <Settings className="mr-2 h-4 w-4" />
-              Admin Settings
-            </TabsTrigger>
+
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -1125,50 +1062,7 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="admin-settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin Settings</CardTitle>
-                <CardDescription>Manage admin users and system settings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="admin-email">Add Admin User</Label>
-                    <div className="flex space-x-2">
-                      <Input id="admin-email" type="email" placeholder="admin@example.com" />
-                      <Button>Add</Button>
-                    </div>
-                  </div>
 
-                  <div className="border rounded-md p-4">
-                    <div className="font-medium mb-2">Current Admins</div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                        <span>admin@ceoitbox.com</span>
-                        <Button variant="ghost" size="sm" className="text-red-500">
-                          Remove
-                        </Button>
-                      </div>
-                      <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                        <span>manager@ceoitbox.com</span>
-                        <Button variant="ghost" size="sm" className="text-red-500">
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="company-logo">Company Logo</Label>
-                    <Input id="company-logo" type="file" />
-                  </div>
-
-                  <Button className="w-full mt-4 bg-primary-red hover:bg-red-700">Save Admin Settings</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </main>
     </div>
