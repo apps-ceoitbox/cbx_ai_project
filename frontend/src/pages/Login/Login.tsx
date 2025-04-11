@@ -99,77 +99,90 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <Logo size="lg" />
+    <div style={{ position: "relative" }}>
+      <div style={{ position: "absolute" }} className="p-8">
+        <Logo size="lg" className="mb-8" />
+      </div>
+
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
+        <div className="w-full max-w-md">
+          {/* <div className="flex justify-center mb-8">
+            <Logo size="lg" />
+          </div> */}
+
+          <Card className="border-primary-red">
+            <CardHeader className="bg-primary-red text-white rounded-t-lg">
+              <CardTitle className="text-2xl font-bold">Login</CardTitle>
+              <CardDescription className="text-gray-100">Enter your details to access CEOITBOX tools</CardDescription>
+            </CardHeader>
+
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name*</Label>
+                  <Input
+                    id="userName"
+                    name="userName"
+                    value={formData.userName}
+                    onChange={handleChange}
+                    className={errors.userName ? "border-red-500" : ""}
+                  />
+                  {errors.userName && <p className="text-red-500 text-sm">{errors.userName}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email ID*</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={errors.email ? "border-red-500" : ""}
+                  />
+                  {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company Name*</Label>
+                  <Input
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    className={errors.companyName ? "border-red-500" : ""}
+                  />
+                  {errors.companyName && <p className="text-red-500 text-sm">{errors.companyName}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="mobile">Mobile Number*</Label>
+                  <Input
+                    id="mobile"
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleChange}
+                    className={errors.mobile ? "border-red-500" : ""}
+                  />
+                  {errors.mobile && <p className="text-red-500 text-sm">{errors.mobile}</p>}
+                </div>
+              </form>
+            </CardContent>
+
+            <CardFooter>
+              <Button
+                disabled={!formData.userName || !formData.email || !formData.companyName || !formData.mobile}
+                onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
+                Login
+              </Button>
+            </CardFooter>
+            <div className="py-2">
+              <p className="text-center text-[14px] font-[500]">© 2025 CEOITBOX. All rights reserved.</p>
+            </div>
+
+          </Card>
+
         </div>
-
-        <Card className="border-primary-red">
-          <CardHeader className="bg-primary-red text-white rounded-t-lg">
-            <CardTitle className="text-2xl font-bold">Login</CardTitle>
-            <CardDescription className="text-gray-100">Enter your details to access CEOITBOX tools</CardDescription>
-          </CardHeader>
-
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="userName"
-                  name="userName"
-                  value={formData.userName}
-                  onChange={handleChange}
-                  className={errors.userName ? "border-red-500" : ""}
-                />
-                {errors.userName && <p className="text-red-500 text-sm">{errors.userName}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email ID</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={errors.email ? "border-red-500" : ""}
-                />
-                {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="company">Company Name</Label>
-                <Input
-                  id="companyName"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className={errors.companyName ? "border-red-500" : ""}
-                />
-                {errors.companyName && <p className="text-red-500 text-sm">{errors.companyName}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="mobile">Mobile Number</Label>
-                <Input
-                  id="mobile"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleChange}
-                  className={errors.mobile ? "border-red-500" : ""}
-                />
-                {errors.mobile && <p className="text-red-500 text-sm">{errors.mobile}</p>}
-              </div>
-            </form>
-          </CardContent>
-
-          <CardFooter>
-            <Button onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
-              Login
-            </Button>
-          </CardFooter>
-        </Card>
       </div>
     </div>
   )
