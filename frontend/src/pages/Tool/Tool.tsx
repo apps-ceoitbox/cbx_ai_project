@@ -23,7 +23,7 @@ export default function ToolQuestionsPage() {
   const axios = useAxios("user");
   const nav = useNavigate();
   const params = useParams();
-  const { userAuth } = useData()
+  const { userAuth, generateResponse, setGenerateResponse } = useData()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -80,26 +80,18 @@ export default function ToolQuestionsPage() {
   }
 
   const handleSubmit = () => {
-    // setIsSubmitting(true)
+    setIsSubmitting(true)
 
     axios.post(`/prompt/generate`, {
       questions: answers,
       toolId: toolId
     }).then((res) => {
-      console.log(res.data.data)
-    })
-    console.log(answers)
-    return 
-    // Simulate API call
-    setTimeout(() => {
+      setGenerateResponse(res.data.data)
       setIsSubmitting(false)
       setShowConfirmation(true)
-
-      // Redirect to report page after 2 seconds
-      setTimeout(() => {
-        nav(`/reports/${toolId}`)
-      }, 2000)
-    }, 1500)
+      nav(`/reports/${toolId}`)
+      console.log(res.data.data)
+    })
   }
 
   if (!userAuth.user) {
@@ -175,7 +167,7 @@ export default function ToolQuestionsPage() {
                   onChange={(e) => handleChange(currentQuestion, e.target.value)}
                   className={errors[currentQuestion] ? "border-red-500" : ""}
                 />
-                  {errors[currentQuestion] && <p className="text-red-500 text-sm">{errors[currentQuestion]}</p>}
+                {errors[currentQuestion] && <p className="text-red-500 text-sm">{errors[currentQuestion]}</p>}
               </div>
             </CardContent>
 

@@ -33,10 +33,14 @@ export const AppProvider = ({ children }) => {
     isLoading: false,
   });
 
+
+  const [generateResponse, setGenerateResponse] = useState("");
+
+
   return (
     <AppContext.Provider
       value={{
-        adminAuth, setAdminAuth, userAuth, setUserAuth
+        adminAuth, setAdminAuth, userAuth, setUserAuth, generateResponse, setGenerateResponse
       }}
     >
       {children}

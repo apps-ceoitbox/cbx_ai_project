@@ -30,6 +30,15 @@ export class AI {
                 });
 
                 console.log(response.choices[0].message.content);
+
+                let content = response.choices[0].message.content.trim(); // Remove leading/trailing spaces
+
+                // If response contains backticks, extract only JSON part
+                if (content.startsWith("```")) {
+                    content = content.replace(/```json|```/g, "").trim();
+                }
+
+                return JSON.parse(content)
             }
         }
     }

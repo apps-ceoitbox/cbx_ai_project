@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowLeft, Download, Mail, FileText, Loader2 } from "lucide-react"
 import { toolsData } from "@/lib/tools"
 import { useToast } from "@/components/ui/use-toast"
-import { Toaster } from "@/components/ui/toaster"
 import { useData } from "@/context/AppContext"
 
 // Sample report data
@@ -104,7 +103,7 @@ const generateSampleReport = (toolId: string) => {
 export default function ReportPage() {
   const nav = useNavigate()
   const params = useParams()
-  const { userAuth } = useData()
+  const { userAuth, generateResponse } = useData()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [report, setReport] = useState<any>(null)
@@ -115,7 +114,8 @@ export default function ReportPage() {
   useEffect(() => {
     // Simulate API call to get report
     const timer = setTimeout(() => {
-      setReport(generateSampleReport(toolId))
+      setReport(generateResponse)
+      // setReport(generateSampleReport(toolId))
       setIsLoading(false)
     }, 1500)
 
@@ -152,7 +152,6 @@ export default function ReportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Toaster />
       <header className="bg-black text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <Logo size="sm" />
@@ -187,7 +186,7 @@ export default function ReportPage() {
             <p className="text-lg">Generating your report...</p>
           </div>
         ) : report ? (
-          <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full max-w-4xl mx-auto" >
             <Card className="mb-6 border-2">
               <CardHeader className="bg-primary-red text-white rounded-t-lg">
                 <CardTitle className="text-2xl">{report.title}</CardTitle>
