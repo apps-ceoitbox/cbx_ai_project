@@ -24,7 +24,7 @@ export function Logo({ className, size = "md", width = 180, height = 50 }: LogoP
             alt="CEOITBOX Logo"
             className={`${sizeClasses[size]} w-auto`}
           />
-          <div className="font-bold text-2xl text-primary-red">CEO<span className="text-white">IT</span>BOX</div>
+          <div className="font-bold text-2xl text-primary-red" style={{ letterSpacing: "0.48px" }}>CEOITBOX</div>
         </div>
       </Link>
     </>

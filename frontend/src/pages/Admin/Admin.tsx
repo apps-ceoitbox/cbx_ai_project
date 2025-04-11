@@ -579,16 +579,20 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
           <TabsContent value="ai-settings">
-            <Card>
+            <Card >
               <CardHeader>
                 <CardTitle>AI Platform Settings</CardTitle>
                 <CardDescription>Configure API keys and models for each AI platform</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleFormSubmit}>
-                  <div className="space-y-6">
-                    {apiProviders.map((provider, index) => (
+                  <div
+                    className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2"
+                  // className="space-y-6"
+                  >
+                    {apiProviders?.map((provider, index) => (
                       <div key={provider.name} className="border rounded-md overflow-hidden">
                         <div
                           className="bg-gray-100 dark:bg-gray-800 p-4 flex justify-between items-center cursor-pointer"
@@ -707,6 +711,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
 
           <TabsContent value="manage-prompts">
             <div className="grid grid-cols-1 gap-6">
