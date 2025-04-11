@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Logo } from "@/components/logo";
-import Header from "./Header";
+// import Header from "./Header";
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -16,7 +16,7 @@ const HomePage = () => {
 
     return (
         <div className="min-h-screen bg-black text-white flex flex-col">
-            <Header />
+            {/* <Header /> */}
 
             <div className="flex-grow flex flex-col md:flex-row">
                 <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-16">
@@ -37,13 +37,13 @@ const HomePage = () => {
                     </div>
                 </div>
 
-                <div className="w-full md:w-1/2 bg-gradient-to-b from-gray-900 to-black p-8 md:p-16 flex flex-col justify-center">
+                <div className="w-full md:w-1/2 bg-white  p-8 md:p-16 flex flex-col justify-center">
                     <div className="max-w-lg mx-auto flex items-center justify-center h-full">
                         <img
                             draggable="false"
                             src="https://ceoitbox.com/wp-content/uploads/2022/05/Sanjeev-Jain-3.png.webp"
                             alt="Business Professional"
-                            className="max-w-full h-auto rounded-lg shadow-lg animate-fadeIn animation-delay-200"
+                            className="max-w-full h-auto animate-fadeIn animation-delay-200"
                         />
                     </div>
                 </div>
