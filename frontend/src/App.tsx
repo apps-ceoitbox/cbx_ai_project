@@ -8,8 +8,29 @@ import Report from "./pages/Report/Report"
 import HomePage from "./pages/Home/HomePage"
 import Footer from "./pages/Home/Footer"
 import NotFound from "./pages/NotFound"
+import { useEffect } from "react"
+import { useAxios, useData } from "./context/AppContext"
 
 function App() {
+  const { setUserAuth } = useData();
+  const axios = useAxios("user");
+
+  useEffect(() => {
+    const token = localStorage.getItem("userToken")
+    if (token) {
+      setUserAuth(p => ({
+        ...p,
+        isLoading: true
+      }))
+      axios.get("/users/getUser").then((res) => {
+        setUserAuth({
+          user: res.data,
+          token: token,
+          isLoading: false
+        })
+      })
+    }
+  }, [])
 
   return (
     <>

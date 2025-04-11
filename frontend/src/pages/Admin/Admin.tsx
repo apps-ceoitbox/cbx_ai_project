@@ -134,6 +134,30 @@ export default function AdminDashboard() {
   const [submissions, setSubmissions] = useState(submissionsData);
   const [apiProviders, setApiProviders] = useState<AiSettingsInterface[]>([]);
   const [promptsData, setPromptsData] = useState<PromptInterface[]>([]);
+  const [selectedProviderName, setSelectedProviderName] = useState("ChatGPT (OpenAI)");
+  const [models, setModels] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState("");
+
+  const handleProviderChange = (providerName: string) => {
+    setSelectedProviderName(providerName);
+    const provider = apiProviders?.find(p => p.name === providerName);
+    if (provider) {
+      setModels(provider.models || []);
+      const models = provider.models || [];
+      const defaultModel = models.includes(provider.model)
+        ? provider.model
+        : models[0] || "";
+      setSelectedModel(provider.models?.[0] || "");
+      handleAiProviderAndModelChange(providerName, defaultModel);
+    }
+  };
+
+
+  const handleModelChange = (model: string) => {
+    setSelectedModel(model);
+    handleAiProviderAndModelChange(selectedProviderName, model);
+  };
+
 
   const [filters, setFilters] = useState({
     tool: "",
@@ -143,6 +167,8 @@ export default function AdminDashboard() {
     search: "",
   })
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
+
+
 
   const handleInputChange = (index, field, value) => {
     setApiProviders(prevState => {
@@ -162,6 +188,11 @@ export default function AdminDashboard() {
     try {
       let res = await axios.get("/aiSettings");
       setApiProviders(res?.data?.data)
+      const defaultProvider = res?.data?.data?.find(p => p.name === selectedProviderName);
+      if (defaultProvider) {
+        setModels(defaultProvider.models || []);
+        setSelectedModel(defaultProvider.models?.[0] || "");
+      }
     } catch (error) {
       console.log(error)
     }
@@ -771,7 +802,7 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="prompt-heading">Prompt Heading</Label>
+                    <Label htmlFor="prompt-heading">Template Heading</Label>
                     <Input
                       id="prompt-heading"
                       placeholder="Enter a title for this prompt"
@@ -861,40 +892,37 @@ export default function AdminDashboard() {
 
                   <div className="space-y-2">
                     <Label>Default AI Provider & Model</Label>
+
                     <div className="grid grid-cols-2 gap-4">
-                      <Select onValueChange={(value) => handleAiProviderAndModelChange(value, currentPrompt?.defaultAiProvider.model)} defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "openai"}>
+                      {/* Provider Dropdown */}
+                      <Select onValueChange={handleProviderChange} value={selectedProviderName}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select Provider" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="openai">OpenAI</SelectItem>
-                          <SelectItem value="anthropic">Anthropic</SelectItem>
-                          <SelectItem value="google">Google</SelectItem>
-                          <SelectItem value="xai">xAI</SelectItem>
-                          <SelectItem value="deepseek">Deepseek</SelectItem>
-                          <SelectItem value="ollama">Ollama</SelectItem>
-                          <SelectItem value="perplexity">Perplexity</SelectItem>
-                          <SelectItem value="mistral">Mistral</SelectItem>
+                          {apiProviders.map((provider) => (
+                            <SelectItem key={provider._id} value={provider.name}>
+                              {provider.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
 
-                      <Select onValueChange={(value) => handleAiProviderAndModelChange(currentPrompt?.defaultAiProvider.name, value)} defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}>
+                      {/* Model Dropdown */}
+                      <Select onValueChange={handleModelChange} value={selectedModel}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select Model" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                          <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                          <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                          <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                          <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
-                          <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
-                          <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
-                          <SelectItem value="gemini-1.5-pro-latest">Gemini 1.5 Pro Latest</SelectItem>
-                          <SelectItem value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</SelectItem>
+                          {models?.map((model) => (
+                            <SelectItem key={model} value={model}>
+                              {model}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
+
                   </div>
 
                   <div className="flex justify-between pt-4">
@@ -924,7 +952,7 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="prompt-heading">Prompt Heading</Label>
+                    <Label htmlFor="prompt-heading">Template Heading</Label>
                     <Input
                       id="prompt-heading"
                       placeholder="Enter a title for this prompt"
@@ -1014,8 +1042,9 @@ export default function AdminDashboard() {
 
                   <div className="space-y-2">
                     <Label>Default AI Provider & Model</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Select onValueChange={(value) => handleAiProviderAndModelChange(value, currentPrompt?.defaultAiProvider.model)} defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "openai"}>
+                    {/* <div className="grid grid-cols-2 gap-4">
+                      <Select 
+                      onValueChange={(value) => handleAiProviderAndModelChange(value, currentPrompt?.defaultAiProvider.model)} defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "openai"}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select Provider" />
                         </SelectTrigger>
@@ -1047,7 +1076,43 @@ export default function AdminDashboard() {
                           <SelectItem value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div> */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Provider Dropdown */}
+                      <Select onValueChange={handleProviderChange}
+                        value={selectedProviderName}
+                        defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "ChatGPT (OpenAI)"}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Provider" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {apiProviders.map((provider) => (
+                            <SelectItem key={provider._id} value={provider.name}>
+                              {provider.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Model Dropdown */}
+                      <Select onValueChange={handleModelChange}
+                        value={selectedModel}
+                        defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {models.map((model) => (
+                            <SelectItem key={model} value={model}>
+                              {model}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+
+
                   </div>
 
                   <div className="flex justify-between pt-4">

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,7 @@ import { ArrowLeft, Download, Mail, FileText, Loader2 } from "lucide-react"
 import { toolsData } from "@/lib/tools"
 import { useToast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
+import { useData } from "@/context/AppContext"
 
 // Sample report data
 const generateSampleReport = (toolId: string) => {
@@ -103,7 +104,7 @@ const generateSampleReport = (toolId: string) => {
 export default function ReportPage() {
   const nav = useNavigate()
   const params = useParams()
-  const { isAuthenticated, user } = useAuth()
+  const { userAuth } = useData()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [report, setReport] = useState<any>(null)
@@ -112,16 +113,6 @@ export default function ReportPage() {
   const tool = toolsData[toolId]
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      nav("/login")
-      return
-    }
-
-    if (!tool) {
-      nav("/dashboard")
-      return
-    }
-
     // Simulate API call to get report
     const timer = setTimeout(() => {
       setReport(generateSampleReport(toolId))
@@ -129,11 +120,7 @@ export default function ReportPage() {
     }, 1500)
 
     return () => clearTimeout(timer)
-  }, [isAuthenticated, tool, toolId, nav])
-
-  if (!isAuthenticated || !user) {
-    return null
-  }
+  }, [userAuth?.user, tool, toolId, nav])
 
   const handleDownloadPDF = () => {
     // Simulate PDF download
@@ -155,8 +142,12 @@ export default function ReportPage() {
     // Simulate sending email
     toast({
       title: "Email Sent",
-      description: `Your report has been sent to ${user.email}`,
+      description: `Your report has been sent to ${userAuth?.user?.email}`,
     })
+  }
+
+  if (!userAuth?.user) {
+    return <Navigate to="/login" />
   }
 
   return (
@@ -164,11 +155,11 @@ export default function ReportPage() {
       <Toaster />
       <header className="bg-black text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <Logo />
+          <Logo size="sm" />
           <div className="flex items-center gap-4">
             <div className="text-sm">
-              <div className="font-medium">{user.name}</div>
-              <div className="text-gray-300">{user.company}</div>
+              <div className="font-medium">{userAuth?.user?.name}</div>
+              <div className="text-gray-300">{userAuth?.user?.company}</div>
             </div>
             <Button
               variant="outline"

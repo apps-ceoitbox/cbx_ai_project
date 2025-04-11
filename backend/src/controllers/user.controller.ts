@@ -4,24 +4,15 @@ import { HttpStatusCodes } from "../utils/errorCodes";
 import User from "../models/user.model";
 import Task from "../models/ai.model";
 
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: {
-      _id: string;
-      // Add other properties as needed
-    };
-  }
-}
-
 export default class UserController {
   
   // Method to get user data with jwt token
-  static getUserDataWithToken = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  static getUserDataWithToken = asyncHandler(async (req, res) => {
     res.status(HttpStatusCodes.OK).send(req.user);
   })
 
   // Method to delete user
-  static deleteUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  static deleteUser = asyncHandler(async (req, res) => {
     try {
       await User.findByIdAndDelete(req.params.id);
       await Task.deleteMany({ createdBy: req.user._id });
