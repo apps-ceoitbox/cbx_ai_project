@@ -84,55 +84,63 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
-      <Toaster />
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <Logo size="sm" />
+    <div style={{ position: "relative" }}>
+      <div style={{ position: "absolute" }} className="p-8">
+        <Logo size="lg" className="mb-8" />
+      </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
+        <Toaster />
+        <div className="w-full max-w-md">
+          {/* <div className="flex justify-center mb-8">
+          <Logo size="lg" />
+        </div> */}
+
+          <Card className="border-primary-red">
+            <CardHeader className="bg-primary-red text-white rounded-t-lg">
+              <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+              <CardDescription className="text-gray-100">Enter your admin credentials</CardDescription>
+            </CardHeader>
+
+            <CardContent className="pt-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email*</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={credentials.email}
+                    onChange={handleChange}
+                    className={errors.email ? "border-red-500" : ""}
+                  />
+                  {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password*</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={credentials.password}
+                    onChange={handleChange}
+                    className={errors.password ? "border-red-500" : ""}
+                  />
+                  {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
+                </div>
+              </form>
+            </CardContent>
+
+            <CardFooter>
+              <Button
+                disabled={!credentials.password || !credentials.email}
+                onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
+                Login as Admin
+              </Button>
+            </CardFooter>
+
+          </Card>
         </div>
-
-        <Card className="border-primary-red">
-          <CardHeader className="bg-primary-red text-white rounded-t-lg">
-            <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
-            <CardDescription className="text-gray-100">Enter your admin credentials</CardDescription>
-          </CardHeader>
-
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={credentials.email}
-                  onChange={handleChange}
-                  className={errors.email ? "border-red-500" : ""}
-                />
-                {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={credentials.password}
-                  onChange={handleChange}
-                  className={errors.password ? "border-red-500" : ""}
-                />
-                {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
-              </div>
-            </form>
-          </CardContent>
-
-          <CardFooter>
-            <Button onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
-              Login as Admin
-            </Button>
-          </CardFooter>
-        </Card>
       </div>
     </div>
   )

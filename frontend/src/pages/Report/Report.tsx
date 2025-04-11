@@ -185,7 +185,7 @@ export default function ReportPage() {
         <div className="flex items-center mb-8">
           <Button variant="ghost" className="mr-4" onClick={() => nav("/dashboard")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back
           </Button>
           <h1 className="text-2xl font-bold">{tool ? tool.title : "Report"} Results</h1>
         </div>

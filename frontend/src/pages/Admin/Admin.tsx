@@ -371,15 +371,19 @@ export default function AdminDashboard() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="dashboard" className="flex items-center">
+            <TabsTrigger value="dashboard"
+              className="flex items-center text-[#e50914] data-[state=active]:text-black"
+            >
               <Users className="mr-2 h-4 w-4" />
               Submissions
             </TabsTrigger>
-            <TabsTrigger value="ai-settings" className="flex items-center">
+            <TabsTrigger value="ai-settings"
+              className="flex items-center text-[#e50914] data-[state=active]:text-black"
+            >
               <Settings className="mr-2 h-4 w-4" />
               AI Platform Settings
             </TabsTrigger>
-            <TabsTrigger value="manage-prompts" className="flex items-center">
+            <TabsTrigger value="manage-prompts" className="flex items-center text-[#e50914] data-[state=active]:text-black">
               <FileText className="mr-2 h-4 w-4" />
               Manage Templates
             </TabsTrigger>
@@ -664,7 +668,7 @@ export default function AdminDashboard() {
                       </div>
                     ))}
 
-                    <Button onClick={updateApiProviders} className="w-full mt-4 bg-primary-red hover:bg-red-700" type="submit">
+                    <Button onClick={updateApiProviders} className="mt-4 bg-primary-red hover:bg-red-700" type="submit">
                       Save AI Platform Settings
                     </Button>
                   </div>
@@ -699,7 +703,7 @@ export default function AdminDashboard() {
                       setActiveTab("create-prompt")
                     }}
                   >
-                    Create New Prompt
+                    Create New Template
                   </Button>
                 </CardHeader>
                 <CardContent>
@@ -1068,3 +1072,4 @@ export default function AdminDashboard() {
     </div>
   )
 }
+

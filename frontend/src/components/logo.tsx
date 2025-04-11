@@ -17,13 +17,14 @@ export function Logo({ className, size = "md", width = 180, height = 50 }: LogoP
   return (
     <>
       <Link to="/">
-        <div className={`flex items-center gap-2 ${className}`}>
+        <div className={`flex items-center gap-3 ${className}`}>
           <img
+            draggable="false"
             src="/logo.png"
             alt="CEOITBOX Logo"
             className={`${sizeClasses[size]} w-auto`}
           />
-          <div className="font-bold text-2xl text-primary-red">CEOITBOX</div>
+          <div className="font-bold text-2xl text-primary-red">CEO<span className="text-white">IT</span>BOX</div>
         </div>
       </Link>
     </>

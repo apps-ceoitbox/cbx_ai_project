@@ -63,7 +63,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-black text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <Logo />
+          <Logo size="lg" />
           <div className="flex items-center gap-4">
             <div className="text-sm">
               <div className="font-medium">{user.name}</div>
