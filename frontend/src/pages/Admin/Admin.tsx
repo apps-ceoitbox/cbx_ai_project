@@ -16,8 +16,6 @@ import { cn } from "@/lib/utils"
 import {
   CalendarIcon,
   ChevronDown,
-  Download,
-  Eye,
   Search,
   Settings,
   Users,
@@ -27,7 +25,40 @@ import {
   Trash,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
+import { useAxios, useData } from "@/context/AppContext"
+
+export interface AiSettingsInterface {
+  _id: string;
+  name: string;
+  models: string[];
+  model: string;
+  apiKey: string;
+  temperature: number;
+  maxTokens: number;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+
+export interface PromptInterface {
+  _id: string;
+  heading: string;
+  objective: string;
+  initialGreetingsMessage: string;
+  questions: string[];
+  knowledgeBase: string;
+  promptTemplate: string;
+  defaultAiProvider: DefaultAiProvider;
+  // createdBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface DefaultAiProvider {
+  name: string;
+  model: string;
+}
 
 // Sample submissions data
 const submissionsData = [
@@ -84,16 +115,16 @@ const submissionsData = [
 ]
 
 // Sample API providers
-const apiProviders = [
-  { id: "openai", name: "ChatGPT (OpenAI)" },
-  { id: "anthropic", name: "Claude (Anthropic)" },
-  { id: "google", name: "Gemini (Google)" },
-  { id: "xai", name: "Grok (xAI)" },
-  { id: "deepseek", name: "Deepseek" },
-  { id: "ollama", name: "Ollama (Self-hosted)" },
-  { id: "perplexity", name: "Perplexity" },
-  { id: "mistral", name: "Mistral" },
-]
+// const apiProviders = [
+//   { id: "openai", name: "ChatGPT (OpenAI)" },
+//   { id: "anthropic", name: "Claude (Anthropic)" },
+//   { id: "google", name: "Gemini (Google)" },
+//   { id: "xai", name: "Grok (xAI)" },
+//   { id: "deepseek", name: "Deepseek" },
+//   { id: "ollama", name: "Ollama (Self-hosted)" },
+//   { id: "perplexity", name: "Perplexity" },
+//   { id: "mistral", name: "Mistral" },
+// ]
 
 // Sample tools
 const tools = [
@@ -105,79 +136,84 @@ const tools = [
 ]
 
 // Sample prompts data
-const promptsData = [
-  {
-    id: "1",
-    name: "Business Plan Generator",
-    objective: "Create comprehensive business plans",
-    defaultAI: "ChatGPT",
-    defaultModel: "GPT-4o",
-    created: "2023-04-10",
-    modified: "2024-03-15",
-    greeting:
-      "Welcome to the Business Plan Generator! I'll help you create a comprehensive business plan tailored to your needs.",
-    questions: [
-      "What's your business name?",
-      "What industry are you in?",
-      "Describe your target market",
-      "Explain your business model",
-      "Who are your main competitors?",
-    ],
-    knowledgeBase:
-      "Business plans typically include executive summary, company description, market analysis, organization structure, product/service line, marketing strategy, financial projections, and funding requests.",
-    promptTemplate:
-      "Create a comprehensive business plan for {{business_name}} in the {{industry}} industry. Their target market is {{target_market}} and their business model is {{business_model}}. Their main competitors are {{competitors}}.",
-  },
-  {
-    id: "2",
-    name: "Weekly Schedule Creator",
-    objective: "Generate optimized weekly schedules",
-    defaultAI: "Claude",
-    defaultModel: "Claude 3 Sonnet",
-    created: "2023-05-22",
-    modified: "2024-02-28",
-    greeting: "Welcome to the Weekly Schedule Creator! I'll help you organize your week efficiently.",
-    questions: [
-      "What are your typical working hours?",
-      "What are your top 3 priorities this week?",
-      "How many hours do you want to allocate for meetings?",
-      "How many hours do you need for deep work?",
-      "When should this schedule start?",
-    ],
-    knowledgeBase:
-      "Effective schedules balance deep work, meetings, breaks, and personal time. The Pomodoro technique suggests working in 25-minute focused sessions with 5-minute breaks.",
-    promptTemplate:
-      "Create a weekly schedule starting on {{start_date}} with working hours of {{work_hours}}. Allocate {{meetings}} hours for meetings and {{deep_work}} hours for deep work. The top priorities are {{priorities}}.",
-  },
-  {
-    id: "3",
-    name: "Lead Nurturing Creator",
-    objective: "Create lead nurturing strategies",
-    defaultAI: "Gemini",
-    defaultModel: "Gemini Pro",
-    created: "2023-06-15",
-    modified: "2024-01-10",
-    greeting:
-      "Welcome to the Lead Nurturing Creator! I'll help you develop effective strategies to nurture and convert your leads.",
-    questions: [
-      "What type of business do you run?",
-      "Where do most of your leads come from?",
-      "How long is your typical sales cycle?",
-      "What are the main pain points of your customers?",
-      "Do you currently have a follow-up process?",
-    ],
-    knowledgeBase:
-      "Lead nurturing involves developing relationships with buyers at every stage of the sales funnel. Effective strategies include personalized emails, content marketing, social media engagement, and targeted offers.",
-    promptTemplate:
-      "Create a lead nurturing strategy for a {{business_type}} business where leads primarily come from {{lead_source}}. The sales cycle is {{sales_cycle}} and customer pain points include {{pain_points}}. They {{follow_up}} currently have a follow-up process.",
-  },
-]
+// const promptsData = [
+//   {
+//     id: "1",
+//     name: "Business Plan Generator",
+//     objective: "Create comprehensive business plans",
+//     defaultAI: "ChatGPT",
+//     defaultModel: "GPT-4o",
+//     created: "2023-04-10",
+//     modified: "2024-03-15",
+//     greeting:
+//       "Welcome to the Business Plan Generator! I'll help you create a comprehensive business plan tailored to your needs.",
+//     questions: [
+//       "What's your business name?",
+//       "What industry are you in?",
+//       "Describe your target market",
+//       "Explain your business model",
+//       "Who are your main competitors?",
+//     ],
+//     knowledgeBase:
+//       "Business plans typically include executive summary, company description, market analysis, organization structure, product/service line, marketing strategy, financial projections, and funding requests.",
+//     promptTemplate:
+//       "Create a comprehensive business plan for {{business_name}} in the {{industry}} industry. Their target market is {{target_market}} and their business model is {{business_model}}. Their main competitors are {{competitors}}.",
+//   },
+//   {
+//     id: "2",
+//     name: "Weekly Schedule Creator",
+//     objective: "Generate optimized weekly schedules",
+//     defaultAI: "Claude",
+//     defaultModel: "Claude 3 Sonnet",
+//     created: "2023-05-22",
+//     modified: "2024-02-28",
+//     greeting: "Welcome to the Weekly Schedule Creator! I'll help you organize your week efficiently.",
+//     questions: [
+//       "What are your typical working hours?",
+//       "What are your top 3 priorities this week?",
+//       "How many hours do you want to allocate for meetings?",
+//       "How many hours do you need for deep work?",
+//       "When should this schedule start?",
+//     ],
+//     knowledgeBase:
+//       "Effective schedules balance deep work, meetings, breaks, and personal time. The Pomodoro technique suggests working in 25-minute focused sessions with 5-minute breaks.",
+//     promptTemplate:
+//       "Create a weekly schedule starting on {{start_date}} with working hours of {{work_hours}}. Allocate {{meetings}} hours for meetings and {{deep_work}} hours for deep work. The top priorities are {{priorities}}.",
+//   },
+//   {
+//     id: "3",
+//     name: "Lead Nurturing Creator",
+//     objective: "Create lead nurturing strategies",
+//     defaultAI: "Gemini",
+//     defaultModel: "Gemini Pro",
+//     created: "2023-06-15",
+//     modified: "2024-01-10",
+//     greeting:
+//       "Welcome to the Lead Nurturing Creator! I'll help you develop effective strategies to nurture and convert your leads.",
+//     questions: [
+//       "What type of business do you run?",
+//       "Where do most of your leads come from?",
+//       "How long is your typical sales cycle?",
+//       "What are the main pain points of your customers?",
+//       "Do you currently have a follow-up process?",
+//     ],
+//     knowledgeBase:
+//       "Lead nurturing involves developing relationships with buyers at every stage of the sales funnel. Effective strategies include personalized emails, content marketing, social media engagement, and targeted offers.",
+//     promptTemplate:
+//       "Create a lead nurturing strategy for a {{business_type}} business where leads primarily come from {{lead_source}}. The sales cycle is {{sales_cycle}} and customer pain points include {{pain_points}}. They {{follow_up}} currently have a follow-up process.",
+//   },
+// ]
 
 export default function AdminDashboard() {
   const nav = useNavigate()
+  const axios = useAxios("admin")
+  const { adminAuth } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
-  const [submissions, setSubmissions] = useState(submissionsData)
+  const [submissions, setSubmissions] = useState(submissionsData);
+  const [apiProviders, setApiProviders] = useState<AiSettingsInterface[]>([]);
+  const [promptsData, setPromptsData] = useState<PromptInterface[]>([]);
+
   const [filters, setFilters] = useState({
     tool: "",
     dateFrom: undefined as Date | undefined,
@@ -185,172 +221,64 @@ export default function AdminDashboard() {
     api: "",
     search: "",
   })
-  const [currentPrompt, setCurrentPrompt] = useState<any>(null);
-  // const [modelSelections, setModelSelections] = useState({});
-  const [formState, setFormState] = useState({});
-
-  // Create a function to initialize form state
-  const initializeFormState = () => {
-    const initialState = {};
-
-    apiProviders.forEach((provider) => {
-      initialState[provider.id] = {
-        apiKey: '',
-        model: getDefaultModelForProvider(provider.id),
-        temperature: 0.7,
-        maxTokens: 1000
-      };
+  const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
+  const handleInputChange = (index, field, value) => {
+    setApiProviders(prevState => {
+      const temp = [...prevState]
+      temp[index][field] = value
+      return temp
     });
-
-    return initialState;
-  };
-
-
-  const getDefaultModelForProvider = (providerId) => {
-    switch (providerId) {
-      case "openai": return "gpt-4o";
-      case "anthropic": return "claude-3-opus";
-      case "google": return "gemini-pro";
-      case "xai": return "grok-1";
-      case "deepseek": return "deepseek-coder";
-      case "ollama": return "llama3";
-      case "perplexity": return "pplx-7b-online";
-      case "mistral": return "mistral-large";
-      default: return "";
-    }
-  };
-
-  const handleInputChange = (providerId, field, value) => {
-    setFormState(prevState => ({
-      ...prevState,
-      [providerId]: {
-        ...prevState[providerId],
-        [field]: value
-      }
-    }));
   };
 
   // Handle form submission
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
-    console.log("formState", formState);
-
-    // Show success notification
-    toast({
-      title: "Settings saved",
-      description: "Your AI platform settings have been saved successfully.",
-      duration: 3000,
-    });
-
-    console.log("Saved AI Platform Settings:", formState);
   };
 
-  // const handleSaveSettings = () => {
-  //   // Create an object to store all the settings
-  //   const settings = {};
+  const getApiProviders = () => {
+    axios.get("/aiSettings").then((res) => {
+      setApiProviders(res.data.data)
+    })
+  }
 
-  //   // Loop through each provider and collect their settings
-  //   apiProviders.forEach((provider) => {
-  //     const providerId = provider.id;
+  const updateApiProviders = async () => {
+    await axios.patch("/aiSettings", apiProviders).then((res) => {
+      console.log(res)
+    })
+  }
 
-  //     // Initialize provider settings object
-  //     settings[providerId] = {};
+  const getPrompts = () => {
+    axios.get("/prompt").then((res) => {
+      setPromptsData(res.data.data)
+    })
+  }
 
-  //     // Get the API key (with null check)
-  //     const apiKeyElement = document.getElementById(`${providerId}-key`);
-  //     if (apiKeyElement) {
-  //       settings[providerId].apiKey = apiKeyElement.value;
-  //     }
-
-  //     // Get the selected model (with null check)
-  //     const modelElement = document.getElementById(`${providerId}-model`);
-  //     if (modelElement) {
-  //       settings[providerId].model = modelElement.value;
-  //     }
-
-  //     // Get the temperature (with null check)
-  //     const temperatureElement = document.getElementById(`${providerId}-temperature`);
-  //     if (temperatureElement) {
-  //       settings[providerId].temperature = parseFloat(temperatureElement.value);
-  //     }
-
-  //     // Get the max tokens (with null check)
-  //     const maxTokensElement = document.getElementById(`${providerId}-max-tokens`);
-  //     if (maxTokensElement) {
-  //       settings[providerId].maxTokens = parseInt(maxTokensElement.value);
-  //     }
-  //   });
-
-
-  //   console.log("data", settings);
-
-  //   // Show a success notification
-  //   toast({
-  //     title: "Settings saved",
-  //     description: "Your AI platform settings have been saved successfully.",
-  //     duration: 3000,
-  //   });
-
-  // };
-
-
-  // Simulate admin check
-
-  // const handleSaveSettings = () => {
-  //   const settings = {};
-
-  //   // Loop through each provider and collect their settings
-  //   apiProviders.forEach((provider) => {
-  //     const providerId = provider.id;
-
-  //     // Initialize provider settings object
-  //     settings[providerId] = {};
-
-  //     // Get the API key (with null check)
-  //     const apiKeyElement = document.getElementById(`${providerId}-key`);
-  //     if (apiKeyElement) {
-  //       settings[providerId].apiKey = apiKeyElement.value;
-  //     }
-
-  //     // Get the model from state instead of DOM
-  //     settings[providerId].model = modelSelections[providerId] || getDefaultModelForProvider(providerId);
-
-  //     // Get the temperature (with null check)
-  //     const temperatureElement = document.getElementById(`${providerId}-temperature`);
-  //     if (temperatureElement) {
-  //       settings[providerId].temperature = parseFloat(temperatureElement.value);
-  //     }
-
-  //     // Get the max tokens (with null check)
-  //     const maxTokensElement = document.getElementById(`${providerId}-max-tokens`);
-  //     if (maxTokensElement) {
-  //       settings[providerId].maxTokens = parseInt(maxTokensElement.value);
-  //     }
-  //   });
-
-  //   console.log("data", settings);
-
-  //   // Show a success notification
-  //   toast({
-  //     title: "Settings saved",
-  //     description: "Your AI platform settings have been saved successfully.",
-  //     duration: 3000,
-  //   });
-
-
-  // };
+  const handleSaveOrCreatePrompt = async () => {
+    if (currentPrompt?._id) {
+      await axios.patch("/prompt/" + currentPrompt?._id, currentPrompt).then((res) => {
+        console.log(res)
+      })
+    } else {
+      await axios.post("/prompt", currentPrompt).then((res) => {
+        console.log(res)
+      })
+    }
+  }
 
   useEffect(() => {
     // Check if admin is authenticated
-    const adminAuthenticated = localStorage.getItem("adminAuthenticated") === "true"
-    setIsAdmin(adminAuthenticated)
-
+    if (adminAuth.user) {
+      setIsAdmin(true)
+    }
     // If not authenticated, redirect to admin login
-    if (!adminAuthenticated) {
+    if (!adminAuth.user) {
       nav("/admin/login")
     }
-  }, [nav])
+
+    getApiProviders()
+    getPrompts()
+  }, [adminAuth.user])
 
   if (!isAdmin) {
     return (
@@ -436,20 +364,53 @@ export default function AdminDashboard() {
   }
 
   const handleEditPrompt = (promptId: string) => {
-    const prompt = promptsData.find((p) => p.id === promptId)
+    const prompt = promptsData.find((p) => p._id === promptId)
     if (prompt) {
       setCurrentPrompt(prompt)
-      setActiveTab("create-prompt")
+      setActiveTab("edit-prompt")
     }
   }
 
+  const handleAiProviderAndModelChange = (name: string, model: string) => {
+    setCurrentPrompt((prev) => {
+      const temp = { ...prev }
+      temp.defaultAiProvider.name = name
+      temp.defaultAiProvider.model = model
+      return temp
+    })
+  }
 
+  const handleChangePrompt = (key: string, value: any) => {
+    setCurrentPrompt((prev) => {
+      const temp = { ...prev }
+      temp[key] = value
+      return temp
+    })
+  }
+
+  const handleUpdateQuestions = (questions: string[]) => {
+    setCurrentPrompt((prev) => {
+      const temp = { ...prev }
+      temp.questions = questions
+      return temp
+    })
+  }
+
+  const handleChangePromptQuestion = (index: number, value: string) => {
+    setCurrentPrompt((prev) => {
+      const temp = { ...prev, questions: [...prev.questions] }
+      temp.questions[index] = value
+      console.log(temp)
+      return temp
+    })
+  }
+  // console.log(currentPrompt)
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-black text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <Logo />
+          <Logo size="sm" />
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
@@ -537,7 +498,7 @@ export default function AdminDashboard() {
                       <SelectContent>
                         <SelectItem value="all">All APIs</SelectItem>
                         {apiProviders.map((api) => (
-                          <SelectItem key={api.id} value={api.name.split(" ")[0]}>
+                          <SelectItem key={api.name} value={api.name.split(" ")[0]}>
                             {api.name}
                           </SelectItem>
                         ))}
@@ -631,16 +592,6 @@ export default function AdminDashboard() {
                             <TableCell>{submission.tool}</TableCell>
                             <TableCell>{new Date(submission.date).toLocaleDateString()}</TableCell>
                             <TableCell>{submission.apiUsed}</TableCell>
-                            {/* <TableCell>
-                              <div className="flex space-x-2">
-                                <Button variant="outline" size="sm" onClick={() => handleViewReport(submission.id)}>
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => handleDownloadReport(submission.id)}>
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell> */}
                           </TableRow>
                         ))
                       ) : (
@@ -656,198 +607,6 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-
-          {/* <TabsContent value="ai-settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Platform Settings</CardTitle>
-                <CardDescription>Configure API keys and models for each AI platform</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {apiProviders.map((provider) => (
-                    <div key={provider.id} className="border rounded-md overflow-hidden">
-                      <div
-                        className="bg-gray-100 dark:bg-gray-800 p-4 flex justify-between items-center cursor-pointer"
-                        onClick={() => {
-                          const currentExpanded = JSON.parse(localStorage.getItem("expandedProviders") || "{}")
-                          const newExpanded = {
-                            ...currentExpanded,
-                            [provider.id]:
-                              currentExpanded[provider.id] === undefined ? true : !currentExpanded[provider.id],
-                          }
-                          localStorage.setItem("expandedProviders", JSON.stringify(newExpanded))
-                          // Force re-render
-                          setFilters({ ...filters })
-                        }}
-                      >
-                        <h3 className="text-lg font-medium">{provider.name}</h3>
-                        <Button variant="ghost" size="sm">
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform ${JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.id] === false
-                              ? "rotate-180"
-                              : ""
-                              }`}
-                          />
-                        </Button>
-                      </div>
-
-                      {JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.id] !== false && (
-                        <div className="p-4 space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor={`${provider.id}-key`}>API Key</Label>
-                            <Input
-                              id={`${provider.id}-key`}
-                              type="password"
-                              placeholder={
-                                provider.id === "openai"
-                                  ? "sk-..."
-                                  : provider.id === "anthropic"
-                                    ? "sk-ant-..."
-                                    : provider.id === "google"
-                                      ? "AIza..."
-                                      : provider.id === "xai"
-                                        ? "grok-..."
-                                        : provider.id === "deepseek"
-                                          ? "dsk-..."
-                                          : provider.id === "ollama"
-                                            ? "http://localhost:11434"
-                                            : provider.id === "perplexity"
-                                              ? "pplx-..."
-                                              : "mis-..."
-                              }
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor={`${provider.id}-model`}>Model</Label>
-                            <Select
-                              // defaultValue={
-                              //   provider.id === "openai"
-                              //     ? "gpt-4o"
-                              //     : provider.id === "anthropic"
-                              //       ? "claude-3-opus"
-                              //       : provider.id === "google"
-                              //         ? "gemini-pro"
-                              //         : provider.id === "xai"
-                              //           ? "grok-1"
-                              //           : provider.id === "deepseek"
-                              //             ? "deepseek-coder"
-                              //             : provider.id === "ollama"
-                              //               ? "llama3"
-                              //               : provider.id === "perplexity"
-                              //                 ? "pplx-7b-online"
-                              //                 : "mistral-large"
-                              // }
-                              defaultValue={getDefaultModelForProvider(provider.id)}
-                              onValueChange={(value) => {
-                                setModelSelections(prev => ({
-                                  ...prev,
-                                  [provider.id]: value
-                                }));
-                              }}
-                            >
-                              <SelectTrigger id={`${provider.id}-model`}>
-                                <SelectValue placeholder="Select Model" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {provider.id === "openai" && (
-                                  <>
-                                    <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                                    <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                                    <SelectItem value="gpt-4">GPT-4</SelectItem>
-                                    <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                                  </>
-                                )}
-                                {provider.id === "anthropic" && (
-                                  <>
-                                    <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                                    <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                                    <SelectItem value="claude-3-haiku">Claude 3 Haiku</SelectItem>
-                                    <SelectItem value="claude-2">Claude 2</SelectItem>
-                                  </>
-                                )}
-                                {provider.id === "google" && (
-                                  <>
-                                    <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
-                                    <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
-                                    <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
-                                  </>
-                                )}
-                                {provider.id === "xai" && <SelectItem value="grok-1">Grok-1</SelectItem>}
-                                {provider.id === "deepseek" && (
-                                  <>
-                                    <SelectItem value="deepseek-coder">Deepseek Coder</SelectItem>
-                                    <SelectItem value="deepseek-chat">Deepseek Chat</SelectItem>
-                                  </>
-                                )}
-                                {provider.id === "ollama" && (
-                                  <>
-                                    <SelectItem value="llama3">Llama 3</SelectItem>
-                                    <SelectItem value="mistral">Mistral</SelectItem>
-                                    <SelectItem value="codellama">CodeLlama</SelectItem>
-                                    <SelectItem value="phi3">Phi-3</SelectItem>
-                                  </>
-                                )}
-                                {provider.id === "perplexity" && (
-                                  <>
-                                    <SelectItem value="pplx-7b-online">Perplexity 7B Online</SelectItem>
-                                    <SelectItem value="pplx-70b-online">Perplexity 70B Online</SelectItem>
-                                  </>
-                                )}
-                                {provider.id === "mistral" && (
-                                  <>
-                                    <SelectItem value="mistral-large">Mistral Large</SelectItem>
-                                    <SelectItem value="mistral-medium">Mistral Medium</SelectItem>
-                                    <SelectItem value="mistral-small">Mistral Small</SelectItem>
-                                  </>
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <Label htmlFor={`${provider.id}-temperature`}>Temperature</Label>
-                              <span className="text-sm text-muted-foreground" id={`${provider.id}-temp-value`}>
-                                0.7
-                              </span>
-                            </div>
-                            <Input
-                              id={`${provider.id}-temperature`}
-                              type="range"
-                              min="0"
-                              max="1"
-                              step="0.1"
-                              defaultValue="0.7"
-                              onChange={(e) => {
-                                document.getElementById(`${provider.id}-temp-value`).textContent = e.target.value
-                              }}
-                              className="w-full"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor={`${provider.id}-max-tokens`}>Max Tokens</Label>
-                            <Input
-                              id={`${provider.id}-max-tokens`}
-                              type="number"
-                              min="100"
-                              max="8000"
-                              step="100"
-                              defaultValue="1000"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-
-                  <Button onClick={handleSaveSettings} className="w-full mt-4 bg-primary-red hover:bg-red-700">Save AI Platform Settings</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent> */}
           <TabsContent value="ai-settings">
             <Card>
               <CardHeader>
@@ -857,16 +616,16 @@ export default function AdminDashboard() {
               <CardContent>
                 <form onSubmit={handleFormSubmit}>
                   <div className="space-y-6">
-                    {apiProviders.map((provider) => (
-                      <div key={provider.id} className="border rounded-md overflow-hidden">
+                    {apiProviders.map((provider, index) => (
+                      <div key={provider.name} className="border rounded-md overflow-hidden">
                         <div
                           className="bg-gray-100 dark:bg-gray-800 p-4 flex justify-between items-center cursor-pointer"
                           onClick={() => {
                             const currentExpanded = JSON.parse(localStorage.getItem("expandedProviders") || "{}")
                             const newExpanded = {
                               ...currentExpanded,
-                              [provider.id]:
-                                currentExpanded[provider.id] === undefined ? true : !currentExpanded[provider.id],
+                              [provider.name]:
+                                currentExpanded[provider.name] === undefined ? true : !currentExpanded[provider.name],
                             }
                             localStorage.setItem("expandedProviders", JSON.stringify(newExpanded))
                             // Force re-render
@@ -876,7 +635,7 @@ export default function AdminDashboard() {
                           <h3 className="text-lg font-medium">{provider.name}</h3>
                           <Button variant="ghost" size="sm" type="button">
                             <ChevronDown
-                              className={`h-4 w-4 transition-transform ${JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.id] === false
+                              className={`h-4 w-4 transition-transform ${JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.name] === false
                                 ? "rotate-180"
                                 : ""
                                 }`}
@@ -884,95 +643,83 @@ export default function AdminDashboard() {
                           </Button>
                         </div>
 
-                        {JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.id] !== false && (
+                        {JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.name] !== false && (
                           <div className="p-4 space-y-4">
                             <div className="space-y-2">
-                              <Label htmlFor={`${provider.id}-key`}>API Key</Label>
+                              <Label htmlFor={`${provider.name}-key`}>API Key</Label>
                               <Input
-                                id={`${provider.id}-key`}
+                                id={`${provider.name}-key`}
                                 type="password"
                                 placeholder={
-                                  provider.id === "openai"
+                                  provider.name === "openai"
                                     ? "sk-..."
-                                    : provider.id === "anthropic"
+                                    : provider.name === "anthropic"
                                       ? "sk-ant-..."
-                                      : provider.id === "google"
+                                      : provider.name === "google"
                                         ? "AIza..."
-                                        : provider.id === "xai"
+                                        : provider.name === "xai"
                                           ? "grok-..."
-                                          : provider.id === "deepseek"
+                                          : provider.name === "deepseek"
                                             ? "dsk-..."
-                                            : provider.id === "ollama"
+                                            : provider.name === "ollama"
                                               ? "http://localhost:11434"
-                                              : provider.id === "perplexity"
+                                              : provider.name === "perplexity"
                                                 ? "pplx-..."
                                                 : "mis-..."
                                 }
-                                value={formState[provider.id]?.apiKey || ''}
-                                onChange={(e) => handleInputChange(provider.id, 'apiKey', e.target.value)}
+                                value={provider.apiKey || ''}
+                                onChange={(e) => handleInputChange(index, 'apiKey', e.target.value)}
                               />
                             </div>
 
                             <div className="space-y-2">
-                              <Label htmlFor={`${provider.id}-model`}>Model</Label>
+                              <Label htmlFor={`${provider.name}-model`}>Model</Label>
                               <Select
-                                value={formState[provider.id]?.model || getDefaultModelForProvider(provider.id)}
-                                onValueChange={(value) => handleInputChange(provider.id, 'model', value)}
+                                value={provider.model}
+                                onValueChange={(value) => handleInputChange(index, 'model', value)}
                               >
-                                <SelectTrigger id={`${provider.id}-model`}>
+                                <SelectTrigger id={`${provider.name}-model`}>
                                   <SelectValue placeholder="Select Model" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {provider.id === "openai" && (
-                                    <>
-                                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                                      <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                                      <SelectItem value="gpt-4">GPT-4</SelectItem>
-                                      <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                                    </>
-                                  )}
-                                  {provider.id === "anthropic" && (
-                                    <>
-                                      <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                                      <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                                      <SelectItem value="claude-3-haiku">Claude 3 Haiku</SelectItem>
-                                      <SelectItem value="claude-2">Claude 2</SelectItem>
-                                    </>
-                                  )}
-                                  {/* ... other provider options ... */}
+                                  {[...new Set(provider.models)].map((model) => (
+                                    <SelectItem key={model} value={model}>
+                                      {model}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </div>
 
                             <div className="space-y-2">
                               <div className="flex justify-between">
-                                <Label htmlFor={`${provider.id}-temperature`}>Temperature</Label>
-                                <span className="text-sm text-muted-foreground" id={`${provider.id}-temp-value`}>
-                                  {formState[provider.id]?.temperature || 0.7}
+                                <Label htmlFor={`${provider.name}-temperature`}>Temperature</Label>
+                                <span className="text-sm text-muted-foreground" id={`${provider.name}-temp-value`}>
+                                  {provider.temperature ?? 0.7}
                                 </span>
                               </div>
                               <Input
-                                id={`${provider.id}-temperature`}
+                                id={`${provider.name}-temperature`}
                                 type="range"
                                 min="0"
                                 max="1"
                                 step="0.1"
-                                value={formState[provider.id]?.temperature || 0.7}
-                                onChange={(e) => handleInputChange(provider.id, 'temperature', parseFloat(e.target.value))}
+                                value={provider.temperature ?? 0.7}
+                                onChange={(e) => handleInputChange(index, 'temperature', parseFloat(e.target.value))}
                                 className="w-full"
                               />
                             </div>
 
                             <div className="space-y-2">
-                              <Label htmlFor={`${provider.id}-max-tokens`}>Max Tokens</Label>
+                              <Label htmlFor={`${provider.name}-max-tokens`}>Max Tokens</Label>
                               <Input
-                                id={`${provider.id}-max-tokens`}
+                                id={`${provider.name}-max-tokens`}
                                 type="number"
                                 min="100"
                                 max="8000"
                                 step="100"
-                                value={formState[provider.id]?.maxTokens || 1000}
-                                onChange={(e) => handleInputChange(provider.id, 'maxTokens', parseInt(e.target.value))}
+                                value={provider?.maxTokens || 1000}
+                                onChange={(e) => handleInputChange(index, 'maxTokens', parseInt(e.target.value))}
                               />
                             </div>
                           </div>
@@ -980,7 +727,7 @@ export default function AdminDashboard() {
                       </div>
                     ))}
 
-                    <Button className="w-full mt-4 bg-primary-red hover:bg-red-700" type="submit">
+                    <Button onClick={updateApiProviders} className="w-full mt-4 bg-primary-red hover:bg-red-700" type="submit">
                       Save AI Platform Settings
                     </Button>
                   </div>
@@ -1000,7 +747,18 @@ export default function AdminDashboard() {
                   <Button
                     className="bg-primary-red hover:bg-red-700"
                     onClick={() => {
-                      setCurrentPrompt(null)
+                      setCurrentPrompt({
+                        heading: "",
+                        objective: "",
+                        initialGreetingsMessage: "",
+                        questions: [""],
+                        knowledgeBase: "",
+                        promptTemplate: "",
+                        defaultAiProvider: {
+                          name: "",
+                          model: ""
+                        }
+                      } as PromptInterface)
                       setActiveTab("create-prompt")
                     }}
                   >
@@ -1022,14 +780,14 @@ export default function AdminDashboard() {
                       </TableHeader>
                       <TableBody>
                         {promptsData.map((prompt) => (
-                          <TableRow key={prompt.id}>
-                            <TableCell className="font-medium">{prompt.name}</TableCell>
+                          <TableRow key={prompt._id}>
+                            <TableCell className="font-medium">{prompt.heading}</TableCell>
                             <TableCell>{prompt.objective}</TableCell>
                             <TableCell>
-                              {prompt.defaultAI} ({prompt.defaultModel})
+                              {prompt.defaultAiProvider.name} ({prompt.defaultAiProvider.model})
                             </TableCell>
-                            <TableCell>{prompt.created}</TableCell>
-                            <TableCell>{prompt.modified}</TableCell>
+                            <TableCell>{new Date(prompt.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell>{new Date(prompt.updatedAt).toLocaleDateString()}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
                                 {/* <Button variant="outline" size="sm" title="View">
@@ -1039,7 +797,7 @@ export default function AdminDashboard() {
                                   variant="outline"
                                   size="sm"
                                   title="Edit"
-                                  onClick={() => handleEditPrompt(prompt.id)}
+                                  onClick={() => handleEditPrompt(prompt._id)}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -1064,7 +822,7 @@ export default function AdminDashboard() {
           <TabsContent value="create-prompt">
             <Card>
               <CardHeader>
-                <CardTitle>{currentPrompt ? "Edit Prompt" : "Create Template"}</CardTitle>
+                <CardTitle>{activeTab === "create-prompt" ? "Edit Prompt" : "Create Template"}</CardTitle>
                 <CardDescription>
                   {currentPrompt ? "Modify an existing prompt template" : "Design a new prompt template for your tools"}
                 </CardDescription>
@@ -1076,7 +834,8 @@ export default function AdminDashboard() {
                     <Input
                       id="prompt-heading"
                       placeholder="Enter a title for this prompt"
-                      defaultValue={currentPrompt?.name || ""}
+                      defaultValue={currentPrompt?.heading || ""}
+                      onChange={(e) => handleChangePrompt("heading", e.target.value)}
                     />
                   </div>
 
@@ -1086,6 +845,7 @@ export default function AdminDashboard() {
                       id="prompt-objective"
                       placeholder="What is the purpose of this prompt?"
                       defaultValue={currentPrompt?.objective || ""}
+                      onChange={(e) => handleChangePrompt("objective", e.target.value)}
                     />
                   </div>
 
@@ -1094,7 +854,8 @@ export default function AdminDashboard() {
                     <Textarea
                       id="initial-greeting"
                       placeholder="Enter the initial greeting message"
-                      defaultValue={currentPrompt?.greeting || ""}
+                      defaultValue={currentPrompt?.initialGreetingsMessage || ""}
+                      onChange={(e) => handleChangePrompt("initialGreetingsMessage", e.target.value)}
                     />
                   </div>
 
@@ -1103,71 +864,28 @@ export default function AdminDashboard() {
                     <div className="border rounded-md p-4 space-y-4">
                       {/* Questions will be dynamically added here */}
                       <div id="questions-container">
-                        {currentPrompt ? (
-                          currentPrompt.questions.map((question, index) => (
+                        {
+                          (currentPrompt?.questions || []).map((question, index) => (
                             <div key={index} className="flex items-center space-x-2 mb-2">
-                              <Input placeholder={`Question ${index + 1}`} defaultValue={question} />
+                              <Input placeholder={`Question ${index + 1}`} defaultValue={question} onChange={(e) => handleChangePromptQuestion(index, e.target.value)} />
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={(e) => {
-                                  e.currentTarget.parentElement.remove()
+                                  handleUpdateQuestions(currentPrompt.questions.filter((_, i) => i !== index))
                                 }}
                               >
                                 <X className="h-4 w-4" />
                               </Button>
                             </div>
                           ))
-                        ) : (
-                          <>
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Input placeholder="Question 1" />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => {
-                                  e.currentTarget.parentElement.remove()
-                                }}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Input placeholder="Question 2" />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => {
-                                  e.currentTarget.parentElement.remove()
-                                }}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </>
-                        )}
+                        }
                       </div>
                       <Button
                         variant="outline"
                         className="mt-2"
                         onClick={() => {
-                          const container = document.getElementById("questions-container")
-                          const questionCount = container.children.length + 1
-                          const questionDiv = document.createElement("div")
-                          questionDiv.className = "flex items-center space-x-2 mb-2"
-                          questionDiv.innerHTML = `
-                            <input class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" placeholder="Question ${questionCount}">
-                            <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10 p-0" data-variant="ghost" data-size="icon">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="h-4 w-4"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-                            </button>
-                          `
-                          container.appendChild(questionDiv)
-
-                          // Add event listener to the remove button
-                          const removeButton = questionDiv.querySelector("button")
-                          removeButton.addEventListener("click", () => {
-                            questionDiv.remove()
-                          })
+                          handleUpdateQuestions([...currentPrompt.questions, ""])
                         }}
                       >
                         Add Question
@@ -1182,6 +900,7 @@ export default function AdminDashboard() {
                       placeholder="Enter relevant information, context or data for the AI"
                       className="min-h-[100px]"
                       defaultValue={currentPrompt?.knowledgeBase || ""}
+                      onChange={(e) => handleChangePrompt("knowledgeBase", e.target.value)}
                     />
                   </div>
 
@@ -1192,6 +911,7 @@ export default function AdminDashboard() {
                       placeholder="Design the prompt that will be sent to the AI"
                       className="min-h-[100px]"
                       defaultValue={currentPrompt?.promptTemplate || ""}
+                      onChange={(e) => handleChangePrompt("promptTemplate", e.target.value)}
                     />
                     <p className="text-sm text-muted-foreground">
                       Use placeholders: {"{objective}"}, {"{user_info}"}, {"{knowledge_base}"}, {"{query}"}
@@ -1201,23 +921,23 @@ export default function AdminDashboard() {
                   <div className="space-y-2">
                     <Label>Default AI Provider & Model</Label>
                     <div className="grid grid-cols-2 gap-4">
-                      <Select defaultValue={currentPrompt?.defaultAI?.toLowerCase() || "openai"}>
+                      <Select onValueChange={(value) => handleAiProviderAndModelChange(value, currentPrompt?.defaultAiProvider.model)} defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "openai"}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select Provider" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="openai">ChatGPT (OpenAI)</SelectItem>
-                          <SelectItem value="anthropic">Claude (Anthropic)</SelectItem>
-                          <SelectItem value="google">Gemini (Google)</SelectItem>
-                          <SelectItem value="xai">Grok (xAI)</SelectItem>
+                          <SelectItem value="openai">OpenAI</SelectItem>
+                          <SelectItem value="anthropic">Anthropic</SelectItem>
+                          <SelectItem value="google">Google</SelectItem>
+                          <SelectItem value="xai">xAI</SelectItem>
                           <SelectItem value="deepseek">Deepseek</SelectItem>
-                          <SelectItem value="ollama">Ollama (Self-hosted)</SelectItem>
+                          <SelectItem value="ollama">Ollama</SelectItem>
                           <SelectItem value="perplexity">Perplexity</SelectItem>
                           <SelectItem value="mistral">Mistral</SelectItem>
                         </SelectContent>
                       </Select>
 
-                      <Select defaultValue={currentPrompt?.defaultModel || "gpt-4o"}>
+                      <Select onValueChange={(value) => handleAiProviderAndModelChange(currentPrompt?.defaultAiProvider.name, value)} defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select Model" />
                         </SelectTrigger>
@@ -1227,6 +947,10 @@ export default function AdminDashboard() {
                           <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
                           <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
                           <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
+                          <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
+                          <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
+                          <SelectItem value="gemini-1.5-pro-latest">Gemini 1.5 Pro Latest</SelectItem>
+                          <SelectItem value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1238,8 +962,161 @@ export default function AdminDashboard() {
                       <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
                         Cancel
                       </Button>
-                      <Button className="bg-primary-red hover:bg-red-700">
+                      <Button onClick={handleSaveOrCreatePrompt} className="bg-primary-red hover:bg-red-700">
                         {currentPrompt ? "Update Prompt" : "Save Prompt"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="edit-prompt">
+            <Card>
+              <CardHeader>
+                <CardTitle>{"Edit Prompt"}</CardTitle>
+                <CardDescription>
+                  "Modify an existing prompt template"
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="prompt-heading">Prompt Heading</Label>
+                    <Input
+                      id="prompt-heading"
+                      placeholder="Enter a title for this prompt"
+                      defaultValue={currentPrompt?.heading || ""}
+                      onChange={(e) => handleChangePrompt("heading", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="prompt-objective">Objective</Label>
+                    <Textarea
+                      id="prompt-objective"
+                      placeholder="What is the purpose of this prompt?"
+                      defaultValue={currentPrompt?.objective || ""}
+                      onChange={(e) => handleChangePrompt("objective", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="initial-greeting">Initial Greeting Message</Label>
+                    <Textarea
+                      id="initial-greeting"
+                      placeholder="Enter the initial greeting message"
+                      defaultValue={currentPrompt?.initialGreetingsMessage || ""}
+                      onChange={(e) => handleChangePrompt("initialGreetingsMessage", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Questions to Collect Information</Label>
+                    <div className="border rounded-md p-4 space-y-4">
+                      {/* Questions will be dynamically added here */}
+                      <div id="questions-container">
+                        {
+                          (currentPrompt?.questions || []).map((question, index) => (
+                            <div key={index} className="flex items-center space-x-2 mb-2">
+                              <Input placeholder={`Question ${index + 1}`} defaultValue={question} onChange={(e) => handleChangePromptQuestion(index, e.target.value)} />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  handleUpdateQuestions(currentPrompt.questions.filter((_, i) => i !== index))
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))
+                        }
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => {
+                          handleUpdateQuestions([...(currentPrompt?.questions || []), ""])
+                        }}
+                      >
+                        Add Question
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="knowledge-base">Knowledge Base</Label>
+                    <Textarea
+                      id="knowledge-base"
+                      placeholder="Enter relevant information, context or data for the AI"
+                      className="min-h-[100px]"
+                      defaultValue={currentPrompt?.knowledgeBase || ""}
+                      onChange={(e) => handleChangePrompt("knowledgeBase", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="prompt-template">Prompt Template</Label>
+                    <Textarea
+                      id="prompt-template"
+                      placeholder="Design the prompt that will be sent to the AI"
+                      className="min-h-[100px]"
+                      defaultValue={currentPrompt?.promptTemplate || ""}
+                      onChange={(e) => handleChangePrompt("promptTemplate", e.target.value)}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Use placeholders: {"{objective}"}, {"{user_info}"}, {"{knowledge_base}"}, {"{query}"}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Default AI Provider & Model</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Select onValueChange={(value) => handleAiProviderAndModelChange(value, currentPrompt?.defaultAiProvider.model)} defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "openai"}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Provider" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="openai">OpenAI</SelectItem>
+                          <SelectItem value="anthropic">Anthropic</SelectItem>
+                          <SelectItem value="google">Google</SelectItem>
+                          <SelectItem value="xai">xAI</SelectItem>
+                          <SelectItem value="deepseek">Deepseek</SelectItem>
+                          <SelectItem value="ollama">Ollama</SelectItem>
+                          <SelectItem value="perplexity">Perplexity</SelectItem>
+                          <SelectItem value="mistral">Mistral</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Select onValueChange={(value) => handleAiProviderAndModelChange(currentPrompt?.defaultAiProvider.name, value)} defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                          <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
+                          <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
+                          <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
+                          <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
+                          <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
+                          <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
+                          <SelectItem value="gemini-1.5-pro-latest">Gemini 1.5 Pro Latest</SelectItem>
+                          <SelectItem value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between pt-4">
+                    <Button variant="destructive">Delete</Button>
+                    <div className="space-x-2">
+                      <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSaveOrCreatePrompt} className="bg-primary-red hover:bg-red-700">
+                        Update Prompt
                       </Button>
                     </div>
                   </div>
