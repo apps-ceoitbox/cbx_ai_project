@@ -84,6 +84,7 @@ function generatePrompt(userAnswers, promptData) {
         ${promptData.promptTemplate}
 
         Based on the above information, generate a structured JSON response with multiple sections, following this format:
+        Do not include any other text or comments in your response.
 
         {
           "title": "${promptData.heading}",
@@ -105,32 +106,3 @@ function generatePrompt(userAnswers, promptData) {
 
     return prompt;
 }
-
-
-// function generatePrompt(userAnswers, promptData) {
-//     // Step 1: Format user answers
-//     let formattedAnswers = Object.entries(userAnswers)
-//         .map(([question, answer]) => `<b>${question}</b>: ${answer}`)
-//         .join("<br><br>");
-
-//     // Step 2: Construct the AI prompt
-//     const prompt = `
-//         ${promptData.initialGreetingsMessage}
-
-//         Objective: ${promptData.objective}
-
-//         User Responses:
-//         ${formattedAnswers}
-
-//         Additional Knowledge Base:
-//         ${promptData.knowledgeBase}
-
-//         Based on the above information, generate a professional HTML response using the following template:
-
-//         ${promptData.promptTemplate}
-
-//         Ensure the response is formatted as valid HTML.
-//     `;
-
-//     return prompt;
-// }
