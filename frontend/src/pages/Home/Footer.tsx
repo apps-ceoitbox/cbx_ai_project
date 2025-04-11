@@ -19,11 +19,13 @@ const Footer: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* Center Section */}
-                    <div className="flex-1 mt-6 md:mt-0 text-center"
-                    >
-                        <p>© 2025 CEOITBOX. All rights reserved.</p>
-                    </div>
+
+                    {location.pathname === "/login" ?
+                        <div></div> :
+                        <div className="flex-1 mt-6 md:mt-0 text-center">
+                            <p>© 2025 CEOITBOX. All rights reserved.</p>
+                        </div>
+                    }
 
                     {/* Right Section */}
                     <div className="flex-1 text-right">
@@ -35,7 +37,7 @@ const Footer: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </footer>
+        </footer >
     )
 }
 
