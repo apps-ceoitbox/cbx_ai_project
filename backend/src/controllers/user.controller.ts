@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { HttpStatusCodes } from "../utils/errorCodes";
 import User from "../models/user.model";
-import Task from "../models/task.model";
+import Task from "../models/ai.model";
 
 declare module 'express-serve-static-core' {
   interface Request {

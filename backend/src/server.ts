@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 dotenv.config();
 const PORT = process.env.PORT;
-const MONGO_URI = `${process.env.MONGO_URI}/task` || "";
+const MONGO_URI = `${process.env.MONGO_URI}` || "";
 
 app.listen(PORT, async () => {
     try {
