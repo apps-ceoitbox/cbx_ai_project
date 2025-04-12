@@ -119,8 +119,6 @@ export default function AdminDashboard() {
 
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
 
-  console.log("submissions", submissions)
-
   const handleInputChange = (index, field, value) => {
     setApiProviders(prevState => {
       const temp = [...prevState]
@@ -332,7 +330,7 @@ export default function AdminDashboard() {
       return temp
     })
   }
-
+  console.log(filters.api)
 
   return (
     <div className="min-h-screen bg-gray-50" >
@@ -409,9 +407,9 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All tools</SelectItem>
-                        {submissions?.map((item) => (
-                          <SelectItem key={item._id} value={item.tool}>
-                            {item.tool}
+                        {[...new Set(submissions.map(item => item.tool))]?.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -426,9 +424,9 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All APIs</SelectItem>
-                        {submissions?.map((api) => (
-                          <SelectItem key={api._id} value={api.apiUsed.split(" ")[0]}>
-                            {api.apiUsed}
+                        {[...new Set(submissions.map(item => item.apiUsed))]?.map((api) => (
+                          <SelectItem key={api._id} value={api}>
+                            {api}
                           </SelectItem>
                         ))}
                       </SelectContent>
