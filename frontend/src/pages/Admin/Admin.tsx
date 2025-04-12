@@ -24,7 +24,6 @@ import {
   Edit,
   Trash,
   Eye,
-  Trash2,
   ArrowLeft,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
@@ -76,69 +75,6 @@ interface DefaultAiProvider {
   model: string;
 }
 
-// Sample submissions data
-const submissionsData = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    company: "Acme Inc",
-    tool: "Business Plan Generator",
-    date: "2023-04-01T10:30:00Z",
-    status: "Completed",
-    apiUsed: "ChatGPT",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    company: "Tech Solutions",
-    tool: "Weekly Schedule Creator",
-    date: "2023-04-02T14:15:00Z",
-    status: "Completed",
-    apiUsed: "Claude",
-  },
-  {
-    id: "3",
-    name: "Robert Johnson",
-    email: "robert@example.com",
-    company: "Global Services",
-    tool: "Lead Nurturing Creator",
-    date: "2023-04-03T09:45:00Z",
-    status: "Completed",
-    apiUsed: "Gemini",
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    email: "emily@example.com",
-    company: "Creative Solutions",
-    tool: "Purpose Master",
-    date: "2023-04-04T16:20:00Z",
-    status: "Completed",
-    apiUsed: "Grok",
-  },
-  {
-    id: "5",
-    name: "Michael Wilson",
-    email: "michael@example.com",
-    company: "Innovative Tech",
-    tool: "Core Values Generator",
-    date: "2023-04-05T11:10:00Z",
-    status: "Completed",
-    apiUsed: "Mistral",
-  },
-]
-
-// Sample tools
-const tools = [
-  { id: "business-plan", name: "Business Plan Generator" },
-  { id: "weekly-schedule", name: "Weekly Schedule Creator" },
-  { id: "lead-nurturing", name: "Lead Nurturing Creator" },
-  { id: "purpose-master", name: "Purpose Master" },
-  { id: "core-values", name: "Core Values Generator" },
-]
-
 
 export default function AdminDashboard() {
   const nav = useNavigate()
@@ -152,6 +88,7 @@ export default function AdminDashboard() {
   const [selectedProviderName, setSelectedProviderName] = useState("ChatGPT (OpenAI)");
   const [models, setModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
+
 
   const handleProviderChange = (providerName: string) => {
     setSelectedProviderName(providerName);
@@ -182,7 +119,7 @@ export default function AdminDashboard() {
 
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
 
-
+  console.log("submissions", submissions)
 
   const handleInputChange = (index, field, value) => {
     setApiProviders(prevState => {
@@ -472,9 +409,9 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All tools</SelectItem>
-                        {tools.map((tool) => (
-                          <SelectItem key={tool.id} value={tool.name}>
-                            {tool.name}
+                        {submissions?.map((item) => (
+                          <SelectItem key={item._id} value={item.tool}>
+                            {item.tool}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -489,9 +426,9 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All APIs</SelectItem>
-                        {apiProviders.map((api) => (
-                          <SelectItem key={api.name} value={api.name.split(" ")[0]}>
-                            {api.name}
+                        {submissions?.map((api) => (
+                          <SelectItem key={api._id} value={api.apiUsed.split(" ")[0]}>
+                            {api.apiUsed}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1260,7 +1197,7 @@ export default function AdminDashboard() {
                       {/* Provider Dropdown */}
                       <Select onValueChange={handleProviderChange}
                         value={selectedProviderName}
-                        // defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "ChatGPT (OpenAI)"}
+                      // defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "ChatGPT (OpenAI)"}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Provider" />
@@ -1278,8 +1215,8 @@ export default function AdminDashboard() {
                       {/* Model Dropdown */}
                       <Select onValueChange={handleModelChange}
                         value={selectedModel}
-                        // defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}
-                        >
+                      // defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Model" />
                         </SelectTrigger>

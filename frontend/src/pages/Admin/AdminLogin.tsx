@@ -117,6 +117,7 @@ export default function AdminLoginPage() {
                     id="email"
                     name="email"
                     type="email"
+                    placeholder="Email"
                     value={credentials.email}
                     onChange={handleChange}
                     className={errors.email ? "border-red-500" : ""}
@@ -130,6 +131,7 @@ export default function AdminLoginPage() {
                     id="password"
                     name="password"
                     type="password"
+                    placeholder="Password"
                     value={credentials.password}
                     onChange={handleChange}
                     className={errors.password ? "border-red-500" : ""}
