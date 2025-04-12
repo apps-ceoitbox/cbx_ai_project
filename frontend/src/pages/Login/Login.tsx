@@ -96,7 +96,7 @@ export default function LoginPage() {
         })
 
         localStorage.setItem("userToken", res?.data?.token);
-        toast.success(res?.data?.message)
+        toast.success("Login successful")
         nav("/dashboard")
       }
     } catch (error) {
