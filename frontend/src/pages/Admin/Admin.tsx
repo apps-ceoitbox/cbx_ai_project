@@ -229,9 +229,11 @@ export default function AdminDashboard() {
 
   const getPrompts = () => {
     axios.get("/prompt").then((res) => {
-      setPromptsData(res.data.data)
+      setPromptsData(res?.data?.data)
     })
   }
+
+
 
   const handleSaveOrCreatePrompt = async () => {
     try {
@@ -382,6 +384,7 @@ export default function AdminDashboard() {
     })
   }
 
+
   const handleChangePromptQuestion = (index: number, value: string) => {
     setCurrentPrompt((prev) => {
       const temp = { ...prev, questions: [...prev.questions] }
@@ -390,10 +393,10 @@ export default function AdminDashboard() {
       return temp
     })
   }
-  // console.log(currentPrompt)
+
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" >
       <header className="bg-black text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <Logo size="sm" />
@@ -412,8 +415,8 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+      <main className="container mx-auto py-8 px-10">
+        <h1 className="text-3xl font-bold mb-8 text-center">Admin Dashboard</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
@@ -602,7 +605,7 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="ai-settings">
+          {/* <TabsContent value="ai-settings">
             <Card >
               <CardHeader>
                 <CardTitle>AI Platform Settings</CardTitle>
@@ -615,7 +618,9 @@ export default function AdminDashboard() {
                   // className="space-y-6"
                   >
                     {apiProviders?.map((provider, index) => (
-                      <div key={provider.name} className="border rounded-md overflow-hidden">
+                      <div key={provider.name}
+                        className="border rounded-md overflow-hidden"
+                      >
                         <div
                           className="bg-gray-100 dark:bg-gray-800 p-4 flex justify-between items-center cursor-pointer"
                           onClick={() => {
@@ -725,10 +730,140 @@ export default function AdminDashboard() {
                       </div>
                     ))}
 
-                    <Button onClick={updateApiProviders} className="mt-4 bg-primary-red hover:bg-red-700" type="submit">
-                      Save AI Platform Settings
-                    </Button>
+
                   </div>
+                  <Button onClick={updateApiProviders} className="mt-4 bg-primary-red hover:bg-red-700" type="submit">
+                    Save AI Platform Settings
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent> */}
+
+          <TabsContent value="ai-settings">
+            <Card>
+              <CardHeader>
+                <CardTitle>AI Platform Settings</CardTitle>
+                <CardDescription>Configure API keys and models for each AI platform</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleFormSubmit}>
+                  <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
+                    {apiProviders?.map((provider, index) => {
+                      const isExpanded = JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.name] !== false;
+
+                      return (
+                        <div key={provider.name} className={`border rounded-md overflow-hidden ${isExpanded ? "md:col-span-2 xl:col-span-2" : ""}`}>
+                          <div
+                            className="bg-gray-100 dark:bg-gray-800 p-4 flex justify-between items-center cursor-pointer"
+                            onClick={() => {
+                              const currentExpanded = JSON.parse(localStorage.getItem("expandedProviders") || "{}")
+                              const newExpanded = {
+                                ...currentExpanded,
+                                [provider.name]:
+                                  currentExpanded[provider.name] === undefined ? true : !currentExpanded[provider.name],
+                              }
+                              localStorage.setItem("expandedProviders", JSON.stringify(newExpanded))
+                              // Force re-render
+                              setFilters({ ...filters })
+                            }}
+                          >
+                            <h3 className="text-lg font-medium">{provider.name}</h3>
+                            <Button variant="ghost" size="sm" type="button">
+                              <ChevronDown
+                                className={`h-4 w-4 transition-transform ${isExpanded ? "" : "rotate-180"}`}
+                              />
+                            </Button>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="p-4 space-y-4">
+                              <div className="space-y-2">
+                                <Label htmlFor={`${provider.name}-key`}>API Key</Label>
+                                <Input
+                                  id={`${provider.name}-key`}
+                                  type="password"
+                                  placeholder={
+                                    provider.name === "openai"
+                                      ? "sk-..."
+                                      : provider.name === "anthropic"
+                                        ? "sk-ant-..."
+                                        : provider.name === "google"
+                                          ? "AIza..."
+                                          : provider.name === "xai"
+                                            ? "grok-..."
+                                            : provider.name === "deepseek"
+                                              ? "dsk-..."
+                                              : provider.name === "ollama"
+                                                ? "http://localhost:11434"
+                                                : provider.name === "perplexity"
+                                                  ? "pplx-..."
+                                                  : "mis-..."
+                                  }
+                                  value={provider.apiKey || ''}
+                                  onChange={(e) => handleInputChange(index, 'apiKey', e.target.value)}
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor={`${provider.name}-model`}>Model</Label>
+                                <Select
+                                  value={provider.model}
+                                  onValueChange={(value) => handleInputChange(index, 'model', value)}
+                                >
+                                  <SelectTrigger id={`${provider.name}-model`}>
+                                    <SelectValue placeholder="Select Model" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {[...new Set(provider.models)].map((model) => (
+                                      <SelectItem key={model} value={model}>
+                                        {model}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <Label htmlFor={`${provider.name}-temperature`}>Temperature</Label>
+                                  <span className="text-sm text-muted-foreground" id={`${provider.name}-temp-value`}>
+                                    {provider.temperature ?? 0.7}
+                                  </span>
+                                </div>
+                                <Input
+                                  id={`${provider.name}-temperature`}
+                                  type="range"
+                                  min="0"
+                                  max="1"
+                                  step="0.1"
+                                  value={provider.temperature ?? 0.7}
+                                  onChange={(e) => handleInputChange(index, 'temperature', parseFloat(e.target.value))}
+                                  className="w-full"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor={`${provider.name}-max-tokens`}>Max Tokens</Label>
+                                <Input
+                                  id={`${provider.name}-max-tokens`}
+                                  type="number"
+                                  min="100"
+                                  max="8000"
+                                  step="100"
+                                  value={provider?.maxTokens || 1000}
+                                  onChange={(e) => handleInputChange(index, 'maxTokens', parseInt(e.target.value))}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Button onClick={updateApiProviders} className="mt-4 bg-primary-red hover:bg-red-700" type="submit">
+                    Save AI Platform Settings
+                  </Button>
                 </form>
               </CardContent>
             </Card>
@@ -820,6 +955,7 @@ export default function AdminDashboard() {
                                             .then(() => {
                                               toast.success("Template deleted successfully");
                                               getPrompts();
+
                                             })
                                             .catch(error => {
                                               console.error(error);
@@ -850,7 +986,7 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{activeTab === "create-prompt" ? "Edit Template" : "Create Template"}</CardTitle>
+                  <CardTitle>{activeTab === "create-prompt" ? "Create Template" : "Edit Template"}</CardTitle>
                   <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4"
                     onClick={() => setActiveTab('manage-prompts')}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -917,6 +1053,7 @@ export default function AdminDashboard() {
                         }
                       </div>
                       <Button
+                        disabled={currentPrompt?.questions?.length == 15}
                         variant="outline"
                         className="mt-2"
                         onClick={() => {
@@ -963,7 +1100,7 @@ export default function AdminDashboard() {
                           <SelectValue placeholder="Select Provider" />
                         </SelectTrigger>
                         <SelectContent>
-                          {apiProviders.map((provider) => (
+                          {apiProviders?.map((provider) => (
                             <SelectItem key={provider._id} value={provider.name}>
                               {provider.name}
                             </SelectItem>
@@ -990,12 +1127,13 @@ export default function AdminDashboard() {
 
                   <div className="flex justify-between pt-4">
                     <Button variant="destructive">Delete</Button>
+
                     <div className="space-x-2">
                       <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
                         Cancel
                       </Button>
                       <Button onClick={handleSaveOrCreatePrompt} className="bg-primary-red hover:bg-red-700">
-                        {currentPrompt ? "Update Prompt" : "Save Prompt"}
+                        {!currentPrompt ? "Update Template" : "Save Template"}
                       </Button>
                     </div>
                   </div>
@@ -1075,6 +1213,7 @@ export default function AdminDashboard() {
                         }
                       </div>
                       <Button
+                        disabled={currentPrompt?.questions.length == 15}
                         variant="outline"
                         className="mt-2"
                         onClick={() => {
@@ -1187,7 +1326,40 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="flex justify-between pt-4">
-                    <Button variant="destructive">Delete</Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive">Delete</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this template? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => {
+                              axios.delete(`/prompt/${currentPrompt._id}`)
+                                .then(() => {
+                                  toast.success("Template deleted successfully");
+                                  getPrompts();
+                                  setActiveTab("manage-prompts")
+                                })
+                                .catch(error => {
+                                  console.error(error);
+                                  toast.error("Failed to delete template");
+                                });
+                            }}
+                            className="bg-red-500 hover:bg-red-600"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <div className="space-x-2">
                       <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
                         Cancel

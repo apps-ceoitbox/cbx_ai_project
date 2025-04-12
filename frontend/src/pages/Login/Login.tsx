@@ -10,6 +10,11 @@ import { Logo } from "@/components/logo"
 import { useAxios, useData } from "@/context/AppContext"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import UnauthorizedModal from "./UnauthorizedModal"
+
+
+
+
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -24,6 +29,7 @@ export default function LoginPage() {
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -73,6 +79,13 @@ export default function LoginPage() {
       if (validateForm()) {
         setUserAuth(p => ({ ...p, isLoading: true }))
         let res = await axios.post("/auth/user/login", formData)
+
+        if (res?.data?.error === "Invalid license") {
+          setShowUnauthorizedModal(true)
+          setUserAuth(p => ({ ...p, isLoading: false }))
+          return
+        }
+
         setUserAuth(p => {
           return {
             ...p,
@@ -88,10 +101,21 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Login error:", error);
+
+      if (error?.response?.data?.error === "Invalid license") {
+        setShowUnauthorizedModal(true)
+      } else {
+        toast.error("Something went wrong");
+      }
+
       toast.error("Something went wrong");
       setUserAuth(p => ({ ...p, isLoading: false }))
     }
   }
+
+
+  const closeUnauthorizedModal = () => setShowUnauthorizedModal(false)
+
 
   useEffect(() => {
     if (!userAuth.user) {
@@ -110,7 +134,7 @@ export default function LoginPage() {
       </div>
 
       <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-[480px]">
           {/* <div className="flex justify-center mb-8">
             <Logo size="lg" />
           </div> */}
@@ -196,6 +220,10 @@ export default function LoginPage() {
 
         </div>
       </div>
+      <UnauthorizedModal
+        isOpen={showUnauthorizedModal}
+        onClose={closeUnauthorizedModal}
+      />
     </div>
   )
 }
