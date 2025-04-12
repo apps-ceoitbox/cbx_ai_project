@@ -36,17 +36,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const promptSchema = new mongoose_1.Schema({
     heading: { type: String, required: true, unique: true },
-    objective: { type: String, required: true, default: "" },
-    initialGreetingsMessage: { type: String, required: true, default: "" },
-    questions: { type: Array, required: true, default: [] },
-    knowledgeBase: { type: String, required: true, default: "" },
-    promptTemplate: { type: String, required: true, default: "" },
+    objective: { type: String, default: "" },
+    initialGreetingsMessage: { type: String, default: "" },
+    questions: { type: Array, default: [] },
+    knowledgeBase: { type: String, default: "" },
+    promptTemplate: { type: String, default: "" },
     defaultAiProvider: {
         type: {
-            name: { type: String, required: true },
-            model: { type: String, required: true },
+            name: { type: String },
+            model: { type: String },
         },
-        required: true
+        required: true,
     },
     // createdBy: { type: mongoose.Types.ObjectId, required: true },
 }, { timestamps: true });

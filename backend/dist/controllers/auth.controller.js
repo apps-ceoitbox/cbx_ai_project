@@ -77,8 +77,8 @@ AuthController.adminLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awa
 }));
 // Method to login a new user
 AuthController.userLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userName, email, companyName, mobile } = req.body;
-    if (!userName || !email || !companyName || !mobile) {
+    const { userName, email, companyName = "", mobile = 0 } = req.body;
+    if (!userName || !email) {
         res.status(errorCodes_1.HttpStatusCodes.BAD_REQUEST).json({ error: 'All fields are required' });
         return;
     }
@@ -86,7 +86,7 @@ AuthController.userLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awai
         res.status(errorCodes_1.HttpStatusCodes.BAD_REQUEST).json({ error: 'Invalid email' });
         return;
     }
-    const license = yield (0, exports.checkLicense)("AI_TEMLATE_GENERATOR", email);
+    const license = yield (0, exports.checkLicense)("AI_TEMPLATE_GENERATOR", email);
     if (!license) {
         res.status(errorCodes_1.HttpStatusCodes.BAD_REQUEST).json({ error: 'Invalid license' });
         return;
