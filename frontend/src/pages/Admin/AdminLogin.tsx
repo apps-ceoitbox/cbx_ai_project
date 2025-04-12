@@ -106,7 +106,7 @@ export default function AdminLoginPage() {
           <Card className="border-primary-red">
             <CardHeader className="bg-primary-red text-white rounded-t-lg">
               <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
-              <CardDescription className="text-gray-100">Enter your admin credentials</CardDescription>
+              <CardDescription className="text-gray-100">Enter your admin credentials (Ceoitbox Employee Only)</CardDescription>
             </CardHeader>
 
             <CardContent className="pt-6">

@@ -10,6 +10,7 @@ import Footer from "./pages/Home/Footer"
 import NotFound from "./pages/NotFound"
 import { useEffect } from "react"
 import { useAxios, useData } from "./context/AppContext"
+import UserGeneratedPlans from "./pages/Dashboard/UserGeneratedPlans"
 
 function App() {
   const { setUserAuth, setAdminAuth } = useData();
@@ -54,6 +55,7 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/generated-plans" element={<UserGeneratedPlans />} />
         <Route path="/reports/:toolId" element={<Report />} />
         <Route path="/tools/:toolId" element={<Tool />} />
 

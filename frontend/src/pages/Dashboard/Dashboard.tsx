@@ -7,7 +7,6 @@ import { FileText } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 
 
-
 export interface PromptInterface {
   _id: string;
   heading: string;
@@ -65,6 +64,14 @@ export default function Dashboard() {
               <div className="font-medium">{userAuth.user.name}</div>
               <div className="text-gray-300">{userAuth.user.company}</div>
             </div>
+
+            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
+              onClick={() => {
+                nav("/generated-plans")
+              }}
+            >
+              Generated Plans
+            </Button>
             <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
               localStorage.removeItem("userToken")
               setUserAuth(p => ({ ...p, user: null, token: null }))

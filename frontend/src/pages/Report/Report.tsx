@@ -36,15 +36,14 @@ export default function ReportPage() {
   const tool = toolsData[toolId]
 
   useEffect(() => {
-    // Simulate API call to get report
     const timer = setTimeout(() => {
       setReport(generateResponse)
-      // setReport(generateSampleReport(toolId))
       setIsLoading(false)
     }, 1500)
 
     return () => clearTimeout(timer)
   }, [userAuth?.user, tool, toolId, nav])
+
 
   const handleDownloadPDF = () => {
 

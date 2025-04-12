@@ -20,7 +20,15 @@ const UnauthorizedModal: React.FC<UnauthorizedModalProps> = ({ isOpen, onClose }
 
                 <p className="text-gray-600 mb-6">
                     Unfortunately you are not authorised to access this app.
-                    Please connect with CEOITBOX team at access@ceoitbox.in.
+                    Please connect with CEOITBOX team at  <a
+                        href="https://mail.google.com/mail/?view=cm&fs=1&to=access@ceoitbox.in"
+                        className="text-blue-600 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        access@ceoitbox.in
+                    </a>
+
                 </p>
 
                 <Button
