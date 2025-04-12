@@ -89,7 +89,7 @@ export default class AuthController {
             return
         }
 
-        const license = await checkLicense("AI_TEMLATE_GENERATOR", email);
+        const license = await checkLicense("AI_TEMPLATE_GENERATOR", email);
 
         if (!license) {
             res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'Invalid license' });

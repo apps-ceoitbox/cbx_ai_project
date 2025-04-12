@@ -202,7 +202,7 @@ export default function LoginPage() {
               <Button
                 disabled={!formData.userName || !formData.email || !formData.companyName || !formData.mobile}
                 onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
-                {isLoading ? (
+                {userAuth.isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Logging in...
