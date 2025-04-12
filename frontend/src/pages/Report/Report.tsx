@@ -13,7 +13,7 @@ import { saveAs } from "file-saver"
 import { toast } from "sonner"
 
 // Sample report data
-function formatBoldText(text) {
+export function formatBoldText(text) {
   // Replace **bold** text with <strong>bold</strong>
   return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
     if (part.startsWith("**") && part.endsWith("**")) {
@@ -225,10 +225,10 @@ export default function ReportPage() {
                   <FileText className="mr-2 h-4 w-4" />
                   Export DOCX
                 </Button>
-                <Button className="bg-primary-red hover:bg-red-700 flex items-center" onClick={handleSendEmail}>
+                {/* <Button className="bg-primary-red hover:bg-red-700 flex items-center" onClick={handleSendEmail}>
                   <Mail className="mr-2 h-4 w-4" />
                   Send to Email
-                </Button>
+                </Button> */}
               </CardFooter>
             </Card>
           </div>

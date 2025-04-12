@@ -40,6 +40,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { formatBoldText } from "../Report/Report"
 
 
 export interface AiSettingsInterface {
@@ -388,7 +398,7 @@ export default function AdminDashboard() {
                   <div>
                     <Label htmlFor="search">Search</Label>
                     <div className="relative">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Search className="absolute left-2 top-[12px] h-4 w-4 text-muted-foreground" />
                       <Input
                         id="search"
                         placeholder="Name, email, company..."
@@ -517,13 +527,40 @@ export default function AdminDashboard() {
                             <TableCell>{submission.email}</TableCell>
                             <TableCell>{submission.company}</TableCell>
                             <TableCell>{submission.tool}</TableCell>
-                            <TableCell>{new Date(submission.date).toLocaleDateString()}</TableCell>
+                            <TableCell>{formatCustomDate(submission.date)}</TableCell>
                             <TableCell>{submission.apiUsed}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
-                                <Button variant="outline" size="sm" title="View">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm" title="View">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-[70vw] max-h-[90vh] overflow-auto">
+
+                                    <div className="w-full  mx-auto mt-4" >
+                                      <Card className="mb-6 border-2">
+                                        <CardHeader className="bg-primary-red text-white rounded-t-lg">
+                                          <CardTitle className="text-2xl">{submission?.tool}</CardTitle>
+                                          <CardDescription className="text-gray-100">
+                                            Generated on {new Date().toLocaleDateString()}
+                                          </CardDescription>
+                                        </CardHeader>
+
+                                        <CardContent id="report-content" className="pt-6">
+                                          {submission?.generatedContent?.sections?.map((section: any, index: number) => (
+                                            <div key={index} className="mb-6">
+                                              <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
+                                              <p className="whitespace-pre-line">{formatBoldText(section.content)}</p>
+                                            </div>
+                                          ))}
+                                        </CardContent>
+                                      </Card>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1287,3 +1324,13 @@ export default function AdminDashboard() {
   )
 }
 
+
+function formatCustomDate(dateString) {
+  const date = new Date(dateString);
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = date.toLocaleString("en-US", { month: "short" });
+  const year = date.getFullYear();
+
+  return `${day} ${month}, ${year}`;
+}
