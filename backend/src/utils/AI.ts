@@ -70,7 +70,7 @@ export class AI {
                 this.ai = new OpenAI({ apiKey: apiProvider.apiKey });
                 break;
             case "Ollama (Self-hosted)":
-                this.ai = new OpenAI({ apiKey: apiProvider.apiKey, baseURL: "https://api.llmapi.com" });
+                // this.ai = new OpenAI({ apiKey: apiProvider.apiKey, baseURL: "https://api.llama-api.com/chat/completions" });
                 break;
             case "Perplexity":
                 this.ai = new OpenAI({ apiKey: apiProvider.apiKey, baseURL: "https://api.perplexity.ai" });
@@ -136,58 +136,42 @@ export class AI {
 
             }
 
-            // **********************
+            case "Ollama (Self-hosted)": { // Done
+                const url = "https://api.llama-api.com/chat/completions";
 
-            case "Groq (Groq)": {
-                return await this.fetchGroqAPI(prompt);
-            }
-
-            case "Ollama (Self-hosted)": {
-                const response = await this.ai.chat.completions.create({
+                const payload = {
                     model: this.apiProvider.model,
-                    messages: [{ role: "user", content: prompt }],
+                    messages: [
+                        { "role": "system", "content": "Assistant is a large language model trained by OpenAI." },
+                        { "role": "user", "content": prompt }
+                    ],
                     temperature: this.apiProvider.temperature,
                     max_tokens: this.apiProvider.maxTokens,
+                };
+
+                const response = await axios.post(url, payload, {
+                    headers: {
+                        Authorization: `Bearer ${this.apiProvider.apiKey}`
+                    },
                 });
-                return this.parseResponse(response.choices[0].message.content);
+                console.log(response.data)
+                return this.parseResponse(response.data.choices[0].message.content);
             }
+
+            // **********************
+
             case "Deepseek": {
-
+                return {
+                    error: "Deepseek is not supported yet"
+                }
             }
 
+            case "Groq (Groq)": {
+                return {
+                    error: "Groq is not supported yet"
+                }
+            }
         }
-    }
-
-    async fetchGroqAPI(prompt: string) {
-        const response = await axios.post(
-            "https://api.groq.com/v1/chat/completions",
-            {
-                model: this.apiProvider.model,
-                messages: [{ role: "user", content: prompt }],
-                temperature: this.apiProvider.temperature,
-                max_tokens: this.apiProvider.maxTokens,
-            },
-            {
-                headers: { Authorization: `Bearer ${this.apiProvider.apiKey}` },
-            }
-        );
-        return this.parseResponse(response.data.choices[0].message.content);
-    }
-
-    async fetchGenericAPI(prompt: string) {
-        const response = await axios.post(
-            "https://api.example.com/chat", // Replace with actual API endpoint
-            {
-                model: this.apiProvider.model,
-                messages: [{ role: "user", content: prompt }],
-                temperature: this.apiProvider.temperature,
-                max_tokens: this.apiProvider.maxTokens,
-            },
-            {
-                headers: { Authorization: `Bearer ${this.apiProvider.apiKey}` },
-            }
-        );
-        return this.parseResponse(response.data.choices[0].message.content);
     }
 
     parseResponse(content: string) {

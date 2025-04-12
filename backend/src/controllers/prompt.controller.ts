@@ -4,6 +4,7 @@ import Prompt, { PromptInterface } from "../models/prompt.model";
 import { asyncHandler } from "../utils/asyncHandler";
 import AiSettings from "../models/ai.model";
 import { AI, ApiProvider } from "../utils/AI";
+import Submission from "../models/submission.model";
 dotenv.config();
 
 export default class PromptController {
@@ -54,7 +55,19 @@ export default class PromptController {
             maxTokens: apiProvider.maxTokens
         });
 
+
         const response = await ai.generateResponse(genPrompt);
+
+        Submission.create({
+            name: req.user.userName,
+            email: req.user.email,
+            company: req.user.companyName,
+            tool: prompt.heading,
+            date: new Date(),
+            apiUsed: apiProvider.name,
+            questionsAndAnswers: questions,
+            generatedContent: response,
+        });
 
         res.status(HttpStatusCodes.OK).json({ message: 'Response generated successfully', data: response });
 

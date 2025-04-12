@@ -5,14 +5,14 @@ import { asyncHandler } from "../utils/asyncHandler";
 dotenv.config();
 
 const apiProviders = [
-    { name: "ChatGPT (OpenAI)", models: ["gpt-4o", "gpt-4o-mini", "gpt-4o-2024-04-09", "gpt-4o-2024-04-09-preview"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
-    { name: "Claude (Anthropic)", models: ["claude-3-opus-20240229", "claude-3-5-sonnet-20240620", "claude-3-5-sonnet-20240620-preview"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
+    { name: "ChatGPT (OpenAI)", models: ["gpt-4o", "gpt-4o-mini"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
+    { name: "Claude (Anthropic)", models: ["claude-3-opus-20240229", "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20240620"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
     { name: "Gemini (Google)", models: ["gemini-1.5-flash-latest", "gemini-1.5-flash-001", "gemini-1.5-flash-002"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
-    { name: "Grok (xAI)", models: ["grok-20240413", "grok-20240413-preview"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
-    { name: "Deepseek", models: ["deepseek-chat", "deepseek-chat-pro"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
-    { name: "Ollama (Self-hosted)", models: ["llama3.1", "llama3.1-70b-instruct", "llama3.1-8b-instruct", "llama3.1-8b-chat", "llama3.1-70b-chat", "llama3.1-70b-instruct", "llama3.1-8b-chat", "llama3.1-8b-instruct"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
-    { name: "Perplexity", models: ["perplexity-2024-04-09", "perplexity-2024-04-09-preview"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
-    { name: "Mistral", models: ["mistral-8x7b-instruct", "mistral-8x7b-instruct-preview"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
+    { name: "Grok (xAI)", models: [], apiKey: "", temperature: 0.5, maxTokens: 4096 },
+    { name: "Deepseek", models: [], apiKey: "", temperature: 0.5, maxTokens: 4096 },
+    { name: "Ollama (Self-hosted)", models: ["llama3.1-70b"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
+    { name: "Perplexity", models: ["perplexity-2024-04-09", "perplexity-2024-04-09-preview", "llama-3.1-sonar-small-128k-online"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
+    { name: "Mistral", models: ["mistral-large-latest"], apiKey: "", temperature: 0.5, maxTokens: 4096 },
 ]
 
 export default class AiSettingsController {
