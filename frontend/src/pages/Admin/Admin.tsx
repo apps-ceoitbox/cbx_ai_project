@@ -212,7 +212,9 @@ export default function AdminDashboard() {
     try {
       let res = await axios.get("/aiSettings");
       setApiProviders(res?.data?.data)
-      const defaultProvider = res?.data?.data?.find(p => p.name === selectedProviderName);
+      const defaultProvider = res?.data?.data?.find(p => {
+        return p.name === selectedProviderName
+      });
       if (defaultProvider) {
         setModels(defaultProvider.models || []);
         setSelectedModel(defaultProvider.models?.[0] || "");
@@ -348,20 +350,14 @@ export default function AdminDashboard() {
     })
   }
 
-  const handleViewReport = (id: string) => {
-    // In a real app, this would navigate to the specific report
-    console.log(`Viewing report ${id}`)
-  }
-
-  const handleDownloadReport = (id: string) => {
-    // In a real app, this would download the report
-    console.log(`Downloading report ${id}`)
-  }
 
   const handleEditPrompt = (promptId: string) => {
     const prompt = promptsData.find((p) => p._id === promptId)
     if (prompt) {
       setCurrentPrompt(prompt)
+      setSelectedProviderName(prompt.defaultAiProvider.name)
+      setSelectedModel(prompt.defaultAiProvider.model)
+      setModels(apiProviders.find(p => p.name === prompt.defaultAiProvider.name)?.models || [])
       setActiveTab("edit-prompt")
     }
   }
@@ -396,7 +392,6 @@ export default function AdminDashboard() {
     setCurrentPrompt((prev) => {
       const temp = { ...prev, questions: [...prev.questions] }
       temp.questions[index] = value
-      console.log(temp)
       return temp
     })
   }
@@ -1264,8 +1259,8 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-2 gap-4">
                       {/* Provider Dropdown */}
                       <Select onValueChange={handleProviderChange}
-                        // value={selectedProviderName}
-                        defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "ChatGPT (OpenAI)"}
+                        value={selectedProviderName}
+                        // defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "ChatGPT (OpenAI)"}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Provider" />
@@ -1282,8 +1277,9 @@ export default function AdminDashboard() {
 
                       {/* Model Dropdown */}
                       <Select onValueChange={handleModelChange}
-                        // value={selectedModel}
-                        defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}>
+                        value={selectedModel}
+                        // defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}
+                        >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Model" />
                         </SelectTrigger>

@@ -22,13 +22,13 @@ export const useData = () => {
 
 export const AppProvider = ({ children }) => {
   const [adminAuth, setAdminAuth] = useState({
-    token: localStorage.getItem("token"),
+    token: localStorage.getItem("adminToken"),
     user: null,
     isLoading: false,
   });
 
   const [userAuth, setUserAuth] = useState({
-    token: localStorage.getItem("token"),
+    token: localStorage.getItem("userToken"),
     user: null,
     isLoading: false,
   });

@@ -2,7 +2,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -85,6 +85,10 @@ export default function AdminLoginPage() {
         setAdminAuth(prev => ({ ...prev, isLoading: false }))
       }
     }
+  }
+
+  if (adminAuth.user) {
+    return <Navigate to="/admin" />
   }
 
   return (

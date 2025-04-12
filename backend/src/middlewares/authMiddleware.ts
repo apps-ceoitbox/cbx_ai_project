@@ -28,12 +28,13 @@ export const authenticateToken = async (
     const user = await User.findById(decoded.userId, { password: 0, googleRefreshToken: 0, isApproved: 0 }).lean();
     if (!user) {
       const admin = await Admin.findOne({ _id: decoded.userId }); 
-      console.log(admin, decoded.userId)
       if (!admin) {
         res.status(403).json({ message: "User not found" });
         return
       }
       req.user = admin;
+      next();
+      return
     }
     req.user = user; // Attach decoded token to request
     next(); // Proceed to the next middleware or route

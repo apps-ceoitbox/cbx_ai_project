@@ -10,22 +10,38 @@ import Footer from "./pages/Home/Footer"
 import NotFound from "./pages/NotFound"
 import { useEffect } from "react"
 import { useAxios, useData } from "./context/AppContext"
+import axios from "axios"
 
 function App() {
-  const { setUserAuth } = useData();
-  const axios = useAxios("user");
+  const { setUserAuth, setAdminAuth } = useData();
+  const userAxios = useAxios("user");
+  const adminAxios = useAxios("admin");
 
   useEffect(() => {
-    const token = localStorage.getItem("userToken")
-    if (token) {
+    const userToken = localStorage.getItem("userToken")
+    if (userToken) {
       setUserAuth(p => ({
         ...p,
         isLoading: true
       }))
-      axios.get("/users/getUser").then((res) => {
+      userAxios.get("/users/getUser").then((res) => {
         setUserAuth({
           user: res.data,
-          token: token,
+          token: userToken,
+          isLoading: false
+        })
+      })
+    }
+    const adminToken = localStorage.getItem("adminToken")
+    if (adminToken) {
+      setUserAuth(p => ({
+        ...p,
+        isLoading: true
+      }))
+      adminAxios.get("/users/getUser").then((res) => {
+        setAdminAuth({
+          user: res.data,
+          token: adminToken,
           isLoading: false
         })
       })
