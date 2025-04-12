@@ -6,38 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { FileText } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 
-// const tools = [
-//   {
-//     id: "business-plan",
-//     title: "Business Plan Generator",
-//     description: "Create a comprehensive business plan for your company",
-//     icon: FileText,
-//   },
-//   {
-//     id: "weekly-schedule",
-//     title: "Weekly Schedule Creator",
-//     description: "Organize your week with an AI-generated schedule",
-//     icon: Calendar,
-//   },
-//   {
-//     id: "lead-nurturing",
-//     title: "Lead Nurturing Creator",
-//     description: "Develop strategies to nurture and convert leads",
-//     icon: Users,
-//   },
-//   {
-//     id: "purpose-master",
-//     title: "Purpose Master",
-//     description: "Define and refine your business purpose and mission",
-//     icon: Target,
-//   },
-//   {
-//     id: "core-values",
-//     title: "Core Values Generator",
-//     description: "Identify and articulate your organization's core values",
-//     icon: Heart,
-//   },
-// ]
+
 
 export interface PromptInterface {
   _id: string;
@@ -96,7 +65,7 @@ export default function Dashboard() {
               <div className="font-medium">{userAuth.user.name}</div>
               <div className="text-gray-300">{userAuth.user.company}</div>
             </div>
-            <Button variant="outline" className="text-black border-white hover:bg-primary-red" onClick={() => {
+            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
               localStorage.removeItem("userToken")
               setUserAuth(p => ({ ...p, user: null, token: null }))
               nav("/login")

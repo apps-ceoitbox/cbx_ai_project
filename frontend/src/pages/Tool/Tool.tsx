@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
-import { useAuth } from "@/lib/auth"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,7 +22,7 @@ export default function ToolQuestionsPage() {
   const axios = useAxios("user");
   const nav = useNavigate();
   const params = useParams();
-  const { userAuth, generateResponse, setGenerateResponse } = useData()
+  const { userAuth, setUserAuth, generateResponse, setGenerateResponse } = useData();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -110,24 +109,25 @@ export default function ToolQuestionsPage() {
               <div className="font-medium">{userAuth?.user?.name}</div>
               <div className="text-gray-300">{userAuth?.user?.company}</div>
             </div>
-            <Button
-              variant="outline"
-              className="text-white border-white hover:bg-primary-red"
-              onClick={() => nav("/dashboard")}
-            >
-              Dashboard
+            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
+              localStorage.removeItem("userToken")
+              setUserAuth(p => ({ ...p, user: null, token: null }))
+              nav("/login")
+            }}>
+              Logout
             </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto py-8 px-4">
-        <div className="flex items-center mb-8">
-          <Button variant="ghost" className="mr-4" onClick={() => nav("/dashboard")}>
+        <div className="flex items-center justify-between mb-8" >
+          <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4" onClick={() => nav("/dashboard")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">{tool?.heading}</h1>
+          <h1 style={{ minWidth: "100px" }} className="text-2xl font-bold">{tool?.heading}</h1>
+          <div style={{ minWidth: "100px" }}></div>
         </div>
 
         <div className="w-full max-w-2xl mx-auto">

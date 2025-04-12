@@ -9,10 +9,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Logo } from "@/components/logo"
 import { useAxios, useData } from "@/context/AppContext"
 import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const nav = useNavigate();
   const { userAuth, setUserAuth } = useData();
+  const { isLoading } = userAuth || {};
   const axios = useAxios("user");
   const [formData, setFormData] = useState({
     userName: "",
@@ -64,9 +66,9 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0
   }
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     try {
       if (validateForm()) {
         setUserAuth(p => ({ ...p, isLoading: true }))
@@ -79,12 +81,15 @@ export default function LoginPage() {
             isLoading: false
           }
         })
+
         localStorage.setItem("userToken", res?.data?.token);
-        toast(res?.data?.message)
+        toast.success(res?.data?.message)
+        nav("/dashboard")
       }
     } catch (error) {
-      console.log(error);
-      toast("Something went wrong");
+      console.error("Login error:", error);
+      toast.error("Something went wrong");
+      setUserAuth(p => ({ ...p, isLoading: false }))
     }
   }
 
@@ -173,7 +178,14 @@ export default function LoginPage() {
               <Button
                 disabled={!formData.userName || !formData.email || !formData.companyName || !formData.mobile}
                 onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
-                Login
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </CardFooter>
             <div className="py-2">

@@ -23,6 +23,7 @@ import {
   X,
   Edit,
   Trash,
+  Eye,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -202,12 +203,12 @@ export default function AdminDashboard() {
   const updateApiProviders = async () => {
     try {
       await axios.patch("/aiSettings", apiProviders)
-      toast("Ai Provider Settings Updated");
+      toast.success("Ai Provider Settings Updated");
       setActiveTab('ai-settings');
       getApiProviders();
     } catch (error) {
       console.log(error)
-      toast("Something went wrong")
+      toast.error("Something went wrong")
     }
 
   }
@@ -222,17 +223,17 @@ export default function AdminDashboard() {
     try {
       if (currentPrompt?._id) {
         await axios.patch("/prompt/" + currentPrompt?._id, currentPrompt)
-        toast("Prompt Update Successfully!")
+        toast.success("Template Update Successfully!")
 
       } else {
         await axios.post("/prompt", currentPrompt)
-        toast("Prompt Saved Successfully!")
+        toast.success("Template Saved Successfully!")
       }
       setActiveTab('manage-prompts');
       getPrompts();
     } catch (error) {
       console.log(error)
-      toast("Something went wrong")
+      toast.error("Something went wrong")
     }
 
   }
@@ -551,7 +552,7 @@ export default function AdminDashboard() {
                         <TableHead>Tool</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>API Used</TableHead>
-                        {/* <TableHead>Actions</TableHead> */}
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -564,6 +565,13 @@ export default function AdminDashboard() {
                             <TableCell>{submission.tool}</TableCell>
                             <TableCell>{new Date(submission.date).toLocaleDateString()}</TableCell>
                             <TableCell>{submission.apiUsed}</TableCell>
+                            <TableCell>
+                              <div className="flex space-x-2">
+                                <Button variant="outline" size="sm" title="View">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : (
@@ -747,7 +755,7 @@ export default function AdminDashboard() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Prompt Name</TableHead>
+                          <TableHead>Template Name</TableHead>
                           <TableHead>Objective</TableHead>
                           <TableHead>Default AI</TableHead>
                           <TableHead>Created</TableHead>

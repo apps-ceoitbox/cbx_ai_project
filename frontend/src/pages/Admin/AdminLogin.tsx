@@ -8,14 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
-import { Toaster } from "@/components/ui/toaster"
 import { useAxios, useData } from "@/context/AppContext"
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 export default function AdminLoginPage() {
-  const nav = useNavigate()
-  const { toast } = useToast()
-  const { setAdminAuth } = useData()
+  const nav = useNavigate();
+  const { setAdminAuth, adminAuth } = useData();
+  const { isLoading } = adminAuth || {};
   const axios = useAxios("admin")
   const [credentials, setCredentials] = useState({
     email: "",
@@ -54,32 +54,36 @@ export default function AdminLoginPage() {
     return Object.keys(newErrors).length === 0
   }
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
-      // For demo purposes, hardcoded admin credentials
-      // In a real app, this would be a server-side authentication
+      try {
+        setAdminAuth(prev => ({ ...prev, isLoading: true }))
 
-      setAdminAuth(p => ({ ...p, isLoading: true }))
-      const response = await axios.post("/auth/admin/login", credentials);
-      if (response.status != 200) {
-        setAdminAuth(p => ({ ...p, isLoading: false }))
-        toast({
-          title: "Authentication Failed",
-          description: "Invalid email or password",
-          variant: "destructive",
+        const response = await axios.post("/auth/admin/login", credentials);
+
+        if (response.status !== 200) {
+          toast.error("Invalid email or password")
+          return
+        }
+
+        setAdminAuth({
+          token: response.data.token,
+          user: response.data.user,
+          isLoading: false,
         })
-        return
+
+        toast.success("Login successful")
+        localStorage.setItem("adminToken", response.data.token)
+        nav("/admin")
+      } catch (error) {
+        toast.error(error?.response?.data?.me)
+        console.error("Login error:", error)
+      } finally {
+        setAdminAuth(prev => ({ ...prev, isLoading: false }))
       }
-      setAdminAuth({
-        token: response.data.token,
-        user: response.data.user,
-        isLoading: false,
-      })
-      console.log(response)
-      localStorage.setItem("adminToken", response.data.token)
-      nav("/admin")
     }
   }
 
@@ -89,7 +93,7 @@ export default function AdminLoginPage() {
         <Logo size="lg" className="mb-8" />
       </div>
       <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
-        <Toaster />
+
         <div className="w-full max-w-md">
           {/* <div className="flex justify-center mb-8">
           <Logo size="lg" />
@@ -135,7 +139,14 @@ export default function AdminLoginPage() {
               <Button
                 disabled={!credentials.password || !credentials.email}
                 onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
-                Login as Admin
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login as Admin"
+                )}
               </Button>
             </CardFooter>
 

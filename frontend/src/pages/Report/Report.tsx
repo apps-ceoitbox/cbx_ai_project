@@ -1,15 +1,16 @@
-"use client"
 
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
-import { useAuth } from "@/lib/auth"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Download, Mail, FileText, Loader2 } from "lucide-react"
 import { toolsData } from "@/lib/tools"
-import { useToast } from "@/components/ui/use-toast"
 import { useData } from "@/context/AppContext"
+import html2pdf from 'html2pdf.js'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx"
+import { saveAs } from "file-saver"
+import { toast } from "sonner"
 
 // Sample report data
 function formatBoldText(text) {
@@ -24,12 +25,11 @@ function formatBoldText(text) {
 
 
 export default function ReportPage() {
-  const nav = useNavigate()
-  const params = useParams()
-  const { userAuth, generateResponse } = useData()
-  const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(true)
-  const [report, setReport] = useState<any>(null)
+  const nav = useNavigate();
+  const params = useParams();
+  const { userAuth, generateResponse } = useData();
+  const [isLoading, setIsLoading] = useState(true);
+  const [report, setReport] = useState<any>(null);
 
   const toolId = params.toolId as string
   const tool = toolsData[toolId]
@@ -46,27 +46,115 @@ export default function ReportPage() {
   }, [userAuth?.user, tool, toolId, nav])
 
   const handleDownloadPDF = () => {
-    // Simulate PDF download
-    toast({
-      title: "PDF Downloaded",
-      description: "Your report has been downloaded as a PDF file.",
-    })
+
+    // Get the report content element
+    const reportElement = document.getElementById('report-content')
+
+    if (!reportElement) {
+      toast.error("Could not generate PDF. Please try again.")
+      return
+    }
+
+    // Configure PDF options
+    const options = {
+      margin: [10, 10, 10, 10],
+      filename: `${tool?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }
+
+    // Generate and download PDF
+    html2pdf()
+      .set(options)
+      .from(reportElement)
+      .save()
+      .then(() => {
+        toast.success("PDF Downloaded")
+      })
+      .catch(error => {
+        console.error("PDF generation error:", error)
+        toast.error("Failed to download PDF. Please try again.")
+      })
   }
 
   const handleDownloadDOCX = () => {
-    // Simulate DOCX download
-    toast({
-      title: "DOCX Downloaded",
-      description: "Your report has been downloaded as a DOCX file.",
-    })
+    if (!report) {
+      toast.error("No report data available.")
+      return
+    }
+
+    try {
+      // Create a new Document
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            new Paragraph({
+              text: report.title,
+              heading: HeadingLevel.TITLE,
+              thematicBreak: true,
+            }),
+            new Paragraph({
+              text: `Generated on ${new Date().toLocaleDateString()}`,
+              style: "Normal",
+            }),
+          ]
+        }]
+      })
+
+      // Create an array to hold all section paragraphs
+      const sectionParagraphs = []
+
+      // Add each section as paragraphs
+      report.sections.forEach(section => {
+        // Strip markdown bold syntax from strings for DOCX
+        const title = section.title.replace(/\*\*/g, '')
+        const content = section.content.replace(/\*\*/g, '')
+
+        sectionParagraphs.push(
+          new Paragraph({
+            text: title,
+            heading: HeadingLevel.HEADING_2,
+            spacing: {
+              before: 400,
+              after: 200,
+            },
+          })
+        )
+
+        sectionParagraphs.push(
+          new Paragraph({
+            text: content,
+            style: "Normal",
+          })
+        )
+      })
+
+      // Add a new section with all content
+      doc.addSection({
+        children: sectionParagraphs
+      })
+
+      // Generate and download DOCX
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, `${tool?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
+        toast.success("DOCX Downloaded")
+      }).catch(error => {
+        console.error("DOCX generation error:", error)
+        toast.error("Failed to export DOCX. Please try again.")
+
+      })
+    } catch (error) {
+      console.error("DOCX generation error:", error)
+      toast.error("Failed to create DOCX. Please try again.")
+
+    }
   }
 
+
   const handleSendEmail = () => {
-    // Simulate sending email
-    toast({
-      title: "Email Sent",
-      description: `Your report has been sent to ${userAuth?.user?.email}`,
-    })
+    toast.success(`Your report has been sent to ${userAuth?.user?.email}`)
   }
 
   if (!userAuth?.user) {
@@ -85,7 +173,7 @@ export default function ReportPage() {
             </div>
             <Button
               variant="outline"
-              className="text-white border-white hover:bg-primary-red"
+              className="text-black border-white hover:bg-primary-red hover:text-white"
               onClick={() => nav("/dashboard")}
             >
               Dashboard
@@ -95,12 +183,13 @@ export default function ReportPage() {
       </header>
 
       <main className="container mx-auto py-8 px-4">
-        <div className="flex items-center mb-8">
-          <Button variant="ghost" className="mr-4" onClick={() => nav("/dashboard")}>
+        <div className="flex items-center justify-between mb-8">
+          <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4" onClick={() => nav("/dashboard")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">{tool ? tool.title : "Report"} Results</h1>
+          <h1 style={{ minWidth: "100px" }} className="text-2xl font-bold">{tool ? tool.title : "Report"} Results</h1>
+          <div style={{ minWidth: "100px" }} ></div>
         </div>
 
         {isLoading ? (
@@ -118,8 +207,8 @@ export default function ReportPage() {
                 </CardDescription>
               </CardHeader>
 
-              <CardContent className="pt-6">
-                {report.sections.map((section: any, index: number) => (
+              <CardContent id="report-content" className="pt-6">
+                {report?.sections?.map((section: any, index: number) => (
                   <div key={index} className="mb-6">
                     <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
                     <p className="whitespace-pre-line">{formatBoldText(section.content)}</p>
