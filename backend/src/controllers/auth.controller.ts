@@ -89,6 +89,13 @@ export default class AuthController {
             return
         }
 
+        const license = await checkLicense("AI_TEMLATE_GENERATOR", email);
+
+        if (!license) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'Invalid license' });
+            return
+        }
+
         // Check if the user exists
         const user = await User.findOne({ email }).lean();
 
@@ -112,3 +119,19 @@ export default class AuthController {
     })
 
 }
+
+import axios from "axios";
+
+export const checkLicense = async (appName: string, email: string) => {
+  try {
+    const url = `https://auth.ceoitbox.com/checkauth/${appName}/${email}/${appName}/NA/NA`;
+
+    const response = await axios.get(url);
+    const data = response.data;
+
+    return data.valid === "Active";
+  } catch (error) {
+    console.error("Error verifying license:", error.message);
+    return false;
+  }
+};
