@@ -146,7 +146,7 @@ export default function AdminDashboard() {
   const { adminAuth } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
-  const [submissions, setSubmissions] = useState(submissionsData);
+  const [submissions, setSubmissions] = useState([]);
   const [apiProviders, setApiProviders] = useState<AiSettingsInterface[]>([]);
   const [promptsData, setPromptsData] = useState<PromptInterface[]>([]);
   const [selectedProviderName, setSelectedProviderName] = useState("ChatGPT (OpenAI)");
@@ -167,12 +167,10 @@ export default function AdminDashboard() {
     }
   };
 
-
   const handleModelChange = (model: string) => {
     setSelectedModel(model);
     handleAiProviderAndModelChange(selectedProviderName, model);
   };
-
 
   const [filters, setFilters] = useState({
     tool: "",
@@ -181,6 +179,7 @@ export default function AdminDashboard() {
     api: "",
     search: "",
   })
+
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
 
 
@@ -196,8 +195,18 @@ export default function AdminDashboard() {
   // Handle form submission
   const handleFormSubmit = (e) => {
     e.preventDefault();
-
   };
+
+  const getAllUsersSubmissionsData = async () => {
+    try {
+      const res = await axios.get("/submission");
+      setSubmissions(res?.data?.data)
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
+
 
   const getApiProviders = async () => {
     try {
@@ -233,8 +242,6 @@ export default function AdminDashboard() {
     })
   }
 
-
-
   const handleSaveOrCreatePrompt = async () => {
     try {
       if (currentPrompt?._id) {
@@ -263,7 +270,7 @@ export default function AdminDashboard() {
     if (!adminAuth.user) {
       nav("/admin/login")
     }
-
+    getAllUsersSubmissionsData();
     getApiProviders()
     getPrompts()
   }, [adminAuth.user])
