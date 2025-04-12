@@ -353,6 +353,7 @@ export default function AdminDashboard() {
               className="bg-transparent text-white border-white hover:bg-primary-red hover:text-white"
               onClick={() => {
                 localStorage.removeItem("adminAuthenticated")
+
                 nav("/admin/login")
               }}
             >
