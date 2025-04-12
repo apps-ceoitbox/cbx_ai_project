@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,6 +25,7 @@ import {
   Trash,
   Eye,
   ArrowLeft,
+  Download,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -46,6 +47,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { formatBoldText } from "../Report/Report"
+import html2pdf from 'html2pdf.js'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx"
+import { saveAs } from "file-saver"
 
 
 export interface AiSettingsInterface {
@@ -337,6 +341,113 @@ export default function AdminDashboard() {
     })
   }
 
+
+  // Fixed PDF download function
+  const handleDownloadPDF = (submission) => {
+    // Get the report content element
+    const reportElement = document.getElementById('report-content')
+
+    if (!reportElement) {
+      toast.error("Could not generate PDF. Please try again.")
+      return
+    }
+
+    // Configure PDF options
+    const options = {
+      margin: [10, 10, 10, 10],
+      filename: `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }
+
+    // Generate and download PDF
+    html2pdf()
+      .set(options)
+      .from(reportElement)
+      .save()
+      .then(() => {
+        toast.success("PDF Downloaded")
+      })
+      .catch(error => {
+        console.error("PDF generation error:", error)
+        toast.error("Failed to download PDF. Please try again.")
+      })
+  }
+
+  // Fixed DOCX download function
+  const handleDownloadDOCX = (submission) => {
+    if (!submission?.generatedContent) {
+      toast.error("No report data available.")
+      return
+    }
+
+    try {
+      // Create a new Document
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            new Paragraph({
+              text: submission.tool || "Report",
+              heading: HeadingLevel.TITLE,
+              thematicBreak: true,
+            }),
+            new Paragraph({
+              text: `Generated on ${new Date().toLocaleDateString()}`,
+              style: "Normal",
+            }),
+          ]
+        }]
+      })
+
+      // Create an array to hold all section paragraphs
+      const sectionParagraphs = []
+
+      // Add each section as paragraphs
+      submission.generatedContent.sections.forEach(section => {
+        // Strip markdown bold syntax from strings for DOCX
+        const title = section.title.replace(/\*\*/g, '')
+        const content = section.content.replace(/\*\*/g, '')
+
+        sectionParagraphs.push(
+          new Paragraph({
+            text: title,
+            heading: HeadingLevel.HEADING_2,
+            spacing: {
+              before: 400,
+              after: 200,
+            },
+          })
+        )
+
+        sectionParagraphs.push(
+          new Paragraph({
+            text: content,
+            style: "Normal",
+          })
+        )
+      })
+
+      // Add a new section with all content
+      doc.addSection({
+        children: sectionParagraphs
+      })
+
+      // Generate and download DOCX
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
+        toast.success("DOCX Downloaded")
+      }).catch(error => {
+        console.error("DOCX generation error:", error)
+        toast.error("Failed to export DOCX. Please try again.")
+      })
+    } catch (error) {
+      console.error("DOCX generation error:", error)
+      toast.error("Failed to create DOCX. Please try again.")
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50" >
       <header className="bg-black text-white p-4 shadow-md">
@@ -567,6 +678,24 @@ export default function AdminDashboard() {
                                             </div>
                                           ))}
                                         </CardContent>
+                                        <CardFooter className="flex flex-wrap gap-4 justify-center">
+                                          <Button
+                                            variant="outline"
+                                            className="flex items-center"
+                                            onClick={() => handleDownloadPDF(submission)}
+                                          >
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Download PDF
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            className="flex items-center"
+                                            onClick={() => handleDownloadDOCX(submission)}
+                                          >
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            Export DOCX
+                                          </Button>
+                                        </CardFooter>
                                       </Card>
                                     </div>
                                   </DialogContent>
@@ -592,7 +721,6 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-
 
 
           <TabsContent value="ai-settings">
@@ -1112,7 +1240,6 @@ export default function AdminDashboard() {
                       {/* Provider Dropdown */}
                       <Select onValueChange={handleProviderChange}
                         value={selectedProviderName}
-                      // defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "ChatGPT (OpenAI)"}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Provider" />
@@ -1130,7 +1257,6 @@ export default function AdminDashboard() {
                       {/* Model Dropdown */}
                       <Select onValueChange={handleModelChange}
                         value={selectedModel}
-                      // defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Model" />
@@ -1183,6 +1309,7 @@ export default function AdminDashboard() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+
                     <div className="space-x-2">
                       <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
                         Cancel
@@ -1191,13 +1318,12 @@ export default function AdminDashboard() {
                         Update Prompt
                       </Button>
                     </div>
+
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-
-
         </Tabs>
       </main>
     </div >

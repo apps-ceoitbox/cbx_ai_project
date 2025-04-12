@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Logo } from "@/components/logo"

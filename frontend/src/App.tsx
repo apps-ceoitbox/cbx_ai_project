@@ -18,7 +18,7 @@ function App() {
   const adminAxios = useAxios("admin");
 
   useEffect(() => {
-    const userToken = localStorage.getItem("userToken")
+    const userToken = localStorage.getItem("userToken");
     if (userToken) {
       setUserAuth(p => ({
         ...p,
@@ -32,7 +32,7 @@ function App() {
         })
       })
     }
-    const adminToken = localStorage.getItem("adminToken")
+    const adminToken = localStorage.getItem("adminToken");
     if (adminToken) {
       setUserAuth(p => ({
         ...p,
