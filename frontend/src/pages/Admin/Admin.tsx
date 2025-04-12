@@ -43,10 +43,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { formatBoldText } from "../Report/Report"
@@ -89,7 +85,7 @@ interface DefaultAiProvider {
 export default function AdminDashboard() {
   const nav = useNavigate()
   const axios = useAxios("admin")
-  const { adminAuth } = useData();
+  const { adminAuth, setAdminAuth } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [submissions, setSubmissions] = useState([]);
@@ -352,8 +348,12 @@ export default function AdminDashboard() {
               variant="outline"
               className="bg-transparent text-white border-white hover:bg-primary-red hover:text-white"
               onClick={() => {
-                localStorage.removeItem("adminAuthenticated")
-
+                localStorage.removeItem("adminToken")
+                setAdminAuth({
+                  user: null,
+                  token: null,
+                  isLoading: false
+                })
                 nav("/admin/login")
               }}
             >
@@ -1017,7 +1017,7 @@ export default function AdminDashboard() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={(e) => {
+                                onClick={() => {
                                   handleUpdateQuestions(currentPrompt.questions.filter((_, i) => i !== index))
                                 }}
                               >
@@ -1178,7 +1178,7 @@ export default function AdminDashboard() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={(e) => {
+                                onClick={() => {
                                   handleUpdateQuestions(currentPrompt.questions.filter((_, i) => i !== index))
                                 }}
                               >

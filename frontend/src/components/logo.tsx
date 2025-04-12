@@ -7,7 +7,7 @@ interface LogoProps {
   size: string
 }
 
-export function Logo({ className, size = "md", width = 180, height = 50 }: LogoProps) {
+export function Logo({ className, size = "md" }: LogoProps) {
   const sizeClasses = {
     sm: "h-8",
     md: "h-12",

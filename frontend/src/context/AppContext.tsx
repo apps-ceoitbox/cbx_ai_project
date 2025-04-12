@@ -2,11 +2,22 @@ import { createContext, useContext, useState } from "react";
 import axios from "axios";
 const AppContext = createContext({});
 
-const apiUrl = window.location.href.includes("localhost") ? "http://localhost" : "https://api.prompt-ai.com";
+function getURL(link) {
+  const parsedURL = new URL(link);
 
+  // Get the protocol and hostname to create the base URL
+  const baseURL = `${parsedURL.protocol}//${parsedURL.hostname}`;
+
+  return baseURL;
+}
+
+
+const currentURL = window.location.href;
+// let apiLink = `${getURL(currentURL)}/`;
+let apiLink = `${getURL(currentURL)}/api/`;
 export const useAxios = (tokenType: "admin" | "user") => {
   const axiosInstance = axios.create({
-    baseURL: `${apiUrl}/api`,
+    baseURL: `${apiLink}`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${localStorage.getItem(tokenType === "admin" ? "adminToken" : "userToken")}`,

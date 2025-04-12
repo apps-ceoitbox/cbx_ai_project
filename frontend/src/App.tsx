@@ -10,7 +10,6 @@ import Footer from "./pages/Home/Footer"
 import NotFound from "./pages/NotFound"
 import { useEffect } from "react"
 import { useAxios, useData } from "./context/AppContext"
-import axios from "axios"
 
 function App() {
   const { setUserAuth, setAdminAuth } = useData();
