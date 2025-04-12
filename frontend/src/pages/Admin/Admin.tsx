@@ -24,10 +24,24 @@ import {
   Edit,
   Trash,
   Eye,
+  Trash2,
+  ArrowLeft,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
 import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog"
+
 
 export interface AiSettingsInterface {
   _id: string;
@@ -775,9 +789,7 @@ export default function AdminDashboard() {
                             <TableCell>{new Date(prompt.updatedAt).toLocaleDateString()}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
-                                {/* <Button variant="outline" size="sm" title="View">
-                                  <Eye className="h-4 w-4" />
-                                </Button> */}
+
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -786,12 +798,41 @@ export default function AdminDashboard() {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                {/* <Button variant="outline" size="sm" title="Documentation">
-                                  <FileText className="h-4 w-4" />
-                                </Button> */}
-                                <Button variant="outline" size="sm" className="text-red-500" title="Remove">
-                                  <Trash className="h-4 w-4" />
-                                </Button>
+
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this template? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => {
+                                          axios.delete(`/prompt/${prompt._id}`)
+                                            .then(() => {
+                                              toast.success("Template deleted successfully");
+                                              getPrompts();
+                                            })
+                                            .catch(error => {
+                                              console.error(error);
+                                              toast.error("Failed to delete template");
+                                            });
+                                        }}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -805,9 +846,18 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="create-prompt">
+
             <Card>
               <CardHeader>
-                <CardTitle>{activeTab === "create-prompt" ? "Edit Prompt" : "Create Template"}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>{activeTab === "create-prompt" ? "Edit Template" : "Create Template"}</CardTitle>
+                  <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4"
+                    onClick={() => setActiveTab('manage-prompts')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                </div>
+
                 <CardDescription>
                   {currentPrompt ? "Modify an existing prompt template" : "Design a new prompt template for your tools"}
                 </CardDescription>
@@ -957,9 +1007,17 @@ export default function AdminDashboard() {
           <TabsContent value="edit-prompt">
             <Card>
               <CardHeader>
-                <CardTitle>{"Edit Prompt"}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>{"Edit Template"}</CardTitle>
+                  <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4"
+                    onClick={() => setActiveTab('manage-prompts')}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                </div>
+
                 <CardDescription>
-                  "Modify an existing prompt template"
+                  Modify an existing prompt template
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1147,7 +1205,7 @@ export default function AdminDashboard() {
 
         </Tabs>
       </main>
-    </div>
+    </div >
   )
 }
 
