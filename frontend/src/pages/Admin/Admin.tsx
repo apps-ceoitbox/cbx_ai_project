@@ -336,7 +336,6 @@ export default function AdminDashboard() {
       return temp
     })
   }
-  console.log(filters.api)
 
   return (
     <div className="min-h-screen bg-gray-50" >
@@ -606,7 +605,7 @@ export default function AdminDashboard() {
                 <form onSubmit={handleFormSubmit}>
                   <div className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
                     {apiProviders?.map((provider, index) => {
-                      const isExpanded = JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.name] !== false;
+                      const isExpanded = JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.name] == true || false;
 
                       return (
                         <div key={provider.name} className={`border rounded-md overflow-hidden ${isExpanded ? "md:col-span-2 xl:col-span-2" : ""}`}>
