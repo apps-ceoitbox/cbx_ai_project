@@ -16,7 +16,6 @@ import UnauthorizedModal from "./UnauthorizedModal"
 export default function LoginPage() {
   const nav = useNavigate();
   const { userAuth, setUserAuth } = useData();
-  const { isLoading } = userAuth || {};
   const axios = useAxios("user");
   const [formData, setFormData] = useState({
     userName: "",
@@ -197,7 +196,7 @@ export default function LoginPage() {
               <Button
                 disabled={!formData.userName || !formData.email}
                 onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
-                {isLoading ? (
+                {userAuth.isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Logging in...

@@ -12,166 +12,126 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const checkEmail = (email: string) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return !emailRegex.test(email);
-};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return !emailRegex.test(email);
+}
 
 export default class AuthController {
-  // Method to register a new user
-  static adminRegister = asyncHandler(
-    async (req: Request, res: Response): Promise<void> => {
-      const { email, userName, password } = req.body;
 
-      if (!email || !userName || !password) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({
-            message: "Username, email and password fields are required",
-          });
-        return;
-      }
+    // Method to register a new user
+    static adminRegister = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+        const { email, userName, password } = req.body;
 
-      const existingUser = await Admin.findOne({ email }).lean();
+        if (!email || !userName || !password) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ message: 'Username, email and password fields are required' });
+            return
+        }
 
-      if (existingUser) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ message: "User already exists" });
-        return;
-      }
+        const existingUser = await Admin.findOne({ email }).lean();
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
+        if (existingUser) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ message: 'User already exists' });
+            return
+        }
 
-      // Create new user
-      const newUser = new Admin({ email, userName, password: hashedPassword });
-      await newUser.save();
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10,);
 
-      res
-        .status(HttpStatusCodes.CREATED)
-        .json({ message: "User registered successfully" });
-    }
-  );
+        // Create new user
+        const newUser = new Admin({ email, userName, password: hashedPassword });
+        await newUser.save();
 
-  // Method to register a new user
-  static adminLogin = asyncHandler(
-    async (req: Request, res: Response): Promise<void> => {
-      const { email, password } = req.body;
+        res.status(HttpStatusCodes.CREATED).json({ message: 'User registered successfully' });
+    })
 
-      if (!email || !password) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ message: "Email and password fields are required" });
-        return;
-      }
+    // Method to register a new user
+    static adminLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+        const { email, password } = req.body;
 
-      // Check if the user exists
-      const user = await Admin.findOne({ email }).lean();
-      if (!user) {
-        res
-          .status(HttpStatusCodes.NOT_FOUND)
-          .json({ message: "User not found" });
-        return;
-      }
+        if (!email || !password) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ message: 'Email and password fields are required' });
+            return
+        }
 
-      // Compare the password
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ message: "Invalid credentials" });
-        return;
-      }
+        // Check if the user exists
+        const user = await Admin.findOne({ email }).lean();
+        if (!user) {
+            res.status(HttpStatusCodes.NOT_FOUND).json({ message: 'User not found' });
+            return
+        }
 
-      // Generate JWT
-      const token = jwt.sign({ userId: user._id }, JWT_SECRET);
-      delete user.password;
+        // Compare the password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ message: 'Invalid credentials' });
+            return
+        }
 
-      await AiSettingsController.createAiEntries();
+        // Generate JWT
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET );
+        delete user.password;
 
-      res
-        .status(HttpStatusCodes.OK)
-        .json({ message: "Login successful", token, user });
-    }
-  );
+        await AiSettingsController.createAiEntries();
 
-  // Method to login a new user
-  static userLogin = asyncHandler(
-    async (req: Request, res: Response): Promise<void> => {
-      const { userName, email, companyName, mobile } =
-        req.body as UserInterface;
+        res.status(HttpStatusCodes.OK).json({ message: 'Login successful', token, user });
+    })
 
-      if (!userName || !email) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ error: "All fields are required" });
-        return;
-      }
-      if (checkEmail(email)) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ error: "Invalid email" });
-        return;
-      }
+    // Method to login a new user
+    static userLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+        const { userName, email, companyName="", mobile=0 } = req.body as UserInterface;
 
-      const license = await checkLicense("AI_TEMLATE_GENERATOR", email);
+        if (!userName || !email) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'All fields are required' });
+            return
+        }
+        if (checkEmail(email)) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'Invalid email' });
+            return
+        }
 
-      if (!license) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ error: "Invalid license" });
-        return;
-      }
+        const license = await checkLicense("AI_TEMPLATE_GENERATOR", email);
 
-      // Check if the user exists
-      const user = await User.findOne({ email }).lean();
+        if (!license) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'Invalid license' });
+            return
+        }
 
-      if (!user) {
-        let newUser = await User.create({
-          userName,
-          email,
-          companyName,
-          mobile,
+        // Check if the user exists
+        const user = await User.findOne({ email }).lean();
+
+        if (!user) {
+            let newUser = await User.create({ userName, email, companyName, mobile });
+
+            const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, {
+                expiresIn: '1h',
+            });
+
+            res.status(HttpStatusCodes.CREATED).json({ message: 'User registered successfully', data: newUser, token });
+            return
+        }
+
+        // Generate JWT
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+            expiresIn: '1h',
         });
 
-        const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, {
-          expiresIn: "1h",
-        });
+        res.status(HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user });
+    })
 
-        res
-          .status(HttpStatusCodes.CREATED)
-          .json({
-            message: "User registered successfully",
-            data: newUser,
-            token,
-          });
-        return;
-      }
-
-      // Generate JWT
-      const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
-        expiresIn: "1h",
-      });
-
-      res
-        .status(HttpStatusCodes.OK)
-        .json({ message: "Login successful", token, data: user });
-    }
-  );
 }
 
 import axios from "axios";
 
 export const checkLicense = async (appName: string, email: string) => {
-  try {
-    const url = `https://auth.ceoitbox.com/checkauth/${appName}/${email}/${appName}/NA/NA`;
+    try {
+        const url = `https://auth.ceoitbox.com/checkauth/${appName}/${email}/${appName}/NA/NA`;
 
-    const response = await axios.get(url);
-    const data = response.data;
+        const response = await axios.get(url);
+        const data = response.data;
 
     return data.valid === "Active";
   } catch (error) {
     console.error("Error verifying license:", error.message);
     return false;
-  }
+  }
 };

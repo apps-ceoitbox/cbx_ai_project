@@ -34,7 +34,7 @@ function App() {
     }
     const adminToken = localStorage.getItem("adminToken");
     if (adminToken) {
-      setUserAuth(p => ({
+      setAdminAuth(p => ({
         ...p,
         isLoading: true
       }))
