@@ -1100,11 +1100,12 @@ export default function AdminDashboard() {
                           <SelectValue placeholder="Select Provider" />
                         </SelectTrigger>
                         <SelectContent>
-                          {apiProviders?.map((provider) => (
-                            <SelectItem key={provider._id} value={provider.name}>
+                          {apiProviders?.map((provider) => {
+                            if (provider.models.length === 0 || !provider.apiKey) return ""
+                            return <SelectItem key={provider._id} value={provider.name}>
                               {provider.name}
                             </SelectItem>
-                          ))}
+                          })}
                         </SelectContent>
                       </Select>
 
@@ -1252,72 +1253,39 @@ export default function AdminDashboard() {
 
                   <div className="space-y-2">
                     <Label>Default AI Provider & Model</Label>
-                    {/* <div className="grid grid-cols-2 gap-4">
-                      <Select 
-                      onValueChange={(value) => handleAiProviderAndModelChange(value, currentPrompt?.defaultAiProvider.model)} defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "openai"}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Provider" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="openai">OpenAI</SelectItem>
-                          <SelectItem value="anthropic">Anthropic</SelectItem>
-                          <SelectItem value="google">Google</SelectItem>
-                          <SelectItem value="xai">xAI</SelectItem>
-                          <SelectItem value="deepseek">Deepseek</SelectItem>
-                          <SelectItem value="ollama">Ollama</SelectItem>
-                          <SelectItem value="perplexity">Perplexity</SelectItem>
-                          <SelectItem value="mistral">Mistral</SelectItem>
-                        </SelectContent>
-                      </Select>
 
-                      <Select onValueChange={(value) => handleAiProviderAndModelChange(currentPrompt?.defaultAiProvider.name, value)} defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Model" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                          <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                          <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                          <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                          <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
-                          <SelectItem value="gemini-1.5-pro">Gemini 1.5 Pro</SelectItem>
-                          <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
-                          <SelectItem value="gemini-1.5-pro-latest">Gemini 1.5 Pro Latest</SelectItem>
-                          <SelectItem value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div> */}
                     <div className="grid grid-cols-2 gap-4">
                       {/* Provider Dropdown */}
                       <Select onValueChange={handleProviderChange}
-                        value={selectedProviderName}
+                        // value={selectedProviderName}
                         defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "ChatGPT (OpenAI)"}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Provider" />
                         </SelectTrigger>
                         <SelectContent>
-                          {apiProviders.map((provider) => (
-                            <SelectItem key={provider._id} value={provider.name}>
+                          {apiProviders?.map((provider) => {
+                            if (provider.models.length === 0 || !provider.apiKey) return ""
+                            return <SelectItem key={provider._id} value={provider.name}>
                               {provider.name}
                             </SelectItem>
-                          ))}
+                          })}
                         </SelectContent>
                       </Select>
 
                       {/* Model Dropdown */}
                       <Select onValueChange={handleModelChange}
-                        value={selectedModel}
+                        // value={selectedModel}
                         defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select Model" />
                         </SelectTrigger>
                         <SelectContent>
-                          {models.map((model) => (
-                            <SelectItem key={model} value={model}>
+                          {models.map((model) => {
+                            return <SelectItem key={model} value={model}>
                               {model}
                             </SelectItem>
-                          ))}
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
