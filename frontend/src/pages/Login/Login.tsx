@@ -13,9 +13,6 @@ import { Loader2 } from "lucide-react"
 import UnauthorizedModal from "./UnauthorizedModal"
 
 
-
-
-
 export default function LoginPage() {
   const nav = useNavigate();
   const { userAuth, setUserAuth } = useData();
