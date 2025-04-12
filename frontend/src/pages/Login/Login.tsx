@@ -19,7 +19,6 @@ import UnauthorizedModal from "./UnauthorizedModal"
 export default function LoginPage() {
   const nav = useNavigate();
   const { userAuth, setUserAuth } = useData();
-  const { isLoading } = userAuth || {};
   const axios = useAxios("user");
   const [formData, setFormData] = useState({
     userName: "",
@@ -58,15 +57,15 @@ export default function LoginPage() {
       newErrors.email = "Email is invalid"
     }
 
-    if (!formData.companyName.trim()) {
-      newErrors.companyName = "Company name is required"
-    }
+    // if (!formData.companyName.trim()) {
+    //   newErrors.companyName = "Company name is required"
+    // }
 
-    if (!formData.mobile.trim()) {
-      newErrors.mobile = "Mobile number is required"
-    } else if (!/^\d{10}$/.test(formData.mobile.replace(/\D/g, ""))) {
-      newErrors.mobile = "Mobile number should be 10 digits"
-    }
+    // if (!formData.mobile.trim()) {
+    //   newErrors.mobile = "Mobile number is required"
+    // } else if (!/^\d{10}$/.test(formData.mobile.replace(/\D/g, ""))) {
+    //   newErrors.mobile = "Mobile number should be 10 digits"
+    // }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -135,9 +134,7 @@ export default function LoginPage() {
 
       <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">
         <div className="w-full max-w-[480px]">
-          {/* <div className="flex justify-center mb-8">
-            <Logo size="lg" />
-          </div> */}
+
 
           <Card className="border-primary-red">
             <CardHeader className="bg-primary-red text-white rounded-t-lg">
@@ -173,7 +170,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company Name*</Label>
+                  <Label htmlFor="company">Company Name</Label>
                   <Input
                     id="companyName"
                     name="companyName"
@@ -185,7 +182,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mobile">Mobile Number*</Label>
+                  <Label htmlFor="mobile">Mobile Number</Label>
                   <Input
                     id="mobile"
                     name="mobile"
@@ -200,7 +197,7 @@ export default function LoginPage() {
 
             <CardFooter>
               <Button
-                disabled={!formData.userName || !formData.email || !formData.companyName || !formData.mobile}
+                disabled={!formData.userName || !formData.email}
                 onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
                 {userAuth.isLoading ? (
                   <>

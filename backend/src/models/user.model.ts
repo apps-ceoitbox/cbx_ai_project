@@ -10,8 +10,8 @@ export interface UserInterface {
 const userSchema: Schema = new Schema({
   userName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  companyName: { type: String, required: true },
-  mobile: { type: Number, required: true },
+  companyName: { type: String, default: "" },
+  mobile: { type: Number, default: 0 },
 }, { timestamps: true });
 
 const User = mongoose.model<UserInterface & Document>("user", userSchema);

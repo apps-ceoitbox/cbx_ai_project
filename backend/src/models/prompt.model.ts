@@ -1,8 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { AiSettingsInterface } from "./ai.model";
 
-
-
 export interface PromptInterface {
   _id: string;
   heading: string;
@@ -21,22 +19,28 @@ interface DefaultAiProvider {
   model: string;
 }
 
-const promptSchema: Schema = new Schema({
-  heading: { type: String, required: true, unique: true },
-  objective: { type: String, required: true, default: "" },
-  initialGreetingsMessage: { type: String, required: true, default: "" },
-  questions: { type: Array, required: true, default: [] },
-  knowledgeBase: { type: String, required: true, default: "" },
-  promptTemplate: { type: String, required: true, default: "" },
-  defaultAiProvider: {
-    type: {
-      name: { type: String, required: true },
-      model: { type: String, required: true },
+const promptSchema: Schema = new Schema(
+  {
+    heading: { type: String, required: true, unique: true },
+    objective: { type: String, default: "" },
+    initialGreetingsMessage: { type: String, default: "" },
+    questions: { type: Array, default: [] },
+    knowledgeBase: { type: String, default: "" },
+    promptTemplate: { type: String, default: "" },
+    defaultAiProvider: {
+      type: {
+        name: { type: String },
+        model: { type: String },
+      },
+      required: true,
     },
-    required: true
+    // createdBy: { type: mongoose.Types.ObjectId, required: true },
   },
-  // createdBy: { type: mongoose.Types.ObjectId, required: true },
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-const Prompt = mongoose.model<PromptInterface & Document>("prompt", promptSchema);
+const Prompt = mongoose.model<PromptInterface & Document>(
+  "prompt",
+  promptSchema
+);
 export default Prompt;

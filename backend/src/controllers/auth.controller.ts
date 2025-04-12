@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import User, { UserInterface } from "../models/user.model";
 import { asyncHandler } from "../utils/asyncHandler";
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { HttpStatusCodes } from "../utils/errorCodes";
 import Admin from "../models/admin.model";
 import AiSettingsController from "./aiSettings.controller";
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const checkEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -78,9 +78,9 @@ export default class AuthController {
 
     // Method to login a new user
     static userLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-        const { userName, email, companyName, mobile } = req.body as UserInterface;
+        const { userName, email, companyName="", mobile=0 } = req.body as UserInterface;
 
-        if (!userName || !email || !companyName || !mobile) {
+        if (!userName || !email) {
             res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'All fields are required' });
             return
         }
@@ -123,11 +123,11 @@ export default class AuthController {
 import axios from "axios";
 
 export const checkLicense = async (appName: string, email: string) => {
-  try {
-    const url = `https://auth.ceoitbox.com/checkauth/${appName}/${email}/${appName}/NA/NA`;
+    try {
+        const url = `https://auth.ceoitbox.com/checkauth/${appName}/${email}/${appName}/NA/NA`;
 
-    const response = await axios.get(url);
-    const data = response.data;
+        const response = await axios.get(url);
+        const data = response.data;
 
     return data.valid === "Active";
   } catch (error) {

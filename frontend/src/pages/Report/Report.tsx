@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -36,15 +35,14 @@ export default function ReportPage() {
   const tool = toolsData[toolId]
 
   useEffect(() => {
-    // Simulate API call to get report
     const timer = setTimeout(() => {
       setReport(generateResponse)
-      // setReport(generateSampleReport(toolId))
       setIsLoading(false)
     }, 1500)
 
     return () => clearTimeout(timer)
   }, [userAuth?.user, tool, toolId, nav])
+
 
   const handleDownloadPDF = () => {
 

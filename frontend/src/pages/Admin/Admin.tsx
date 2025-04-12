@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,6 +25,7 @@ import {
   Trash,
   Eye,
   ArrowLeft,
+  Download,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -46,6 +47,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { formatBoldText } from "../Report/Report"
+import html2pdf from 'html2pdf.js'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx"
+import { saveAs } from "file-saver"
 
 
 export interface AiSettingsInterface {
@@ -337,6 +341,113 @@ export default function AdminDashboard() {
     })
   }
 
+
+  // Fixed PDF download function
+  const handleDownloadPDF = (submission) => {
+    // Get the report content element
+    const reportElement = document.getElementById('report-content')
+
+    if (!reportElement) {
+      toast.error("Could not generate PDF. Please try again.")
+      return
+    }
+
+    // Configure PDF options
+    const options = {
+      margin: [10, 10, 10, 10],
+      filename: `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }
+
+    // Generate and download PDF
+    html2pdf()
+      .set(options)
+      .from(reportElement)
+      .save()
+      .then(() => {
+        toast.success("PDF Downloaded")
+      })
+      .catch(error => {
+        console.error("PDF generation error:", error)
+        toast.error("Failed to download PDF. Please try again.")
+      })
+  }
+
+  // Fixed DOCX download function
+  const handleDownloadDOCX = (submission) => {
+    if (!submission?.generatedContent) {
+      toast.error("No report data available.")
+      return
+    }
+
+    try {
+      // Create a new Document
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            new Paragraph({
+              text: submission.tool || "Report",
+              heading: HeadingLevel.TITLE,
+              thematicBreak: true,
+            }),
+            new Paragraph({
+              text: `Generated on ${new Date().toLocaleDateString()}`,
+              style: "Normal",
+            }),
+          ]
+        }]
+      })
+
+      // Create an array to hold all section paragraphs
+      const sectionParagraphs = []
+
+      // Add each section as paragraphs
+      submission.generatedContent.sections.forEach(section => {
+        // Strip markdown bold syntax from strings for DOCX
+        const title = section.title.replace(/\*\*/g, '')
+        const content = section.content.replace(/\*\*/g, '')
+
+        sectionParagraphs.push(
+          new Paragraph({
+            text: title,
+            heading: HeadingLevel.HEADING_2,
+            spacing: {
+              before: 400,
+              after: 200,
+            },
+          })
+        )
+
+        sectionParagraphs.push(
+          new Paragraph({
+            text: content,
+            style: "Normal",
+          })
+        )
+      })
+
+      // Add a new section with all content
+      doc.addSection({
+        children: sectionParagraphs
+      })
+
+      // Generate and download DOCX
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
+        toast.success("DOCX Downloaded")
+      }).catch(error => {
+        console.error("DOCX generation error:", error)
+        toast.error("Failed to export DOCX. Please try again.")
+      })
+    } catch (error) {
+      console.error("DOCX generation error:", error)
+      toast.error("Failed to create DOCX. Please try again.")
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50" >
       <header className="bg-black text-white p-4 shadow-md">
@@ -363,7 +474,7 @@ export default function AdminDashboard() {
       </header>
 
       <main className="container mx-auto py-8 px-10">
-        <h1 className="text-3xl font-bold mb-8 text-center">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center text-red-500">Admin Dashboard</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
@@ -389,8 +500,18 @@ export default function AdminDashboard() {
           <TabsContent value="dashboard">
             <Card>
               <CardHeader>
-                <CardTitle>Submissions</CardTitle>
-                <CardDescription>View and manage all user submissions</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-primary-red mb-1">Submissions</CardTitle>
+                    <CardDescription>View and manage all user submissions</CardDescription>
+                  </div>
+
+                  <Button variant="outline" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                </div>
+
+
               </CardHeader>
               <CardContent>
                 {/* Filters */}
@@ -496,44 +617,44 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center mb-4">
+                {/* <div className="flex justify-between items-center mb-4">
                   <div className="text-sm text-muted-foreground">
                     Showing {filteredSubmissions.length} of {submissions.length} submissions
                   </div>
                   <Button variant="outline" onClick={clearFilters}>
                     Clear Filters
                   </Button>
-                </div>
+                </div> */}
 
                 {/* Submissions table */}
                 <div className="rounded-md border">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Tool</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>API Used</TableHead>
-                        <TableHead>Actions</TableHead>
+                    <TableHeader className="bg-primary-red" >
+                      <TableRow className=" hover:bg-primary-red rounded-[10px]">
+                        <TableHead className="text-white font-[700]">Name</TableHead>
+                        <TableHead className="text-white font-[700]">Email</TableHead>
+                        <TableHead className="text-white font-[700]">Company</TableHead>
+                        <TableHead className="text-white font-[700]">Tool</TableHead>
+                        <TableHead className="text-white font-[700]">Date</TableHead>
+                        <TableHead className="text-white font-[700]">API Used</TableHead>
+                        <TableHead className="text-white font-[700]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredSubmissions.length > 0 ? (
                         filteredSubmissions.map((submission) => (
-                          <TableRow key={submission.id}>
-                            <TableCell className="font-medium">{submission.name}</TableCell>
-                            <TableCell>{submission.email}</TableCell>
-                            <TableCell>{submission.company}</TableCell>
-                            <TableCell>{submission.tool}</TableCell>
-                            <TableCell>{formatDateTime(submission.date)}</TableCell>
-                            <TableCell>{submission.apiUsed}</TableCell>
-                            <TableCell>
+                          <TableRow key={submission.id} className="h-8 px-2" >
+                            <TableCell className="font-medium py-2">{submission.name}</TableCell>
+                            <TableCell className="py-2">{submission.email}</TableCell>
+                            <TableCell className="py-2">{submission.company}</TableCell>
+                            <TableCell className="py-2">{submission.tool}</TableCell>
+                            <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
+                            <TableCell className="py-2">{submission.apiUsed}</TableCell>
+                            <TableCell className="py-2">
                               <div className="flex space-x-2">
                                 <Dialog>
                                   <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" title="View">
+                                    <Button className=" text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
                                       <Eye className="h-4 w-4" />
                                     </Button>
 
@@ -545,7 +666,7 @@ export default function AdminDashboard() {
                                         <CardHeader className="bg-primary-red text-white rounded-t-lg">
                                           <CardTitle className="text-2xl">{submission?.tool}</CardTitle>
                                           <CardDescription className="text-gray-100">
-                                            Generated on {new Date().toLocaleDateString()}
+                                            Generated on {formatDateTime(submission.createdAt)}
                                           </CardDescription>
                                         </CardHeader>
 
@@ -557,6 +678,24 @@ export default function AdminDashboard() {
                                             </div>
                                           ))}
                                         </CardContent>
+                                        <CardFooter className="flex flex-wrap gap-4 justify-center">
+                                          <Button
+                                            variant="outline"
+                                            className="flex items-center"
+                                            onClick={() => handleDownloadPDF(submission)}
+                                          >
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Download PDF
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            className="flex items-center"
+                                            onClick={() => handleDownloadDOCX(submission)}
+                                          >
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            Export DOCX
+                                          </Button>
+                                        </CardFooter>
                                       </Card>
                                     </div>
                                   </DialogContent>
@@ -574,150 +713,20 @@ export default function AdminDashboard() {
                       )}
                     </TableBody>
                   </Table>
+
+                </div>
+                <div className="text-sm text-muted-foreground mt-2 font-[600]">
+                  Showing {filteredSubmissions.length} of {submissions.length} submissions
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* <TabsContent value="ai-settings">
-            <Card >
-              <CardHeader>
-                <CardTitle>AI Platform Settings</CardTitle>
-                <CardDescription>Configure API keys and models for each AI platform</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleFormSubmit}>
-                  <div
-                    className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-2"
-                  // className="space-y-6"
-                  >
-                    {apiProviders?.map((provider, index) => (
-                      <div key={provider.name}
-                        className="border rounded-md overflow-hidden"
-                      >
-                        <div
-                          className="bg-gray-100 dark:bg-gray-800 p-4 flex justify-between items-center cursor-pointer"
-                          onClick={() => {
-                            const currentExpanded = JSON.parse(localStorage.getItem("expandedProviders") || "{}")
-                            const newExpanded = {
-                              ...currentExpanded,
-                              [provider.name]:
-                                currentExpanded[provider.name] === undefined ? true : !currentExpanded[provider.name],
-                            }
-                            localStorage.setItem("expandedProviders", JSON.stringify(newExpanded))
-                            // Force re-render
-                            setFilters({ ...filters })
-                          }}
-                        >
-                          <h3 className="text-lg font-medium">{provider.name}</h3>
-                          <Button variant="ghost" size="sm" type="button">
-                            <ChevronDown
-                              className={`h-4 w-4 transition-transform ${JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.name] === false
-                                ? "rotate-180"
-                                : ""
-                                }`}
-                            />
-                          </Button>
-                        </div>
-
-                        {JSON.parse(localStorage.getItem("expandedProviders") || "{}")[provider.name] !== false && (
-                          <div className="p-4 space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor={`${provider.name}-key`}>API Key</Label>
-                              <Input
-                                id={`${provider.name}-key`}
-                                type="password"
-                                placeholder={
-                                  provider.name === "openai"
-                                    ? "sk-..."
-                                    : provider.name === "anthropic"
-                                      ? "sk-ant-..."
-                                      : provider.name === "google"
-                                        ? "AIza..."
-                                        : provider.name === "xai"
-                                          ? "grok-..."
-                                          : provider.name === "deepseek"
-                                            ? "dsk-..."
-                                            : provider.name === "ollama"
-                                              ? "http://localhost:11434"
-                                              : provider.name === "perplexity"
-                                                ? "pplx-..."
-                                                : "mis-..."
-                                }
-                                value={provider.apiKey || ''}
-                                onChange={(e) => handleInputChange(index, 'apiKey', e.target.value)}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor={`${provider.name}-model`}>Model</Label>
-                              <Select
-                                value={provider.model}
-                                onValueChange={(value) => handleInputChange(index, 'model', value)}
-                              >
-                                <SelectTrigger id={`${provider.name}-model`}>
-                                  <SelectValue placeholder="Select Model" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {[...new Set(provider.models)].map((model) => (
-                                    <SelectItem key={model} value={model}>
-                                      {model}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <Label htmlFor={`${provider.name}-temperature`}>Temperature</Label>
-                                <span className="text-sm text-muted-foreground" id={`${provider.name}-temp-value`}>
-                                  {provider.temperature ?? 0.7}
-                                </span>
-                              </div>
-                              <Input
-                                id={`${provider.name}-temperature`}
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.1"
-                                value={provider.temperature ?? 0.7}
-                                onChange={(e) => handleInputChange(index, 'temperature', parseFloat(e.target.value))}
-                                className="w-full"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor={`${provider.name}-max-tokens`}>Max Tokens</Label>
-                              <Input
-                                id={`${provider.name}-max-tokens`}
-                                type="number"
-                                min="100"
-                                max="8000"
-                                step="100"
-                                value={provider?.maxTokens || 1000}
-                                onChange={(e) => handleInputChange(index, 'maxTokens', parseInt(e.target.value))}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-
-
-                  </div>
-                  <Button onClick={updateApiProviders} className="mt-4 bg-primary-red hover:bg-red-700" type="submit">
-                    Save AI Platform Settings
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent> */}
 
           <TabsContent value="ai-settings">
             <Card>
               <CardHeader>
-                <CardTitle>AI Platform Settings</CardTitle>
+                <CardTitle className="text-primary-red">AI Platform Settings</CardTitle>
                 <CardDescription>Configure API keys and models for each AI platform</CardDescription>
               </CardHeader>
               <CardContent>
@@ -849,7 +858,7 @@ export default function AdminDashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle>Manage Templates</CardTitle>
+                    <CardTitle className="text-primary-red mb-1">Manage Templates</CardTitle>
                     <CardDescription>View and manage all prompt templates</CardDescription>
                   </div>
                   <Button
@@ -956,11 +965,10 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="create-prompt">
-
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{activeTab === "create-prompt" ? "Create Template" : "Edit Template"}</CardTitle>
+                  <CardTitle className="text-primary-red">{activeTab === "create-prompt" ? "Create Template" : "Edit Template"}</CardTitle>
                   <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4"
                     onClick={() => setActiveTab('manage-prompts')}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -1121,7 +1129,7 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{"Edit Template"}</CardTitle>
+                  <CardTitle className="text-primary-red">{"Edit Template"}</CardTitle>
                   <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4"
                     onClick={() => setActiveTab('manage-prompts')}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -1232,7 +1240,6 @@ export default function AdminDashboard() {
                       {/* Provider Dropdown */}
                       <Select onValueChange={handleProviderChange}
                         value={selectedProviderName}
-                      // defaultValue={currentPrompt?.defaultAiProvider.name?.toLowerCase() || "ChatGPT (OpenAI)"}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Provider" />
@@ -1250,7 +1257,6 @@ export default function AdminDashboard() {
                       {/* Model Dropdown */}
                       <Select onValueChange={handleModelChange}
                         value={selectedModel}
-                      // defaultValue={currentPrompt?.defaultAiProvider.model || "gpt-4o"}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select Model" />
@@ -1303,6 +1309,7 @@ export default function AdminDashboard() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+
                     <div className="space-x-2">
                       <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
                         Cancel
@@ -1311,13 +1318,12 @@ export default function AdminDashboard() {
                         Update Prompt
                       </Button>
                     </div>
+
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-
-
         </Tabs>
       </main>
     </div >
@@ -1327,7 +1333,7 @@ export default function AdminDashboard() {
 
 
 
-function formatDateTime(dateString) {
+export function formatDateTime(dateString) {
   const date = new Date(dateString);
 
   const options = {

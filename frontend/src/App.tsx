@@ -10,6 +10,7 @@ import Footer from "./pages/Home/Footer"
 import NotFound from "./pages/NotFound"
 import { useEffect } from "react"
 import { useAxios, useData } from "./context/AppContext"
+import UserGeneratedPlans from "./pages/Dashboard/UserGeneratedPlans"
 
 function App() {
   const { setUserAuth, setAdminAuth } = useData();
@@ -17,7 +18,7 @@ function App() {
   const adminAxios = useAxios("admin");
 
   useEffect(() => {
-    const userToken = localStorage.getItem("userToken")
+    const userToken = localStorage.getItem("userToken");
     if (userToken) {
       setUserAuth(p => ({
         ...p,
@@ -31,9 +32,9 @@ function App() {
         })
       })
     }
-    const adminToken = localStorage.getItem("adminToken")
+    const adminToken = localStorage.getItem("adminToken");
     if (adminToken) {
-      setUserAuth(p => ({
+      setAdminAuth(p => ({
         ...p,
         isLoading: true
       }))
@@ -54,6 +55,7 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/generated-plans" element={<UserGeneratedPlans />} />
         <Route path="/reports/:toolId" element={<Report />} />
         <Route path="/tools/:toolId" element={<Tool />} />
 
