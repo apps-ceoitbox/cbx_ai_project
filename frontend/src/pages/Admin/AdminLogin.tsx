@@ -79,7 +79,7 @@ export default function AdminLoginPage() {
         localStorage.setItem("adminToken", response.data.token)
         nav("/admin")
       } catch (error) {
-        toast.error(error?.response?.data?.me)
+        toast.error(error?.response?.data?.message)
         console.error("Login error:", error)
       } finally {
         setAdminAuth(prev => ({ ...prev, isLoading: false }))
