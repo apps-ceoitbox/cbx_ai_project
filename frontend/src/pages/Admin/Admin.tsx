@@ -243,7 +243,7 @@ export default function AdminDashboard() {
     )
   }
 
-  const filteredSubmissions = submissions.filter((submission) => {
+  const filteredSubmissions = submissions?.filter((submission) => {
     // Filter by tool
     if (filters.tool && filters.tool !== "all" && submission.tool !== filters.tool) {
       return false
@@ -278,6 +278,47 @@ export default function AdminDashboard() {
         submission.name.toLowerCase().includes(searchTerm) ||
         submission.email.toLowerCase().includes(searchTerm) ||
         submission.company.toLowerCase().includes(searchTerm)
+      )
+    }
+
+    return true
+  })
+
+  const filteredTemplats = promptsData?.filter((submission) => {
+    // Filter by tool
+    if (filters.tool && filters.tool !== "all" && submission.heading !== filters.tool) {
+      return false
+    }
+
+    // Filter by API
+    if (filters.api && filters.api !== "all" && submission.defaultAiProvider.name !== filters.api) {
+      return false
+    }
+
+    // Filter by date range
+    if (filters.dateFrom) {
+      const submissionDate = new Date(submission.createdAt)
+      if (submissionDate < filters.dateFrom) {
+        return false
+      }
+    }
+
+    if (filters.dateTo) {
+      const submissionDate = new Date(submission.createdAt)
+      const endOfDay = new Date(filters.dateTo)
+      endOfDay.setHours(23, 59, 59, 999)
+      if (submissionDate > endOfDay) {
+        return false
+      }
+    }
+
+    // Filter by search term
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase()
+      return (
+        submission.heading.toLowerCase().includes(searchTerm) ||
+        submission.category.toLowerCase().includes(searchTerm) ||
+        submission.objective.toLowerCase().includes(searchTerm)
       )
     }
 
@@ -451,6 +492,8 @@ export default function AdminDashboard() {
     }
   }
 
+  console.log("promptsData", promptsData)
+
   return (
     <div className="min-h-screen bg-gray-50" >
       <header className="bg-black text-white p-4 shadow-md">
@@ -513,8 +556,6 @@ export default function AdminDashboard() {
                     Clear Filters
                   </Button>
                 </div>
-
-
               </CardHeader>
               <CardContent>
                 {/* Filters */}
@@ -525,7 +566,7 @@ export default function AdminDashboard() {
                       <Search className="absolute left-2 top-[12px] h-4 w-4 text-muted-foreground" />
                       <Input
                         id="search"
-                        placeholder="Name, email, company..."
+                        placeholder="Template Name, category, objective..."
                         className="pl-8"
                         value={filters.search}
                         onChange={(e) => handleFilterChange("search", e.target.value)}
@@ -620,14 +661,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* <div className="flex justify-between items-center mb-4">
-                  <div className="text-sm text-muted-foreground">
-                    Showing {filteredSubmissions.length} of {submissions.length} submissions
-                  </div>
-                  <Button variant="outline" onClick={clearFilters}>
-                    Clear Filters
-                  </Button>
-                </div> */}
 
                 {/* Submissions table */}
                 <div className="rounded-md border">
@@ -655,6 +688,7 @@ export default function AdminDashboard() {
                             <TableCell className="py-2">{submission.apiUsed}</TableCell>
                             <TableCell className="py-2">
                               <div className="flex space-x-2">
+
                                 <Dialog>
                                   <DialogTrigger asChild>
                                     <Button className=" text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
@@ -703,6 +737,42 @@ export default function AdminDashboard() {
                                     </div>
                                   </DialogContent>
                                 </Dialog>
+
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this Submission? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => {
+                                          axios.delete(`/submission/${submission._id}`)
+                                            .then(() => {
+                                              toast.success("Submission deleted successfully");
+                                              getAllUsersSubmissionsData();
+
+                                            })
+                                            .catch(error => {
+                                              console.error(error);
+                                              toast.error("Failed to delete template");
+                                            });
+                                        }}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -864,28 +934,138 @@ export default function AdminDashboard() {
                     <CardTitle className="text-primary-red mb-1">Manage Templates</CardTitle>
                     <CardDescription>View and manage all prompt templates</CardDescription>
                   </div>
-                  <Button
-                    className="bg-primary-red hover:bg-red-700"
-                    onClick={() => {
-                      setCurrentPrompt({
-                        heading: "",
-                        objective: "",
-                        initialGreetingsMessage: "",
-                        questions: [""],
-                        knowledgeBase: "",
-                        promptTemplate: "",
-                        defaultAiProvider: {
-                          name: "",
-                          model: ""
-                        }
-                      } as PromptInterface)
-                      setActiveTab("create-prompt")
-                    }}
-                  >
-                    Create New Template
-                  </Button>
+
+                  <div className="flex items-center gap-4">
+                    <Button variant="outline" onClick={clearFilters}>
+                      Clear Filters
+                    </Button>
+                    <Button
+                      className="bg-primary-red hover:bg-red-700"
+                      onClick={() => {
+                        setCurrentPrompt({
+                          heading: "",
+                          objective: "",
+                          initialGreetingsMessage: "",
+                          questions: [""],
+                          knowledgeBase: "",
+                          promptTemplate: "",
+                          defaultAiProvider: {
+                            name: "",
+                            model: ""
+                          }
+                        } as PromptInterface)
+                        setActiveTab("create-prompt")
+                      }}
+                    >
+                      Create New Template
+                    </Button>
+                  </div>
+
                 </CardHeader>
                 <CardContent>
+
+                  {/* Filters */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                    <div>
+                      <Label htmlFor="search">Search</Label>
+                      <div className="relative">
+                        <Search className="absolute left-2 top-[12px] h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="search"
+                          placeholder="Name, email, company..."
+                          className="pl-8"
+                          value={filters.search}
+                          onChange={(e) => handleFilterChange("search", e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="tool-filter">Tool</Label>
+                      <Select value={filters.tool} onValueChange={(value) => handleFilterChange("tool", value)}>
+                        <SelectTrigger id="tool-filter">
+                          <SelectValue placeholder="All tools" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All tools</SelectItem>
+                          {[...new Set(promptsData.map(item => item.heading))]?.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="api-filter">API Used</Label>
+                      <Select value={filters.api} onValueChange={(value) => handleFilterChange("api", value)}>
+                        <SelectTrigger id="api-filter">
+                          <SelectValue placeholder="All APIs" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All APIs</SelectItem>
+                          {[...new Set(promptsData.map(item => item.defaultAiProvider?.name))]?.map((api) => (
+                            <SelectItem key={api} value={api}>
+                              {api}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label>From Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !filters.dateFrom && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateFrom}
+                            onSelect={(date) => handleFilterChange("dateFrom", date)}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div>
+                      <Label>To Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !filters.dateTo && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateTo}
+                            onSelect={(date) => handleFilterChange("dateTo", date)}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
                   <div className="rounded-md border">
                     <Table>
                       <TableHeader>
@@ -893,13 +1073,14 @@ export default function AdminDashboard() {
                           <TableHead>Template Name</TableHead>
                           <TableHead>Objective</TableHead>
                           <TableHead>Default AI</TableHead>
+                          <TableHead>Group</TableHead>
                           <TableHead >Created</TableHead>
                           <TableHead>Last Modified</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {promptsData.map((prompt) => (
+                        {filteredTemplats?.map((prompt) => (
                           <TableRow key={prompt._id}>
                             <TableCell className="font-medium">{prompt.heading}</TableCell>
                             <TableCell>{prompt.objective}</TableCell>
@@ -907,6 +1088,8 @@ export default function AdminDashboard() {
                               {prompt.defaultAiProvider.name} ({prompt.defaultAiProvider.model})
                             </TableCell>
                             <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.createdAt)}</TableCell>
+
+                            <TableCell style={{ whiteSpace: "nowrap" }}>{prompt?.category || "--"}</TableCell>
                             <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.updatedAt)}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
