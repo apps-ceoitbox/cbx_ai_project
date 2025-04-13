@@ -6,6 +6,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowLeft, FileText } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 import { templateCategories } from "../Admin/Admin"
+import {
+  Settings,
+  Megaphone,
+  HandCoins,
+  Banknote,
+  Users,
+  BarChart,
+  ShieldCheck,
+  FolderX
+} from "lucide-react";
 
 
 export interface PromptInterface {
@@ -60,6 +70,15 @@ export default function Dashboard() {
 
   const filteredTools = tools?.filter(tool => tool.category == selectedCategory && tool.visibility)
 
+  const categoryIcons = {
+    Operations: <Settings className="h-6 w-6" />,
+    Marketing: <Megaphone className="h-6 w-6" />,
+    Sales: <HandCoins className="h-6 w-6" />,
+    Finance: <Banknote className="h-6 w-6" />,
+    HR: <Users className="h-6 w-6" />,
+    Strategy: <BarChart className="h-6 w-6" />,
+    Compliances: <ShieldCheck className="h-6 w-6" />,
+  };
 
 
   return (
@@ -116,7 +135,7 @@ export default function Dashboard() {
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <div className="p-2 rounded-full bg-primary-red text-white">
-                    <FileText className="h-6 w-6" />
+                    {categoryIcons[category] || <FileText className="h-6 w-6" />}
                   </div>
                   <CardTitle className="text-xl">{category}</CardTitle>
                 </div>
@@ -134,7 +153,13 @@ export default function Dashboard() {
 
           {
             filteredTools.length === 0 ?
-              <div className="w-full font-bold" >No Tools data available</div>
+              <div className="w-full flex flex-col col-span-3 items-center justify-center text-gray-500 py-8 gap-2">
+                <FolderX className="w-10 h-10 text-primary-red" />
+                <div className="text-lg font-semibold">No tools found</div>
+                <div className="text-sm text-center max-w-md">
+                  It looks like there’s no tool data available in this category. Please select another or check back later.
+                </div>
+              </div>
               :
 
               tools.filter(tool => tool.category == selectedCategory && tool.visibility).map((tool) => (
