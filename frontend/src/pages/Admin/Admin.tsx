@@ -284,14 +284,14 @@ export default function AdminDashboard() {
     return true
   })
 
-  const filteredTemplats = promptsData?.filter((submission) => {
+  const filteredTemplates = promptsData?.filter((submission) => {
     // Filter by tool
-    if (filters.tool && filters.tool !== "all" && submission.heading !== filters.tool) {
+    if (filters.tool && filters.tool !== "all" && (submission?.heading || "") !== filters.tool) {
       return false
     }
 
     // Filter by API
-    if (filters.api && filters.api !== "all" && submission.defaultAiProvider.name !== filters.api) {
+    if (filters.api && filters.api !== "all" && (submission?.defaultAiProvider?.name || "") !== filters.api) {
       return false
     }
 
@@ -311,14 +311,14 @@ export default function AdminDashboard() {
         return false
       }
     }
-
+    console.log(filters?.search)
     // Filter by search term
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase()
+    if (filters?.search) {
+      const searchTerm = (filters?.search || "")?.toLowerCase()
       return (
-        submission.heading.toLowerCase().includes(searchTerm) ||
-        submission.category.toLowerCase().includes(searchTerm) ||
-        submission.objective.toLowerCase().includes(searchTerm)
+        (submission?.heading || "").toLowerCase().includes(searchTerm) ||
+        (submission?.category || "").toLowerCase().includes(searchTerm) ||
+        (submission?.objective || "").toLowerCase().includes(searchTerm)
       )
     }
 
@@ -1080,7 +1080,7 @@ export default function AdminDashboard() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredTemplats?.map((prompt) => (
+                        {filteredTemplates?.map((prompt) => (
                           <TableRow key={prompt._id}>
                             <TableCell className="font-medium">{prompt.heading}</TableCell>
                             <TableCell>{prompt.objective}</TableCell>

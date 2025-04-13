@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Download, Mail, FileText, Loader2 } from "lucide-react"
 import { toolsData } from "@/lib/tools"
-import { useData } from "@/context/AppContext"
+import { useAxios, useData } from "@/context/AppContext"
 import html2pdf from 'html2pdf.js'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx"
 import { saveAs } from "file-saver"
@@ -15,13 +15,40 @@ import { toast } from "sonner"
 // Sample report data
 export function formatBoldText(text) {
   // Replace **bold** text with <strong>bold</strong>
-  return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={index}>{part.slice(2, -2)}</strong>;
-    }
-    return part;
-  });
+  return text
+  // return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
+  //   if (part.startsWith("**") && part.endsWith("**")) {
+  //     return <strong key={index}>{part.slice(2, -2)}</strong>;
+  //   }
+  //   return part;
+  // });
 }
+
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      // @ts-ignore
+      const base64String = reader.result.split(',')[1]; // remove data:application/pdf;base64,
+      resolve(base64String);
+    };
+
+    reader.onerror = reject;
+
+    reader.readAsDataURL(file); // Triggers the conversion
+  });
+};
+
+const openBase64PDF = (base64) => {
+  const byteCharacters = atob(base64); // Decode base64
+  const byteNumbers = new Array(byteCharacters.length).fill(0).map((_, i) => byteCharacters.charCodeAt(i));
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+  const blobUrl = URL.createObjectURL(blob);
+  window.open(blobUrl, '_blank'); // Open in new tab
+};
+
 
 
 export default function ReportPage() {
@@ -30,7 +57,7 @@ export default function ReportPage() {
   const { userAuth, generateResponse } = useData();
   const [isLoading, setIsLoading] = useState(true);
   const [report, setReport] = useState<any>(null);
-
+  const axios = useAxios("user");
   const toolId = params.toolId as string
   const tool = toolsData[toolId]
 
@@ -130,7 +157,7 @@ export default function ReportPage() {
         )
       })
 
-      // Add a new section with all content
+      // @ts-ignore
       doc.addSection({
         children: sectionParagraphs
       })
@@ -153,7 +180,37 @@ export default function ReportPage() {
 
 
 
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
+    // Get the report content element
+    const reportElement = document.getElementById('report-content')
+
+    if (!reportElement) {
+      toast.error("Could not generate PDF. Please try again.")
+      return
+    }
+
+    // Configure PDF options
+    const options = {
+      margin: [10, 10, 10, 10],
+      filename: `${tool?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }
+
+    const worker = html2pdf().set(options).from(reportElement);
+
+    // Get PDF as base64f
+    const blob = await worker.outputPdf("blob");
+    const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+    let base64PDF = await fileToBase64(pdfFile)
+
+    await axios.post("/users/email", {
+      to:userAuth.user?.email,
+      subject: report.title || "",
+      body: "",
+      attachment: base64PDF
+    })
 
     toast.success(`Your report has been sent to ${userAuth?.user?.email}`)
   }

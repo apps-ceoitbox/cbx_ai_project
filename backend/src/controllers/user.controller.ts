@@ -13,10 +13,11 @@ export default class UserController {
   })
 
   static sendEmail = asyncHandler(async (req, res) => {
-    const { to, subject, body } = req.body;
+    const { to, subject, body, attachment } = req.body;
     MAIL({
-      to, subject, body
+      to, subject, body, attachment
     })
+
     res.json({
       status: true,
       message: "Email sent Successfully"

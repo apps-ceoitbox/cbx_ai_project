@@ -6,10 +6,16 @@ interface MailInterface {
   to: string;
   subject: string;
   body: string;
+  attachment?:string;
   template?: string | null;
 }
 
-export async function MAIL({ to, subject, body, template = null }: MailInterface) {
+export async function MAIL({ to, subject, body, attachment, template = null }: MailInterface) {
+  let buffer = null;
+  if(attachment) {
+    buffer = Buffer.from(attachment, 'base64');
+  }
+
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -23,8 +29,19 @@ export async function MAIL({ to, subject, body, template = null }: MailInterface
     from: 'apps@ceoitbox.com',
     to,
     subject: subject,
-    html: template == "OTP" ? EmailTemplate(body) : body
+    html: template == "OTP" ? EmailTemplate(body) : body,
+    attachments:[]
   };
+  if(buffer) {
+    mailOptions.attachments = [
+      {
+        filename:subject,
+        content: buffer,
+        contentType: 'application/pdf'
+      }
+    ]
+  }
+
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);

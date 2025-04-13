@@ -88,7 +88,7 @@ export default function Dashboard() {
 
       <main className="container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-2">Welcome, {userAuth.user.userName}</h1>
-        <p className="text-gray-600 mb-8">Select a tool to get started</p>
+        <p className="text-gray-600 mb-8">Select a {selectedCategory ? "tool" : "category"} to get started</p>
 
         {selectedCategory && <button onClick={() => setSelectedCategory(null)}>
           Back
