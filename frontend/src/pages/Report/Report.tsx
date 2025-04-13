@@ -152,7 +152,9 @@ export default function ReportPage() {
   }
 
 
+
   const handleSendEmail = () => {
+
     toast.success(`Your report has been sent to ${userAuth?.user?.email}`)
   }
 
@@ -233,10 +235,10 @@ export default function ReportPage() {
                   <FileText className="mr-2 h-4 w-4" />
                   Export DOCX
                 </Button>
-                {/* <Button className="bg-primary-red hover:bg-red-700 flex items-center" onClick={handleSendEmail}>
+                <Button className="bg-primary-red hover:bg-red-700 flex items-center" onClick={handleSendEmail}>
                   <Mail className="mr-2 h-4 w-4" />
                   Send to Email
-                </Button> */}
+                </Button>
               </CardFooter>
             </Card>
           </div>

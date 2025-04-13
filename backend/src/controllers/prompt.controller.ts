@@ -15,7 +15,7 @@ export default class PromptController {
     })
 
     static getAllPrompts = asyncHandler(async (req, res) => {
-        const prompts = await Prompt.find();
+        const prompts = await Prompt.find().sort({ createdAt: -1 });
         res.status(HttpStatusCodes.OK).json({ message: 'Prompts fetched successfully', data: prompts });
     })
 
