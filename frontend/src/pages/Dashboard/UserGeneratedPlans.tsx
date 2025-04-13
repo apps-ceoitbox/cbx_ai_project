@@ -231,12 +231,12 @@ const UserGeneratedPlans: React.FC = () => {
                     <Logo size="sm" />
                     <div className="flex items-center gap-4">
 
-                        <Button variant="outline" className="bg-primary-red text-white border-white hover:bg-primary-red hover:text-white"
+                        <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
-                                nav("/generated-plans")
+                                nav("/dashboard")
                             }}
                         >
-                            Generated Plans
+                            Dashboard
                         </Button>
                         <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {

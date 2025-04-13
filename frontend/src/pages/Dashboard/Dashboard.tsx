@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText } from "lucide-react"
+import { ArrowLeft, FileText } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 import { templateCategories } from "../Admin/Admin"
 
@@ -46,6 +46,7 @@ export default function Dashboard() {
   }
 
   const handleToolClick = (toolId: string) => {
+
     nav(`/tools/${toolId}`)
   }
 
@@ -56,6 +57,10 @@ export default function Dashboard() {
     }
     fetchTools()
   }, [])
+
+  const filteredTools = tools?.filter(tool => tool.category == selectedCategory && tool.visibility)
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,7 +78,7 @@ export default function Dashboard() {
                 nav("/generated-plans")
               }}
             >
-              Dashboard
+              Generated Plans
             </Button>
             <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
               localStorage.removeItem("userToken")
@@ -87,12 +92,20 @@ export default function Dashboard() {
       </header>
 
       <main className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-2">Welcome, {userAuth.user.userName}</h1>
-        <p className="text-gray-600 mb-8">Select a {selectedCategory ? "tool" : "category"} to get started</p>
+        <div className="flex  justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Welcome, {userAuth.user.userName}</h1>
+            <p className="text-gray-600 mb-8">Select a {selectedCategory ? "tool" : "category"} to get started</p>
+          </div>
+          {selectedCategory &&
+            <Button onClick={() => setSelectedCategory(null)}
+              style={{ minWidth: "100px" }} variant="ghost" className="mr-4" >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          }
+        </div>
 
-        {selectedCategory && <button onClick={() => setSelectedCategory(null)}>
-          Back
-        </button>}
 
         {!selectedCategory && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {templateCategories.map((category) => (
@@ -118,30 +131,39 @@ export default function Dashboard() {
         </div>}
 
         {selectedCategory && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tools.filter(tool => tool.category == selectedCategory && tool.visibility).map((tool) => (
-            <Card
-              key={tool._id}
-              className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary-red"
-              onClick={() => handleToolClick(tool._id)}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-full bg-primary-red text-white">
-                    <FileText className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-xl">{tool.heading}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base">{tool.objective}</CardDescription>
-              </CardContent>
-              <CardFooter>
-                <Button variant="ghost" className="w-full text-primary-red hover:bg-red-50">
-                  Start Now
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+
+          {
+            filteredTools.length === 0 ?
+              <div className="w-full font-bold" >No Tools data available</div>
+              :
+
+              tools.filter(tool => tool.category == selectedCategory && tool.visibility).map((tool) => (
+
+                <Card
+                  key={tool._id}
+                  className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary-red"
+                  onClick={() => handleToolClick(tool._id)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-full bg-primary-red text-white">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <CardTitle className="text-xl">{tool.heading}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-base">{tool.objective}</CardDescription>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="ghost" className="w-full text-primary-red hover:bg-red-50">
+                      Start Now
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+
+
         </div>}
       </main>
     </div>

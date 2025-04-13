@@ -492,7 +492,7 @@ export default function AdminDashboard() {
     }
   }
 
-  console.log("promptsData", promptsData)
+
 
   return (
     <div className="min-h-screen bg-gray-50" >
@@ -1087,9 +1087,8 @@ export default function AdminDashboard() {
                             <TableCell>
                               {prompt.defaultAiProvider.name} ({prompt.defaultAiProvider.model})
                             </TableCell>
-                            <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.createdAt)}</TableCell>
-
                             <TableCell style={{ whiteSpace: "nowrap" }}>{prompt?.category || "--"}</TableCell>
+                            <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.createdAt)}</TableCell>
                             <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.updatedAt)}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
