@@ -8,7 +8,7 @@ import { ArrowLeft, Download, Mail, FileText, Loader2 } from "lucide-react"
 import { toolsData } from "@/lib/tools"
 import { useAxios, useData } from "@/context/AppContext"
 import html2pdf from 'html2pdf.js'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx"
+import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 import { saveAs } from "file-saver"
 import { toast } from "sonner"
 
@@ -37,16 +37,6 @@ const fileToBase64 = (file) => {
 
     reader.readAsDataURL(file); // Triggers the conversion
   });
-};
-
-const openBase64PDF = (base64) => {
-  const byteCharacters = atob(base64); // Decode base64
-  const byteNumbers = new Array(byteCharacters.length).fill(0).map((_, i) => byteCharacters.charCodeAt(i));
-  const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-  const blobUrl = URL.createObjectURL(blob);
-  window.open(blobUrl, '_blank'); // Open in new tab
 };
 
 

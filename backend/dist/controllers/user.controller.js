@@ -17,12 +17,23 @@ const asyncHandler_1 = require("../utils/asyncHandler");
 const errorCodes_1 = require("../utils/errorCodes");
 const user_model_1 = __importDefault(require("../models/user.model"));
 const ai_model_1 = __importDefault(require("../models/ai.model"));
+const sendMail_1 = require("../utils/sendMail");
 class UserController {
 }
 _a = UserController;
 // Method to get user data with jwt token
 UserController.getUserDataWithToken = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(errorCodes_1.HttpStatusCodes.OK).send(req.user);
+}));
+UserController.sendEmail = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { to, subject, body, attachment } = req.body;
+    (0, sendMail_1.MAIL)({
+        to, subject, body, attachment
+    });
+    res.json({
+        status: true,
+        message: "Email sent Successfully"
+    });
 }));
 // Method to delete user
 UserController.deleteUser = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

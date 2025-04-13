@@ -9,4 +9,5 @@ const router = (0, express_1.Router)();
 router.get("/", submissions_controller_1.default.getSubmissions);
 router.get("/user", submissions_controller_1.default.getUserSubmission);
 router.patch("/:id", submissions_controller_1.default.updateSubmission);
+router.delete("/:id", submissions_controller_1.default.deleteSubmission);
 exports.default = router;

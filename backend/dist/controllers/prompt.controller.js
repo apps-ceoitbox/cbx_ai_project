@@ -30,7 +30,7 @@ PromptController.createPrompt = (0, asyncHandler_1.asyncHandler)((req, res) => _
     res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Prompt created successfully', data: prompt });
 }));
 PromptController.getAllPrompts = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const prompts = yield prompt_model_1.default.find();
+    const prompts = yield prompt_model_1.default.find().sort({ createdAt: -1 });
     res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Prompts fetched successfully', data: prompts });
 }));
 PromptController.getPromptById = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
