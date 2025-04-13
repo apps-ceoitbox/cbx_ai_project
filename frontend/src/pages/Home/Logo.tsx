@@ -28,6 +28,7 @@ const Logo: React.FC<LogoProps> = ({ className = "", size = "md", color = "black
                         <span className={`text-${color}`}>CEO</span>
                         <span className="text-ceo-red">IT</span>
                         <span className={`text-${color}`}>BOX</span>
+                        <span className={`text-${color}`}>AI</span>
                     </span>
 
                 </div>

@@ -24,7 +24,7 @@ export function Logo({ className, size = "md" }: LogoProps) {
             alt="CEOITBOX Logo"
             className={`${sizeClasses[size]} w-auto`}
           />
-          <div className="font-bold text-2xl text-primary-red" style={{ letterSpacing: "0.48px" }}>CEOITBOX</div>
+          <div className="font-bold text-2xl text-primary-red" style={{ letterSpacing: "0.48px" }}>CEOITBOX AI</div>
         </div>
       </Link>
     </>

@@ -18,12 +18,13 @@ import {
     Eye,
     Download,
     FileText,
+    Mail,
+    LayoutDashboard,
+    LogOut,
+    Loader2,
+    CheckCircle,
 } from "lucide-react"
-import {
-    Dialog,
-    DialogContent,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+
 import { formatBoldText } from "../Report/Report"
 import { useAxios, useData } from "@/context/AppContext"
 import { formatDateTime } from "../Admin/Admin"
@@ -31,12 +32,25 @@ import html2pdf from 'html2pdf.js'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx"
 import { saveAs } from "file-saver"
 import { toast } from "sonner"
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog"
 
 const UserGeneratedPlans: React.FC = () => {
-    const { setUserAuth } = useData();
+    const { userAuth, setUserAuth } = useData();
     const nav = useNavigate();
     const axios = useAxios("user")
     const [submissions, setSubmissions] = useState([]);
+    const [isEmailSending, setIsEmailSending] = useState(false);
+    const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
+    const [sentToEmail, setSentToEmail] = useState("");
+
     const [filters, setFilters] = useState({
         tool: "",
         dateFrom: undefined as Date | undefined,
@@ -130,7 +144,7 @@ const UserGeneratedPlans: React.FC = () => {
         // Configure PDF options
         const options = {
             margin: [10, 10, 10, 10],
-            filename: `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+            filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -223,11 +237,79 @@ const UserGeneratedPlans: React.FC = () => {
         }
     }
 
+
+    const fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // @ts-ignore
+                const base64String = reader.result.split(',')[1]; // remove data:application/pdf;base64,
+                resolve(base64String);
+            };
+
+            reader.onerror = reject;
+
+            reader.readAsDataURL(file); // Triggers the conversion
+        });
+    };
+
+
+    const handleSendEmail = async (submission) => {
+        // Set loading state to true
+        setIsEmailSending(true);
+
+        try {
+            // Get the report content element
+            const reportElement = document.getElementById('report-content')
+
+            if (!reportElement) {
+                toast.error("Could not generate PDF. Please try again.")
+                setIsEmailSending(false);
+                return
+            }
+
+            // Configure PDF options
+            const options = {
+                margin: [10, 10, 10, 10],
+                filename: `${submission?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }
+
+            const worker = html2pdf().set(options).from(reportElement);
+
+            // Get PDF as base64
+            const blob = await worker.outputPdf("blob");
+            const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+            let base64PDF = await fileToBase64(pdfFile)
+
+            await axios.post("/users/email", {
+                to: userAuth.user?.email,
+                subject: submission.tool || "",
+                body: "",
+                attachment: base64PDF
+            })
+
+            // Save the email for displaying in success popup
+            setSentToEmail(userAuth.user?.email);
+
+            // Show success popup
+            setEmailSuccessOpen(true);
+        } catch (error) {
+            console.error("Email sending error:", error);
+            toast.error("Failed to send email. Please try again.");
+        } finally {
+            // Set loading state back to false
+            setIsEmailSending(false);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
 
-            <header className="bg-black text-white p-4 shadow-md">
-                <div className="container mx-auto flex justify-between items-center">
+            <header className="bg-black text-white p-4 px-10 shadow-md">
+                <div className=" mx-auto flex justify-between items-center">
                     <Logo size="sm" />
                     <div className="flex items-center gap-4">
 
@@ -236,6 +318,7 @@ const UserGeneratedPlans: React.FC = () => {
                                 nav("/dashboard")
                             }}
                         >
+                            <LayoutDashboard className="w-5 h-5" />
                             Dashboard
                         </Button>
                         <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
@@ -244,13 +327,14 @@ const UserGeneratedPlans: React.FC = () => {
                                 setUserAuth(p => ({ ...p, user: null, token: null }))
                                 nav("/login")
                             }}>
+                            <LogOut className="w-5 h-5" />
                             Logout
                         </Button>
                     </div>
                 </div>
             </header>
 
-            <Card className="mt-10 py-8 mx-10">
+            <Card className="mt-10 py-8 mx-10 ">
 
                 <CardContent>
                     {/* Filters */}
@@ -436,6 +520,24 @@ const UserGeneratedPlans: React.FC = () => {
                                                                             <FileText className="mr-2 h-4 w-4" />
                                                                             Export DOCX
                                                                         </Button>
+
+                                                                        <Button
+                                                                            className="bg-primary-red hover:bg-red-700 flex items-center"
+                                                                            onClick={() => handleSendEmail(submission)}
+                                                                            disabled={isEmailSending}
+                                                                        >
+                                                                            {isEmailSending ? (
+                                                                                <>
+                                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                                    Sending...
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <Mail className="mr-2 h-4 w-4" />
+                                                                                    Send to Email
+                                                                                </>
+                                                                            )}
+                                                                        </Button>
                                                                     </CardFooter>
                                                                 </Card>
                                                             </div>
@@ -460,6 +562,33 @@ const UserGeneratedPlans: React.FC = () => {
                     </div>
                 </CardContent>
             </Card>
+
+
+            {/* Success Email Dialog */}
+            <Dialog open={emailSuccessOpen} onOpenChange={setEmailSuccessOpen}>
+                <DialogContent className="sm:max-w-md border-2 border-primary-red">
+                    <DialogHeader className="bg-primary-red text-white rounded-t-lg p-4 mt-3">
+                        <DialogTitle className="flex items-center">
+                            <CheckCircle className="h-6 w-6 text-white mr-2" />
+                            Email Sent Successfully
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-100">
+                            Your report has been sent to:
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-6 bg-white">
+                        <p className="text-center font-medium text-black">{sentToEmail}</p>
+                    </div>
+                    <DialogFooter className="p-4 bg-white">
+                        <Button
+                            className="w-full bg-primary-red hover:bg-red-700 text-white"
+                            onClick={() => setEmailSuccessOpen(false)}
+                        >
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
