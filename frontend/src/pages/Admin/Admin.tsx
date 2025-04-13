@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -91,18 +91,20 @@ interface DefaultAiProvider {
 
 export default function AdminDashboard() {
   const nav = useNavigate()
-  const axios = useAxios("admin")
+  const axios = useAxios("admin");
+  
   const { adminAuth, setAdminAuth } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [submissions, setSubmissions] = useState([]);
   const [apiProviders, setApiProviders] = useState<AiSettingsInterface[]>([]);
+  const prevApiProviderString = useRef("");
   const [promptsData, setPromptsData] = useState<PromptInterface[]>([]);
   const [selectedProviderName, setSelectedProviderName] = useState("ChatGPT (OpenAI)");
   const [models, setModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
 
-
+  
   const handleProviderChange = (providerName: string) => {
     setSelectedProviderName(providerName);
     const provider = apiProviders?.find(p => p.name === providerName);
@@ -110,18 +112,18 @@ export default function AdminDashboard() {
       setModels(provider.models || []);
       const models = provider.models || [];
       const defaultModel = models.includes(provider.model)
-        ? provider.model
-        : models[0] || "";
+      ? provider.model
+      : models[0] || "";
       setSelectedModel(provider.models?.[0] || "");
       handleAiProviderAndModelChange(providerName, defaultModel);
     }
   };
-
+  
   const handleModelChange = (model: string) => {
     setSelectedModel(model);
     handleAiProviderAndModelChange(selectedProviderName, model);
   };
-
+  
   const [filters, setFilters] = useState({
     tool: "",
     dateFrom: undefined as Date | undefined,
@@ -129,8 +131,9 @@ export default function AdminDashboard() {
     api: "",
     search: "",
   })
-
+  
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
+  const prevcurrentPrompt = useRef("");
 
   const handleInputChange = (index, field, value) => {
     setApiProviders(prevState => {
@@ -160,6 +163,7 @@ export default function AdminDashboard() {
     try {
       let res = await axios.get("/aiSettings");
       setApiProviders(res?.data?.data)
+      prevApiProviderString.current = JSON.stringify(res?.data?.data)
       const defaultProvider = res?.data?.data?.find(p => {
         return p.name === selectedProviderName
       });
@@ -311,7 +315,7 @@ export default function AdminDashboard() {
         return false
       }
     }
-    console.log(filters?.search)
+
     // Filter by search term
     if (filters?.search) {
       const searchTerm = (filters?.search || "")?.toLowerCase()
@@ -342,6 +346,7 @@ export default function AdminDashboard() {
 
   const handleEditPrompt = (promptId: string) => {
     const prompt = promptsData.find((p) => p._id === promptId)
+    prevcurrentPrompt.current = JSON.stringify(prompt)
     if (prompt) {
       setCurrentPrompt(prompt)
       setSelectedProviderName(prompt.defaultAiProvider.name)
@@ -492,7 +497,9 @@ export default function AdminDashboard() {
     }
   }
 
-
+// @ts-ignore
+  const isAiProvidersChanged = !(JSON.stringify(apiProviders) == prevApiProviderString.current)
+  const isCurrentPromptChanged = !(JSON.stringify(currentPrompt) == prevcurrentPrompt.current)
 
   return (
     <div className="min-h-screen bg-gray-50" >
@@ -917,7 +924,7 @@ export default function AdminDashboard() {
                       );
                     })}
                   </div>
-                  <Button onClick={updateApiProviders} className="mt-4 bg-primary-red hover:bg-red-700" type="submit">
+                  <Button disabled={!isAiProvidersChanged} onClick={updateApiProviders} className="mt-4 bg-primary-red hover:bg-red-700" type="submit">
                     Save AI Platform Settings
                   </Button>
                 </form>
@@ -1557,7 +1564,7 @@ export default function AdminDashboard() {
                       <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
                         Cancel
                       </Button>
-                      <Button onClick={handleSaveOrCreatePrompt} className="bg-primary-red hover:bg-red-700">
+                      <Button disabled={!isCurrentPromptChanged} onClick={handleSaveOrCreatePrompt} className="bg-primary-red hover:bg-red-700">
                         Update Prompt
                       </Button>
                     </div>
