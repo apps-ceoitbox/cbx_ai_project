@@ -4,6 +4,8 @@ import { AiSettingsInterface } from "./ai.model";
 export interface PromptInterface {
   _id: string;
   heading: string;
+  category: string;
+  visibility: boolean;
   objective: string;
   initialGreetingsMessage: string;
   questions: string[];
@@ -22,6 +24,8 @@ interface DefaultAiProvider {
 const promptSchema: Schema = new Schema(
   {
     heading: { type: String, required: true, unique: true },
+    category: { type: String, },
+    visibility: { type: Boolean, default: true },
     objective: { type: String, default: "" },
     initialGreetingsMessage: { type: String, default: "" },
     questions: { type: Array, default: [] },

@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -48,9 +48,10 @@ import {
 } from "@/components/ui/dialog"
 import { formatBoldText } from "../Report/Report"
 import html2pdf from 'html2pdf.js'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx"
+import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 import { saveAs } from "file-saver"
 
+export const templateCategories = ["Operations", "Marketing", "Sales", "Finance", "HR", "Strategy", "Compliances"]
 
 export interface AiSettingsInterface {
   _id: string;
@@ -69,6 +70,8 @@ export interface AiSettingsInterface {
 export interface PromptInterface {
   _id: string;
   heading: string;
+  category: string;
+  visibility: boolean;
   objective: string;
   initialGreetingsMessage: string;
   questions: string[];
@@ -429,7 +432,7 @@ export default function AdminDashboard() {
         )
       })
 
-      // Add a new section with all content
+      // @ts-ignore
       doc.addSection({
         children: sectionParagraphs
       })
@@ -982,14 +985,43 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="prompt-heading">Template Heading</Label>
-                    <Input
-                      id="prompt-heading"
-                      placeholder="Enter a title for this prompt"
-                      defaultValue={currentPrompt?.heading || ""}
-                      onChange={(e) => handleChangePrompt("heading", e.target.value)}
-                    />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="prompt-heading">Template Heading</Label>
+                      <Input
+                        id="prompt-heading"
+                        placeholder="Enter a title for this prompt"
+                        defaultValue={currentPrompt?.heading || ""}
+                        onChange={(e) => handleChangePrompt("heading", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="Category">Category</Label>
+                      <Select value={currentPrompt?.category || ""} onValueChange={(val) => handleChangePrompt("category", val)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {
+                            templateCategories.map(item => {
+                              return <SelectItem value={item}>{item}</SelectItem>
+                            })
+                          }
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="Visibility">Visibility</Label>
+                      <Select value={String(Number(currentPrompt?.visibility)) || ""} onValueChange={(val) => handleChangePrompt("visibility", !!+val)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={"1"}>Show</SelectItem>
+                          <SelectItem value={"0"}>Hide</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -1143,14 +1175,43 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="prompt-heading">Template Heading</Label>
-                    <Input
-                      id="prompt-heading"
-                      placeholder="Enter a title for this prompt"
-                      defaultValue={currentPrompt?.heading || ""}
-                      onChange={(e) => handleChangePrompt("heading", e.target.value)}
-                    />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="prompt-heading">Template Heading</Label>
+                      <Input
+                        id="prompt-heading"
+                        placeholder="Enter a title for this prompt"
+                        defaultValue={currentPrompt?.heading || ""}
+                        onChange={(e) => handleChangePrompt("heading", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="Category">Category</Label>
+                      <Select value={currentPrompt?.category || ""} onValueChange={(val) => handleChangePrompt("category", val)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {
+                            templateCategories.map(item => {
+                              return <SelectItem value={item}>{item}</SelectItem>
+                            })
+                          }
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="Visibility">Visibility</Label>
+                      <Select value={String(Number(currentPrompt?.visibility)) || ""} onValueChange={(val) => handleChangePrompt("visibility", !!+val)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={"1"}>Show</SelectItem>
+                          <SelectItem value={"0"}>Hide</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -1344,6 +1405,6 @@ export function formatDateTime(dateString) {
     minute: '2-digit',
     hour12: true,
   };
-
+  // @ts-ignore
   return date.toLocaleString('en-US', options).replace(',', '');
 }

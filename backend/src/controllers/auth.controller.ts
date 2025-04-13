@@ -135,3 +135,4 @@ export const checkLicense = async (appName: string, email: string) => {
     return false;
   }
 };
+

@@ -30,6 +30,12 @@ function App() {
           token: userToken,
           isLoading: false
         })
+      }).catch(() => {
+        setUserAuth({
+          user: null,
+          token: userToken,
+          isLoading: false
+        })
       })
     }
     const adminToken = localStorage.getItem("adminToken");
@@ -41,6 +47,12 @@ function App() {
       adminAxios.get("/users/getUser").then((res) => {
         setAdminAuth({
           user: res.data,
+          token: adminToken,
+          isLoading: false
+        })
+      }).catch(() => {
+        setAdminAuth({
+          user: null,
           token: adminToken,
           isLoading: false
         })
