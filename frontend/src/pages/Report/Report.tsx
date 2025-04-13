@@ -202,8 +202,17 @@ export default function ReportPage() {
               <CardHeader className="bg-primary-red text-white rounded-t-lg">
                 <CardTitle className="text-2xl">{report.title}</CardTitle>
                 <CardDescription className="text-gray-100">
-                  Generated on {new Date().toLocaleDateString()}
+                  Generated on{" "}
+                  {new Date().toLocaleString("en-US", {
+                    month: "short",
+                    day: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
                 </CardDescription>
+
               </CardHeader>
 
               <CardContent id="report-content" className="pt-6">

@@ -70,7 +70,7 @@ export default function Dashboard() {
                 nav("/generated-plans")
               }}
             >
-              Generated Plans
+              Dashboard
             </Button>
             <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
               localStorage.removeItem("userToken")
