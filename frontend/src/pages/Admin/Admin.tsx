@@ -26,6 +26,11 @@ import {
   Eye,
   ArrowLeft,
   Download,
+  LogOut,
+  Loader2,
+  Mail,
+  CheckCircle,
+  Info,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -45,13 +50,25 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
+
 import { formatBoldText } from "../Report/Report"
 import html2pdf from 'html2pdf.js'
 import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 import { saveAs } from "file-saver"
 
-export const templateCategories = ["Operations", "Marketing", "Sales", "Finance", "HR", "Strategy", "Compliances"]
+export const templateCategories = [
+  "Compliances",
+  "Finance",
+  "HR",
+  "Marketing",
+  "Operations",
+  "Sales",
+  "Strategy",
+];
 
 export interface AiSettingsInterface {
   _id: string;
@@ -92,7 +109,7 @@ interface DefaultAiProvider {
 export default function AdminDashboard() {
   const nav = useNavigate()
   const axios = useAxios("admin");
-  
+
   const { adminAuth, setAdminAuth } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -103,8 +120,27 @@ export default function AdminDashboard() {
   const [selectedProviderName, setSelectedProviderName] = useState("ChatGPT (OpenAI)");
   const [models, setModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState("");
 
-  
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // @ts-ignore
+        const base64String = reader.result.split(',')[1]; // remove data:application/pdf;base64,
+        resolve(base64String);
+      };
+
+      reader.onerror = reject;
+
+      reader.readAsDataURL(file); // Triggers the conversion
+    });
+  };
+
+
   const handleProviderChange = (providerName: string) => {
     setSelectedProviderName(providerName);
     const provider = apiProviders?.find(p => p.name === providerName);
@@ -112,26 +148,27 @@ export default function AdminDashboard() {
       setModels(provider.models || []);
       const models = provider.models || [];
       const defaultModel = models.includes(provider.model)
-      ? provider.model
-      : models[0] || "";
+        ? provider.model
+        : models[0] || "";
       setSelectedModel(provider.models?.[0] || "");
       handleAiProviderAndModelChange(providerName, defaultModel);
     }
   };
-  
+
   const handleModelChange = (model: string) => {
     setSelectedModel(model);
     handleAiProviderAndModelChange(selectedProviderName, model);
   };
-  
+
   const [filters, setFilters] = useState({
     tool: "",
     dateFrom: undefined as Date | undefined,
     dateTo: undefined as Date | undefined,
     api: "",
     search: "",
+    group: "",
   })
-  
+
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
   const prevcurrentPrompt = useRef("");
 
@@ -229,6 +266,57 @@ export default function AdminDashboard() {
     getPrompts()
   }, [adminAuth.user])
 
+  const handleSendEmail = async (submission) => {
+    // Set loading state to true
+    setIsEmailSending(true);
+
+    try {
+      // Get the report content element
+      const reportElement = document.getElementById('report-content')
+
+      if (!reportElement) {
+        toast.error("Could not generate PDF. Please try again.")
+        setIsEmailSending(false);
+        return
+      }
+
+      // Configure PDF options
+      const options = {
+        margin: [10, 10, 10, 10],
+        filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }
+
+      const worker = html2pdf().set(options).from(reportElement);
+
+      // Get PDF as base64
+      const blob = await worker.outputPdf("blob");
+      const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+      let base64PDF = await fileToBase64(pdfFile)
+
+      await axios.post("/users/email", {
+        to: submission?.email,
+        subject: submission.tool || "",
+        body: "",
+        attachment: base64PDF
+      })
+
+      // Save the email for displaying in success popup
+      setSentToEmail(submission?.email);
+
+      // Show success popup
+      setEmailSuccessOpen(true);
+    } catch (error) {
+      console.error("Email sending error:", error);
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      // Set loading state back to false
+      setIsEmailSending(false);
+    }
+  }
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -251,6 +339,12 @@ export default function AdminDashboard() {
     // Filter by tool
     if (filters.tool && filters.tool !== "all" && submission.tool !== filters.tool) {
       return false
+    }
+
+
+    // Filter by group
+    if (filters.group && filters.group !== "all" && (submission?.category || "") !== filters.group) {
+      return false;
     }
 
     // Filter by API
@@ -292,6 +386,11 @@ export default function AdminDashboard() {
     // Filter by tool
     if (filters.tool && filters.tool !== "all" && (submission?.heading || "") !== filters.tool) {
       return false
+    }
+
+    // Filter by group
+    if (filters.group && filters.group !== "all" && (submission?.category || "") !== filters.group) {
+      return false;
     }
 
     // Filter by API
@@ -340,9 +439,9 @@ export default function AdminDashboard() {
       dateTo: undefined,
       api: "",
       search: "",
+      group: "",
     })
   }
-
 
   const handleEditPrompt = (promptId: string) => {
     const prompt = promptsData.find((p) => p._id === promptId)
@@ -380,7 +479,6 @@ export default function AdminDashboard() {
       return temp
     })
   }
-
 
   const handleChangePromptQuestion = (index: number, value: string) => {
     setCurrentPrompt((prev) => {
@@ -497,14 +595,14 @@ export default function AdminDashboard() {
     }
   }
 
-// @ts-ignore
+  // @ts-ignore
   const isAiProvidersChanged = !(JSON.stringify(apiProviders) == prevApiProviderString.current)
   const isCurrentPromptChanged = !(JSON.stringify(currentPrompt) == prevcurrentPrompt.current)
 
   return (
     <div className="min-h-screen bg-gray-50" >
-      <header className="bg-black text-white p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
+      <header className="bg-black text-white p-4 px-10  shadow-md">
+        <div className="mx-auto flex justify-between items-center">
           <Logo size="sm" />
           <div className="flex items-center gap-4">
             <Button
@@ -517,16 +615,18 @@ export default function AdminDashboard() {
                   token: null,
                   isLoading: false
                 })
+                toast.success("Logout successful")
                 nav("/admin/login")
               }}
             >
+              <LogOut className="w-4 h-4" />
               Logout
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-10">
+      <main className=" mx-auto py-8 px-10">
         <h1 className="text-3xl font-bold mb-8 text-center text-red-500">Admin Dashboard</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -552,6 +652,7 @@ export default function AdminDashboard() {
 
           <TabsContent value="dashboard">
             <Card>
+
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -564,16 +665,17 @@ export default function AdminDashboard() {
                   </Button>
                 </div>
               </CardHeader>
+
               <CardContent>
                 {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                   <div>
                     <Label htmlFor="search">Search</Label>
                     <div className="relative">
                       <Search className="absolute left-2 top-[12px] h-4 w-4 text-muted-foreground" />
                       <Input
                         id="search"
-                        placeholder="Template Name, category, objective..."
+                        placeholder="Template Name, category..."
                         className="pl-8"
                         value={filters.search}
                         onChange={(e) => handleFilterChange("search", e.target.value)}
@@ -597,6 +699,23 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {/* Group */}
+                  <div>
+                    <Label htmlFor="group-filter">Category</Label>
+                    <Select value={filters.group} onValueChange={(value) => handleFilterChange("group", value)}>
+                      <SelectTrigger id="group-filter">
+                        <SelectValue placeholder="All category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All category</SelectItem>
+                        {[...new Set(submissions?.map(item => item.category))]?.map((group) => (
+                          <SelectItem key={group} value={group}>
+                            {group}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   <div>
                     <Label htmlFor="api-filter">API Used</Label>
@@ -614,57 +733,58 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <Label>From Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !filters.dateFrom && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateFrom}
+                            onSelect={(date) => handleFilterChange("dateFrom", date)}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
 
-                  <div>
-                    <Label>From Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !filters.dateFrom && "text-muted-foreground",
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={filters.dateFrom}
-                          onSelect={(date) => handleFilterChange("dateFrom", date)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div>
-                    <Label>To Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !filters.dateTo && "text-muted-foreground",
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={filters.dateTo}
-                          onSelect={(date) => handleFilterChange("dateTo", date)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <div>
+                      <Label>To Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !filters.dateTo && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateTo}
+                            onSelect={(date) => handleFilterChange("dateTo", date)}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
                 </div>
 
@@ -678,8 +798,9 @@ export default function AdminDashboard() {
                         <TableHead className="text-white font-[700]">Email</TableHead>
                         <TableHead className="text-white font-[700]">Company</TableHead>
                         <TableHead className="text-white font-[700]">Tool</TableHead>
-                        <TableHead className="text-white font-[700]">Date</TableHead>
+                        <TableHead className="text-white font-[700]">Category</TableHead>
                         <TableHead className="text-white font-[700]">API Used</TableHead>
+                        <TableHead className="text-white font-[700]">Date</TableHead>
                         <TableHead className="text-white font-[700]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -691,8 +812,9 @@ export default function AdminDashboard() {
                             <TableCell className="py-2">{submission.email}</TableCell>
                             <TableCell className="py-2">{submission.company}</TableCell>
                             <TableCell className="py-2">{submission.tool}</TableCell>
-                            <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
+                            <TableCell className="py-2">{submission?.category || "--"}</TableCell>
                             <TableCell className="py-2">{submission.apiUsed}</TableCell>
+                            <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
                             <TableCell className="py-2">
                               <div className="flex space-x-2">
 
@@ -708,19 +830,19 @@ export default function AdminDashboard() {
                                     <div className="w-full  mx-auto mt-4" >
                                       <Card className="mb-6 border-2">
                                         <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                                          <CardTitle className="text-2xl">{submission?.tool}</CardTitle>
+                                          <CardTitle className="text-2xl">{submission?.tool || "Report"}</CardTitle>
                                           <CardDescription className="text-gray-100">
                                             Generated on {formatDateTime(submission.createdAt)}
                                           </CardDescription>
                                         </CardHeader>
 
-                                        <CardContent id="report-content" className="pt-6">
-                                          {submission?.generatedContent?.sections?.map((section: any, index: number) => (
+                                        <CardContent   dangerouslySetInnerHTML={{ __html: submission?.generatedContent }} id="report-content" className="pt-6">
+                                          {/* {submission?.generatedContent?.sections?.map((section: any, index: number) => (
                                             <div key={index} className="mb-6">
                                               <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
                                               <p className="whitespace-pre-line">{formatBoldText(section.content)}</p>
                                             </div>
-                                          ))}
+                                          ))} */}
                                         </CardContent>
                                         <CardFooter className="flex flex-wrap gap-4 justify-center">
                                           <Button
@@ -738,6 +860,23 @@ export default function AdminDashboard() {
                                           >
                                             <FileText className="mr-2 h-4 w-4" />
                                             Export DOCX
+                                          </Button>
+                                          <Button
+                                            className="bg-primary-red hover:bg-red-700 flex items-center"
+                                            onClick={() => handleSendEmail(submission)}
+                                            disabled={isEmailSending}
+                                          >
+                                            {isEmailSending ? (
+                                              <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Sending...
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Mail className="mr-2 h-4 w-4" />
+                                                Send to Email
+                                              </>
+                                            )}
                                           </Button>
                                         </CardFooter>
                                       </Card>
@@ -842,7 +981,12 @@ export default function AdminDashboard() {
                           {isExpanded && (
                             <div className="p-4 space-y-4">
                               <div className="space-y-2">
-                                <Label htmlFor={`${provider.name}-key`}>API Key</Label>
+
+                                <Label htmlFor={`${provider.name}-key`} className="flex items-center gap-1">
+                                  API Key
+                                  <Info className="w-4 h-4 text-muted-foreground" />
+                                </Label>
+
                                 <Input
                                   id={`${provider.name}-key`}
                                   type="password"
@@ -869,7 +1013,10 @@ export default function AdminDashboard() {
                               </div>
 
                               <div className="space-y-2">
-                                <Label htmlFor={`${provider.name}-model`}>Model</Label>
+                                <Label htmlFor={`${provider.name}-model`} className="flex items-center gap-1">
+                                  Model
+                                  <Info className="w-4 h-4 text-muted-foreground" />
+                                </Label>
                                 <Select
                                   value={provider.model}
                                   onValueChange={(value) => handleInputChange(index, 'model', value)}
@@ -889,7 +1036,10 @@ export default function AdminDashboard() {
 
                               <div className="space-y-2">
                                 <div className="flex justify-between">
-                                  <Label htmlFor={`${provider.name}-temperature`}>Temperature</Label>
+                                  <Label htmlFor={`${provider.name}-temperature`} className="flex items-center gap-1">
+                                    Temperature
+                                    <Info className="w-4 h-4 text-muted-foreground" />
+                                  </Label>
                                   <span className="text-sm text-muted-foreground" id={`${provider.name}-temp-value`}>
                                     {provider.temperature ?? 0.7}
                                   </span>
@@ -907,7 +1057,10 @@ export default function AdminDashboard() {
                               </div>
 
                               <div className="space-y-2">
-                                <Label htmlFor={`${provider.name}-max-tokens`}>Max Tokens</Label>
+                                <Label htmlFor={`${provider.name}-max-tokens`} className="flex items-center gap-1">
+                                  Max Tokens
+                                  <Info className="w-4 h-4 text-muted-foreground" />
+                                </Label>
                                 <Input
                                   id={`${provider.name}-max-tokens`}
                                   type="number"
@@ -972,7 +1125,7 @@ export default function AdminDashboard() {
                 <CardContent>
 
                   {/* Filters */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div>
                       <Label htmlFor="search">Search</Label>
                       <div className="relative">
@@ -1004,6 +1157,24 @@ export default function AdminDashboard() {
                       </Select>
                     </div>
 
+                    {/* Group */}
+                    <div>
+                      <Label htmlFor="group-filter">Category</Label>
+                      <Select value={filters.group} onValueChange={(value) => handleFilterChange("group", value)}>
+                        <SelectTrigger id="group-filter">
+                          <SelectValue placeholder="All category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All category</SelectItem>
+                          {[...new Set(promptsData?.map(item => item.category))]?.map((group) => (
+                            <SelectItem key={group} value={group}>
+                              {group}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div>
                       <Label htmlFor="api-filter">API Used</Label>
                       <Select value={filters.api} onValueChange={(value) => handleFilterChange("api", value)}>
@@ -1020,57 +1191,58 @@ export default function AdminDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <Label>From Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !filters.dateFrom && "text-muted-foreground",
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={filters.dateFrom}
+                              onSelect={(date) => handleFilterChange("dateFrom", date)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
 
-                    <div>
-                      <Label>From Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !filters.dateFrom && "text-muted-foreground",
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={filters.dateFrom}
-                            onSelect={(date) => handleFilterChange("dateFrom", date)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div>
-                      <Label>To Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !filters.dateTo && "text-muted-foreground",
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={filters.dateTo}
-                            onSelect={(date) => handleFilterChange("dateTo", date)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <div>
+                        <Label>To Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !filters.dateTo && "text-muted-foreground",
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={filters.dateTo}
+                              onSelect={(date) => handleFilterChange("dateTo", date)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                   </div>
                   <div className="rounded-md border">
@@ -1576,6 +1748,38 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Success Email Dialog */}
+      <Dialog open={emailSuccessOpen} onOpenChange={setEmailSuccessOpen}>
+        <DialogContent className="sm:max-w-md border-2 border-primary-red">
+          <DialogHeader className="bg-primary-red text-white rounded-t-lg p-4 mt-3">
+            <DialogTitle className="flex items-center">
+              <CheckCircle className="h-6 w-6 text-white mr-2" />
+              Email Sent Successfully
+            </DialogTitle>
+            {/* <DialogDescription className="text-gray-100">
+              Your report has been sent to:
+            </DialogDescription> */}
+          </DialogHeader>
+          {/* <div className="py-6 bg-white">
+            <p className="text-center font-medium text-black">{sentToEmail}</p>
+          </div> */}
+          <div className="py-6 bg-white">
+            <p className="text-center font-medium text-black">
+              We have emailed the plan on{" "}
+              <span className="text-primary-red font-semibold">{sentToEmail}</span> ID
+            </p>
+          </div>
+          <DialogFooter className="p-4 bg-white">
+            <Button
+              className="w-full bg-primary-red hover:bg-red-700 text-white"
+              onClick={() => setEmailSuccessOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div >
   )
 }

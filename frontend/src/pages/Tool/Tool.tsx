@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 import { PromptInterface } from "../Admin/Admin"
+import { toast } from "sonner"
 
 export default function ToolQuestionsPage() {
   const axios = useAxios("user");
@@ -105,6 +106,7 @@ export default function ToolQuestionsPage() {
             <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
               localStorage.removeItem("userToken")
               setUserAuth(p => ({ ...p, user: null, token: null }))
+              toast.success("Logout successful")
               nav("/login")
             }}>
               Logout

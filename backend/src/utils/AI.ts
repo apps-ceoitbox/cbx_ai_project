@@ -174,20 +174,29 @@ export class AI {
         }
     }
 
+    // parseResponse(content: string) {
+    //     let parsedContent = cleanResponse(content);
+
+    //     if (parsedContent.startsWith("```")) {
+    //         parsedContent = parsedContent.replace(/```json|```/g, "").trim();
+    //     }
+
+    //     // Try parsing as JSON
+    //     try {
+    //         return JSON.parse(parsedContent);
+    //     } catch (error) {
+    //         console.log(error)
+    //         console.log(parsedContent)
+    //     }
+    // }
     parseResponse(content: string) {
         let parsedContent = cleanResponse(content);
 
         if (parsedContent.startsWith("```")) {
-            parsedContent = parsedContent.replace(/```json|```/g, "").trim();
+            parsedContent = parsedContent.replace(/```html|```/g, "").trim();
         }
 
-        // Try parsing as JSON
-        try {
-            return JSON.parse(parsedContent);
-        } catch (error) {
-            console.log(error)
-            console.log(parsedContent)
-        }
+        return parsedContent
     }
 }
 

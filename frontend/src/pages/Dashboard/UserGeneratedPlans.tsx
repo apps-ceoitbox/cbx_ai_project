@@ -18,12 +18,13 @@ import {
     Eye,
     Download,
     FileText,
+    Mail,
+    LayoutDashboard,
+    LogOut,
+    Loader2,
+    CheckCircle,
 } from "lucide-react"
-import {
-    Dialog,
-    DialogContent,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+
 import { formatBoldText } from "../Report/Report"
 import { useAxios, useData } from "@/context/AppContext"
 import { formatDateTime } from "../Admin/Admin"
@@ -31,18 +32,32 @@ import html2pdf from 'html2pdf.js'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx"
 import { saveAs } from "file-saver"
 import { toast } from "sonner"
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog"
 
 const UserGeneratedPlans: React.FC = () => {
-    const { setUserAuth } = useData();
+    const { userAuth, setUserAuth } = useData();
     const nav = useNavigate();
     const axios = useAxios("user")
     const [submissions, setSubmissions] = useState([]);
+    const [isEmailSending, setIsEmailSending] = useState(false);
+    const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
+    const [sentToEmail, setSentToEmail] = useState("");
+
     const [filters, setFilters] = useState({
         tool: "",
         dateFrom: undefined as Date | undefined,
         dateTo: undefined as Date | undefined,
         api: "",
         search: "",
+        group: "",
     })
 
     const handleFilterChange = (key: string, value: any) => {
@@ -71,6 +86,7 @@ const UserGeneratedPlans: React.FC = () => {
             dateTo: undefined,
             api: "",
             search: "",
+            group: ""
         })
     }
 
@@ -79,6 +95,11 @@ const UserGeneratedPlans: React.FC = () => {
         // Filter by tool
         if (filters.tool && filters.tool !== "all" && submission.tool !== filters.tool) {
             return false
+        }
+
+        // Filter by group
+        if (filters.group && filters.group !== "all" && (submission?.category || "") !== filters.group) {
+            return false;
         }
 
         // Filter by API
@@ -130,7 +151,7 @@ const UserGeneratedPlans: React.FC = () => {
         // Configure PDF options
         const options = {
             margin: [10, 10, 10, 10],
-            filename: `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+            filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -223,11 +244,79 @@ const UserGeneratedPlans: React.FC = () => {
         }
     }
 
+
+    const fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // @ts-ignore
+                const base64String = reader.result.split(',')[1]; // remove data:application/pdf;base64,
+                resolve(base64String);
+            };
+
+            reader.onerror = reject;
+
+            reader.readAsDataURL(file); // Triggers the conversion
+        });
+    };
+
+
+    const handleSendEmail = async (submission) => {
+        // Set loading state to true
+        setIsEmailSending(true);
+
+        try {
+            // Get the report content element
+            const reportElement = document.getElementById('report-content')
+
+            if (!reportElement) {
+                toast.error("Could not generate PDF. Please try again.")
+                setIsEmailSending(false);
+                return
+            }
+
+            // Configure PDF options
+            const options = {
+                margin: [10, 10, 10, 10],
+                filename: `${submission?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }
+
+            const worker = html2pdf().set(options).from(reportElement);
+
+            // Get PDF as base64
+            const blob = await worker.outputPdf("blob");
+            const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+            let base64PDF = await fileToBase64(pdfFile)
+
+            await axios.post("/users/email", {
+                to: userAuth.user?.email,
+                subject: submission.tool || "",
+                body: "",
+                attachment: base64PDF
+            })
+
+            // Save the email for displaying in success popup
+            setSentToEmail(userAuth.user?.email);
+
+            // Show success popup
+            setEmailSuccessOpen(true);
+        } catch (error) {
+            console.error("Email sending error:", error);
+            toast.error("Failed to send email. Please try again.");
+        } finally {
+            // Set loading state back to false
+            setIsEmailSending(false);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
 
-            <header className="bg-black text-white p-4 shadow-md">
-                <div className="container mx-auto flex justify-between items-center">
+            <header className="bg-black text-white p-4 px-10 shadow-md">
+                <div className=" mx-auto flex justify-between items-center">
                     <Logo size="sm" />
                     <div className="flex items-center gap-4">
 
@@ -236,26 +325,29 @@ const UserGeneratedPlans: React.FC = () => {
                                 nav("/dashboard")
                             }}
                         >
+                            <LayoutDashboard className="w-5 h-5" />
                             Dashboard
                         </Button>
                         <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
                                 localStorage.removeItem("userToken")
                                 setUserAuth(p => ({ ...p, user: null, token: null }))
+                                toast.success("Logout successful")
                                 nav("/login")
                             }}>
+                            <LogOut className="w-5 h-5" />
                             Logout
                         </Button>
                     </div>
                 </div>
             </header>
 
-            <Card className="mt-10 py-8 mx-10">
-
+            <Card
+                className=" mt-10 py-8 mx-10 ">
                 <CardContent>
                     {/* Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        {/* <div>
                             <Label htmlFor="search">Search</Label>
                             <div className="relative">
                                 <Search className="absolute left-2 top-[12px] h-4 w-4 text-muted-foreground" />
@@ -267,7 +359,7 @@ const UserGeneratedPlans: React.FC = () => {
                                     onChange={(e) => handleFilterChange("search", e.target.value)}
                                 />
                             </div>
-                        </div>
+                        </div> */}
 
                         <div>
                             <Label htmlFor="tool-filter">Tool</Label>
@@ -286,7 +378,25 @@ const UserGeneratedPlans: React.FC = () => {
                             </Select>
                         </div>
 
+                        {/* Group */}
                         <div>
+                            <Label htmlFor="group-filter">Category</Label>
+                            <Select value={filters.group} onValueChange={(value) => handleFilterChange("group", value)}>
+                                <SelectTrigger id="group-filter">
+                                    <SelectValue placeholder="All category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All category</SelectItem>
+                                    {[...new Set(submissions?.map(item => item.category))]?.map((group) => (
+                                        <SelectItem key={group} value={group}>
+                                            {group}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* <div>
                             <Label htmlFor="api-filter">API Used</Label>
                             <Select value={filters.api} onValueChange={(value) => handleFilterChange("api", value)}>
                                 <SelectTrigger id="api-filter">
@@ -301,64 +411,67 @@ const UserGeneratedPlans: React.FC = () => {
                                     ))}
                                 </SelectContent>
                             </Select>
-                        </div>
+                        </div> */}
 
-                        <div>
-                            <Label>From Date</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !filters.dateFrom && "text-muted-foreground",
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={filters.dateFrom}
-                                        onSelect={(date) => handleFilterChange("dateFrom", date)}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <Label>From Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !filters.dateFrom && "text-muted-foreground",
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={filters.dateFrom}
+                                            onSelect={(date) => handleFilterChange("dateFrom", date)}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
 
-                        <div>
-                            <Label>To Date</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !filters.dateTo && "text-muted-foreground",
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={filters.dateTo}
-                                        onSelect={(date) => handleFilterChange("dateTo", date)}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                            <div>
+                                <Label>To Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !filters.dateTo && "text-muted-foreground",
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={filters.dateTo}
+                                            onSelect={(date) => handleFilterChange("dateTo", date)}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
 
-                        <div className="mt-6">
-                            <Button variant="outline" onClick={clearFilters}>
-                                Clear Filters
-                            </Button>
+
+                            <div className="mt-6">
+                                <Button variant="outline" onClick={clearFilters}>
+                                    Clear Filters
+                                </Button>
+                            </div>
                         </div>
 
 
@@ -371,12 +484,13 @@ const UserGeneratedPlans: React.FC = () => {
                         <Table>
                             <TableHeader className="bg-primary-red" >
                                 <TableRow className=" hover:bg-primary-red rounded-[10px]">
-                                    <TableHead className="text-white font-[700]">Name</TableHead>
-                                    <TableHead className="text-white font-[700]">Email</TableHead>
-                                    <TableHead className="text-white font-[700]">Company</TableHead>
+                                    {/* <TableHead className="text-white font-[700]">Name</TableHead> */}
+                                    {/* <TableHead className="text-white font-[700]">Email</TableHead> */}
+                                    {/* <TableHead className="text-white font-[700]">Company</TableHead> */}
                                     <TableHead className="text-white font-[700]">Tool</TableHead>
+                                    <TableHead className="text-white font-[700]">Category</TableHead>
                                     <TableHead className="text-white font-[700]">Date</TableHead>
-                                    <TableHead className="text-white font-[700]">API Used</TableHead>
+                                    {/* <TableHead className="text-white font-[700]">API Used</TableHead> */}
                                     <TableHead className="text-white font-[700]">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -384,12 +498,13 @@ const UserGeneratedPlans: React.FC = () => {
                                 {filteredSubmissions?.length > 0 ? (
                                     filteredSubmissions?.map((submission) => (
                                         <TableRow key={submission.id} className="h-8 px-2">
-                                            <TableCell className="font-medium py-2">{submission.name}</TableCell>
-                                            <TableCell className="py-2">{submission.email}</TableCell>
-                                            <TableCell className="py-2">{submission.company}</TableCell>
-                                            <TableCell className="py-2">{submission.tool}</TableCell>
-                                            <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
-                                            <TableCell className="py-2">{submission.apiUsed}</TableCell>
+                                            {/* <TableCell className="font-medium py-2">{submission?.name}</TableCell> */}
+                                            {/* <TableCell className="py-2">{submission?.email}</TableCell> */}
+                                            {/* <TableCell className="py-2">{submission?.company}</TableCell> */}
+                                            <TableCell className="py-2">{submission?.tool}</TableCell>
+                                            <TableCell className="py-2">{submission?.category || "--"}</TableCell>
+                                            <TableCell className="py-2">{formatDateTime(submission?.date)}</TableCell>
+                                            {/* <TableCell className="py-2">{submission?.apiUsed}</TableCell> */}
                                             <TableCell className="py-2">
                                                 <div className="flex space-x-2">
                                                     <Dialog>
@@ -436,6 +551,24 @@ const UserGeneratedPlans: React.FC = () => {
                                                                             <FileText className="mr-2 h-4 w-4" />
                                                                             Export DOCX
                                                                         </Button>
+
+                                                                        <Button
+                                                                            className="bg-primary-red hover:bg-red-700 flex items-center"
+                                                                            onClick={() => handleSendEmail(submission)}
+                                                                            disabled={isEmailSending}
+                                                                        >
+                                                                            {isEmailSending ? (
+                                                                                <>
+                                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                                    Sending...
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <Mail className="mr-2 h-4 w-4" />
+                                                                                    Send to Email
+                                                                                </>
+                                                                            )}
+                                                                        </Button>
                                                                     </CardFooter>
                                                                 </Card>
                                                             </div>
@@ -447,7 +580,7 @@ const UserGeneratedPlans: React.FC = () => {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center">
+                                        <TableCell colSpan={8} className="h-24 text-center">
                                             No submissions found.
                                         </TableCell>
                                     </TableRow>
@@ -460,6 +593,35 @@ const UserGeneratedPlans: React.FC = () => {
                     </div>
                 </CardContent>
             </Card>
+
+
+
+            {/* Success Email Dialog */}
+            <Dialog open={emailSuccessOpen} onOpenChange={setEmailSuccessOpen}>
+                <DialogContent className="sm:max-w-md border-2 border-primary-red">
+                    <DialogHeader className="bg-primary-red text-white rounded-t-lg p-4 mt-3">
+                        <DialogTitle className="flex items-center">
+                            <CheckCircle className="h-6 w-6 text-white mr-2" />
+                            Email Sent Successfully
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-6 bg-white">
+                        <p className="text-center font-medium text-black">
+                            We have emailed the plan on{" "}
+                            <span className="text-primary-red font-semibold">{sentToEmail}</span> ID
+                        </p>
+                    </div>
+                    <DialogFooter className="p-4 bg-white">
+                        <Button
+                            className="w-full bg-primary-red hover:bg-red-700 text-white"
+                            onClick={() => setEmailSuccessOpen(false)}
+                        >
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     )
 }

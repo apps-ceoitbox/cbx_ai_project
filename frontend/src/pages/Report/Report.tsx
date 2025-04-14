@@ -4,24 +4,25 @@ import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Download, Mail, FileText, Loader2 } from "lucide-react"
-import { toolsData } from "@/lib/tools"
-import { useAxios, useData } from "@/context/AppContext"
-import html2pdf from 'html2pdf.js'
-import { Document, Packer, Paragraph, HeadingLevel } from "docx"
-import { saveAs } from "file-saver"
-import { toast } from "sonner"
+import { ArrowLeft, Download, Mail, FileText, Loader2, CheckCircle, LayoutDashboard } from "lucide-react";
+import { toolsData } from "@/lib/tools";
+import { useAxios, useData } from "@/context/AppContext";
+import html2pdf from 'html2pdf.js';
+import { Document, Packer, Paragraph, HeadingLevel } from "docx";
+import { saveAs } from "file-saver";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+
 
 // Sample report data
 export function formatBoldText(text) {
-  // Replace **bold** text with <strong>bold</strong>
   return text
-  // return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
-  //   if (part.startsWith("**") && part.endsWith("**")) {
-  //     return <strong key={index}>{part.slice(2, -2)}</strong>;
-  //   }
-  //   return part;
-  // });
 }
 
 const fileToBase64 = (file) => {
@@ -50,6 +51,10 @@ export default function ReportPage() {
   const axios = useAxios("user");
   const toolId = params.toolId as string
   const tool = toolsData[toolId]
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState("");
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -65,7 +70,6 @@ export default function ReportPage() {
 
     // Get the report content element
     const reportElement = document.getElementById('report-content')
-
     if (!reportElement) {
       toast.error("Could not generate PDF. Please try again.")
       return
@@ -169,41 +173,54 @@ export default function ReportPage() {
   }
 
 
-
   const handleSendEmail = async () => {
-    // Get the report content element
-    const reportElement = document.getElementById('report-content')
+    setIsEmailSending(true);
+    try {
+      const reportElement = document.getElementById('report-content')
 
-    if (!reportElement) {
-      toast.error("Could not generate PDF. Please try again.")
-      return
+      if (!reportElement) {
+        toast.error("Could not generate PDF. Please try again.")
+        setIsEmailSending(false);
+        return
+      }
+
+      // Configure PDF options
+      const options = {
+        margin: [10, 10, 10, 10],
+        filename: `Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }
+
+      const worker = html2pdf().set(options).from(reportElement);
+
+      // Get PDF as base64
+      const blob = await worker.outputPdf("blob");
+      const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+      let base64PDF = await fileToBase64(pdfFile)
+
+      await axios.post("/users/email", {
+        to: userAuth.user?.email,
+        subject: "Report" || "",
+        body: "",
+        attachment: base64PDF
+      })
+
+      // Save the email for displaying in success popup
+      setSentToEmail(userAuth.user?.email);
+
+      // Show success popup
+      setEmailSuccessOpen(true);
+    } catch (error) {
+      console.error("Email sending error:", error);
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      // Set loading state back to false
+      setIsEmailSending(false);
     }
-
-    // Configure PDF options
-    const options = {
-      margin: [10, 10, 10, 10],
-      filename: `${tool?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }
-
-    const worker = html2pdf().set(options).from(reportElement);
-
-    // Get PDF as base64f
-    const blob = await worker.outputPdf("blob");
-    const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
-    let base64PDF = await fileToBase64(pdfFile)
-
-    await axios.post("/users/email", {
-      to:userAuth.user?.email,
-      subject: report.title || "",
-      body: "",
-      attachment: base64PDF
-    })
-
-    toast.success(`Your report has been sent to ${userAuth?.user?.email}`)
   }
+
 
   if (!userAuth?.user) {
     return <Navigate to="/login" />
@@ -211,8 +228,8 @@ export default function ReportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-black text-white p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
+      <header className="bg-black text-white p-4 shadow-md px-10">
+        <div className=" mx-auto flex justify-between items-center">
           <Logo size="sm" />
           <div className="flex items-center gap-4">
             <div className="text-sm">
@@ -224,13 +241,14 @@ export default function ReportPage() {
               className="text-black border-white hover:bg-primary-red hover:text-white"
               onClick={() => nav("/dashboard")}
             >
+              <LayoutDashboard className="w-5 h-5" />
               Dashboard
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4">
+      <main className="mx-auto py-8 px-10">
         <div className="flex items-center justify-between mb-8">
           <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4" onClick={() => nav("/dashboard")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -249,7 +267,7 @@ export default function ReportPage() {
           <div className="w-full max-w-4xl mx-auto" >
             <Card className="mb-6 border-2">
               <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                <CardTitle className="text-2xl">{report.title}</CardTitle>
+                <CardTitle className="text-2xl">{tool?.title || "Report"}</CardTitle>
                 <CardDescription className="text-gray-100">
                   Generated on{" "}
                   {new Date().toLocaleString("en-US", {
@@ -264,13 +282,8 @@ export default function ReportPage() {
 
               </CardHeader>
 
-              <CardContent id="report-content" className="pt-6">
-                {report?.sections?.map((section: any, index: number) => (
-                  <div key={index} className="mb-6">
-                    <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
-                    <p className="whitespace-pre-line">{formatBoldText(section.content)}</p>
-                  </div>
-                ))}
+              <CardContent  dangerouslySetInnerHTML={{ __html: report }} id="report-content" className="pt-6">
+
               </CardContent>
 
               <CardFooter className="flex flex-wrap gap-4 justify-center">
@@ -282,9 +295,23 @@ export default function ReportPage() {
                   <FileText className="mr-2 h-4 w-4" />
                   Export DOCX
                 </Button>
-                <Button className="bg-primary-red hover:bg-red-700 flex items-center" onClick={handleSendEmail}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send to Email
+
+                <Button
+                  className="bg-primary-red hover:bg-red-700 flex items-center"
+                  onClick={handleSendEmail}
+                  disabled={isEmailSending}
+                >
+                  {isEmailSending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send to Email
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </Card>
@@ -298,6 +325,39 @@ export default function ReportPage() {
           </div>
         )}
       </main>
+
+
+      {/* Success Email Dialog */}
+      <Dialog open={emailSuccessOpen} onOpenChange={setEmailSuccessOpen}>
+        <DialogContent className="sm:max-w-md border-2 border-primary-red">
+          <DialogHeader className="bg-primary-red text-white rounded-t-lg p-4 mt-3">
+            <DialogTitle className="flex items-center">
+              <CheckCircle className="h-6 w-6 text-white mr-2" />
+              Email Sent Successfully
+            </DialogTitle>
+            {/* <DialogDescription className="text-gray-100">
+              Your report has been sent to:
+            </DialogDescription> */}
+          </DialogHeader>
+          {/* <div className="py-6 bg-white">
+            <p className="text-center font-medium text-black">{sentToEmail}</p>
+          </div> */}
+          <div className="py-6 bg-white">
+            <p className="text-center font-medium text-black">
+              We have emailed the plan on{" "}
+              <span className="text-primary-red font-semibold">{sentToEmail}</span> ID
+            </p>
+          </div>
+          <DialogFooter className="p-4 bg-white">
+            <Button
+              className="w-full bg-primary-red hover:bg-red-700 text-white"
+              onClick={() => setEmailSuccessOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

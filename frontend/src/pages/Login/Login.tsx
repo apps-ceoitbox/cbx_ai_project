@@ -136,7 +136,7 @@ export default function LoginPage() {
           <Card className="border-primary-red">
             <CardHeader className="bg-primary-red text-white rounded-t-lg">
               <CardTitle className="text-2xl font-bold">Login</CardTitle>
-              <CardDescription className="text-gray-100">Enter your details to access CEOITBOX tools</CardDescription>
+              <CardDescription className="text-gray-100">Enter your Registered Email ID to access CEOITBOX AI Tools</CardDescription>
             </CardHeader>
 
             <CardContent className="pt-6">

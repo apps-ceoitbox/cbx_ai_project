@@ -38,6 +38,7 @@ const submissionSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
     company: { type: String, required: true },
+    category: { type: String, required: true },
     tool: { type: String, required: true },
     date: { type: Date, required: true },
     status: { type: String, required: true, default: "Completed" },
