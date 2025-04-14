@@ -55,7 +55,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-import { formatBoldText } from "../Report/Report"
 import html2pdf from 'html2pdf.js'
 import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 import { saveAs } from "file-saver"
@@ -725,7 +724,7 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All APIs</SelectItem>
-                        {[...new Set(submissions.map(item => item.apiUsed))]?.map((api) => (
+                        {[...new Set(submissions.map(item => item.apiUsed))].filter(item=>item)?.map((api) => (
                           <SelectItem key={api._id} value={api}>
                             {api}
                           </SelectItem>
@@ -1025,7 +1024,7 @@ export default function AdminDashboard() {
                                     <SelectValue placeholder="Select Model" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {[...new Set(provider.models)].map((model) => (
+                                    {[...new Set(provider.models)].filter(model=>model).map((model) => (
                                       <SelectItem key={model} value={model}>
                                         {model}
                                       </SelectItem>
@@ -1148,7 +1147,7 @@ export default function AdminDashboard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All tools</SelectItem>
-                          {[...new Set(promptsData.map(item => item.heading))]?.map((item) => (
+                          {[...new Set(promptsData.map(item => item.heading))].filter(i=>i)?.map((item) => (
                             <SelectItem key={item} value={item}>
                               {item}
                             </SelectItem>
@@ -1166,7 +1165,7 @@ export default function AdminDashboard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All category</SelectItem>
-                          {[...new Set(promptsData?.map(item => item.category))]?.map((group) => (
+                          {[...new Set(promptsData?.map(item => item.category))].filter(i=>i)?.map((group) => (
                             <SelectItem key={group} value={group}>
                               {group}
                             </SelectItem>
@@ -1183,7 +1182,7 @@ export default function AdminDashboard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All APIs</SelectItem>
-                          {[...new Set(promptsData.map(item => item.defaultAiProvider?.name))]?.map((api) => (
+                          {[...new Set(promptsData.map(item => item.defaultAiProvider?.name))].filter(i=>i)?.map((api) => (
                             <SelectItem key={api} value={api}>
                               {api}
                             </SelectItem>
