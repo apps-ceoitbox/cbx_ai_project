@@ -7,7 +7,7 @@ import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAxios, useData } from "@/context/AppContext"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
@@ -138,23 +138,24 @@ export default function AdminLoginPage() {
                   />
                   {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
                 </div>
+                {/* <CardFooter className="w-full"> */}
+                <Button
+                  disabled={!credentials.password || !credentials.email}
+                  onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700 mt-5">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging in...
+                    </>
+                  ) : (
+                    "Login as Admin"
+                  )}
+                </Button>
+                {/* </CardFooter> */}
               </form>
             </CardContent>
 
-            <CardFooter>
-              <Button
-                disabled={!credentials.password || !credentials.email}
-                onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
-                  </>
-                ) : (
-                  "Login as Admin"
-                )}
-              </Button>
-            </CardFooter>
+
 
           </Card>
         </div>
