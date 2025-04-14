@@ -124,9 +124,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ position: "relative" }}>
-      <div style={{ position: "absolute" }} className="p-8">
-        <Logo size="lg" className="mb-8" />
+    <div
+    // style={{ position: "relative" }}
+    >
+      <div style={{ position: "relative" }} className="py-6 pl-8 bg-black ">
+        <Logo size="lg" />
       </div>
 
       <div className="min-h-screen flex flex-col items-center justify-center bg-black p-4">

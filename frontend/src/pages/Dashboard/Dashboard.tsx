@@ -438,16 +438,21 @@ export default function Dashboard() {
 
       <main className="px-10 mx-auto py-8">
         <div className="flex justify-between">
-          <div>
+          <div >
+
             <h1 className="text-3xl font-bold mb-2">Welcome, {userAuth.user.userName}</h1>
             <p className="text-gray-600 mb-8">Select a {selectedCategory ? "tool" : "category"} to get started</p>
           </div>
           {selectedCategory &&
-            <Button onClick={() => setSelectedCategory(null)}
-              style={{ minWidth: "100px" }} variant="ghost" className="mr-4" >
+            <Button
+              onClick={() => setSelectedCategory(null)}
+              style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+              className=" bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
+
           }
         </div>
 

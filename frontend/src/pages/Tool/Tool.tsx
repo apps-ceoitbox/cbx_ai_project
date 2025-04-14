@@ -95,8 +95,9 @@ export default function ToolQuestionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-black text-white p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
+
+      <header className="bg-black text-white p-4 shadow-md px-10">
+        <div className=" mx-auto flex justify-between items-center">
           <Logo size="sm" />
           <div className="flex items-center gap-4">
             <div className="text-sm">
@@ -115,9 +116,12 @@ export default function ToolQuestionsPage() {
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-4">
+      <main className="container mx-auto py-8 px-10">
         <div className="flex items-center justify-between mb-8" >
-          <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4" onClick={() => nav("/dashboard")}>
+          <Button
+            style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+            className=" bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+            variant="ghost" onClick={() => nav("/dashboard")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>

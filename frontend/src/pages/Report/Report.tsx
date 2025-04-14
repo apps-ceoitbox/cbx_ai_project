@@ -258,7 +258,8 @@ export default function ReportPage() {
 
       <main className="mx-auto py-8 px-10">
         <div className="flex items-center justify-between mb-8">
-          <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4" onClick={() => nav("/dashboard")}>
+          <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+            className="mr-4 bg-primary-red  hover:bg-red-700 transition-colors duration-200" variant="ghost" onClick={() => nav("/dashboard")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>

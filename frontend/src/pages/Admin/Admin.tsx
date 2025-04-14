@@ -667,7 +667,7 @@ export default function AdminDashboard() {
 
               <CardContent>
                 {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
                   <div>
                     <Label htmlFor="search">Search</Label>
                     <div className="relative">
@@ -724,7 +724,7 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All APIs</SelectItem>
-                        {[...new Set(submissions.map(item => item.apiUsed))].filter(item=>item)?.map((api) => (
+                        {[...new Set(submissions.map(item => item.apiUsed))].filter(item => item)?.map((api) => (
                           <SelectItem key={api._id} value={api}>
                             {api}
                           </SelectItem>
@@ -732,59 +732,59 @@ export default function AdminDashboard() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <Label>From Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !filters.dateFrom && "text-muted-foreground",
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={filters.dateFrom}
-                            onSelect={(date) => handleFilterChange("dateFrom", date)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div>
-                      <Label>To Date</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !filters.dateTo && "text-muted-foreground",
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={filters.dateTo}
-                            onSelect={(date) => handleFilterChange("dateTo", date)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                  {/* <div className="flex items-center gap-4"> */}
+                  <div>
+                    <Label>From Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !filters.dateFrom && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={filters.dateFrom}
+                          onSelect={(date) => handleFilterChange("dateFrom", date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
+
+                  <div>
+                    <Label>To Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !filters.dateTo && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={filters.dateTo}
+                          onSelect={(date) => handleFilterChange("dateTo", date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  {/* </div> */}
                 </div>
 
 
@@ -1024,7 +1024,7 @@ export default function AdminDashboard() {
                                     <SelectValue placeholder="Select Model" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {[...new Set(provider.models)].filter(model=>model).map((model) => (
+                                    {[...new Set(provider.models)].filter(model => model).map((model) => (
                                       <SelectItem key={model} value={model}>
                                         {model}
                                       </SelectItem>
@@ -1124,7 +1124,7 @@ export default function AdminDashboard() {
                 <CardContent>
 
                   {/* Filters */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
                     <div>
                       <Label htmlFor="search">Search</Label>
                       <div className="relative">
@@ -1147,7 +1147,7 @@ export default function AdminDashboard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All tools</SelectItem>
-                          {[...new Set(promptsData.map(item => item.heading))].filter(i=>i)?.map((item) => (
+                          {[...new Set(promptsData.map(item => item.heading))].filter(i => i)?.map((item) => (
                             <SelectItem key={item} value={item}>
                               {item}
                             </SelectItem>
@@ -1165,7 +1165,7 @@ export default function AdminDashboard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All category</SelectItem>
-                          {[...new Set(promptsData?.map(item => item.category))].filter(i=>i)?.map((group) => (
+                          {[...new Set(promptsData?.map(item => item.category))].filter(i => i)?.map((group) => (
                             <SelectItem key={group} value={group}>
                               {group}
                             </SelectItem>
@@ -1182,7 +1182,7 @@ export default function AdminDashboard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All APIs</SelectItem>
-                          {[...new Set(promptsData.map(item => item.defaultAiProvider?.name))].filter(i=>i)?.map((api) => (
+                          {[...new Set(promptsData.map(item => item.defaultAiProvider?.name))].filter(i => i)?.map((api) => (
                             <SelectItem key={api} value={api}>
                               {api}
                             </SelectItem>
@@ -1190,59 +1190,59 @@ export default function AdminDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <Label>From Date</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !filters.dateFrom && "text-muted-foreground",
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={filters.dateFrom}
-                              onSelect={(date) => handleFilterChange("dateFrom", date)}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      <div>
-                        <Label>To Date</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !filters.dateTo && "text-muted-foreground",
-                              )}
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={filters.dateTo}
-                              onSelect={(date) => handleFilterChange("dateTo", date)}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
+                    {/* <div className="flex items-center gap-4"> */}
+                    <div>
+                      <Label>From Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !filters.dateFrom && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateFrom}
+                            onSelect={(date) => handleFilterChange("dateFrom", date)}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
+
+                    <div>
+                      <Label>To Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !filters.dateTo && "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={filters.dateTo}
+                            onSelect={(date) => handleFilterChange("dateTo", date)}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    {/* </div> */}
                   </div>
                   <div className="rounded-md border">
                     <Table>
@@ -1332,7 +1332,8 @@ export default function AdminDashboard() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-primary-red">{activeTab === "create-prompt" ? "Create Template" : "Edit Template"}</CardTitle>
-                  <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4"
+                  <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                    className="mr-4 bg-primary-red  hover:bg-red-700 transition-colors duration-200" variant="ghost"
                     onClick={() => setActiveTab('manage-prompts')}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
@@ -1522,7 +1523,8 @@ export default function AdminDashboard() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-primary-red">{"Edit Template"}</CardTitle>
-                  <Button style={{ minWidth: "100px" }} variant="ghost" className="mr-4"
+                  <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                    className="mr-4 bg-primary-red  hover:bg-red-700 transition-colors duration-200" variant="ghost"
                     onClick={() => setActiveTab('manage-prompts')}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
