@@ -27,52 +27,71 @@ _a = PromptController;
 PromptController.createPrompt = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const data = req.body;
     const prompt = yield prompt_model_1.default.create(data);
-    res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Prompt created successfully', data: prompt });
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Prompt created successfully", data: prompt });
 }));
 PromptController.getAllPrompts = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const prompts = yield prompt_model_1.default.find().sort({ createdAt: -1 });
-    res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Prompts fetched successfully', data: prompts });
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Prompts fetched successfully", data: prompts });
 }));
 PromptController.getPromptById = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const prompt = yield prompt_model_1.default.findById(req.params.id);
-    res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Prompt fetched successfully', data: prompt });
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Prompt fetched successfully", data: prompt });
 }));
 PromptController.updatePrompt = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const prompt = yield prompt_model_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Prompt updated successfully', data: prompt });
+    const prompt = yield prompt_model_1.default.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+    });
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Prompt updated successfully", data: prompt });
 }));
 PromptController.deletePrompt = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield prompt_model_1.default.findByIdAndDelete(req.params.id);
-    res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Prompt deleted successfully' });
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Prompt deleted successfully" });
 }));
 PromptController.getPromptByToolId = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const prompts = yield prompt_model_1.default.find({ toolId: req.params.toolId });
-    res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Prompts fetched successfully', data: prompts });
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Prompts fetched successfully", data: prompts });
 }));
 PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const questions = req.body.questions;
     const prompt = yield prompt_model_1.default.findOne({ _id: req.body.toolId });
-    const apiProvider = yield ai_model_1.default.findOne({ name: prompt.defaultAiProvider.name });
+    const apiProvider = yield ai_model_1.default.findOne({
+        name: prompt.defaultAiProvider.name,
+    });
     const genPrompt = generatePrompt(questions, prompt);
     const ai = new AI_1.AI({
         name: apiProvider === null || apiProvider === void 0 ? void 0 : apiProvider.name,
         model: prompt.defaultAiProvider.model,
         apiKey: apiProvider.apiKey,
         temperature: apiProvider.temperature,
-        maxTokens: apiProvider.maxTokens
+        maxTokens: apiProvider.maxTokens,
     });
     const response = yield ai.generateResponse(genPrompt);
     submission_model_1.default.create({
         name: req.user.userName,
         email: req.user.email,
         company: req.user.companyName,
+        category: prompt.category,
         tool: prompt.heading,
         date: new Date(),
         apiUsed: apiProvider.name,
         questionsAndAnswers: questions,
         generatedContent: response,
     });
-    res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Response generated successfully', data: response });
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Response generated successfully", data: response });
 }));
 exports.default = PromptController;
 function generatePrompt(userAnswers, promptData) {

@@ -57,6 +57,7 @@ const UserGeneratedPlans: React.FC = () => {
         dateTo: undefined as Date | undefined,
         api: "",
         search: "",
+        group: "",
     })
 
     const handleFilterChange = (key: string, value: any) => {
@@ -85,6 +86,7 @@ const UserGeneratedPlans: React.FC = () => {
             dateTo: undefined,
             api: "",
             search: "",
+            group: ""
         })
     }
 
@@ -93,6 +95,11 @@ const UserGeneratedPlans: React.FC = () => {
         // Filter by tool
         if (filters.tool && filters.tool !== "all" && submission.tool !== filters.tool) {
             return false
+        }
+
+        // Filter by group
+        if (filters.group && filters.group !== "all" && (submission?.category || "") !== filters.group) {
+            return false;
         }
 
         // Filter by API
@@ -334,12 +341,12 @@ const UserGeneratedPlans: React.FC = () => {
                 </div>
             </header>
 
-            <Card className="mt-10 py-8 mx-10 ">
-
+            <Card
+                className=" mt-10 py-8 mx-10 ">
                 <CardContent>
                     {/* Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        {/* <div>
                             <Label htmlFor="search">Search</Label>
                             <div className="relative">
                                 <Search className="absolute left-2 top-[12px] h-4 w-4 text-muted-foreground" />
@@ -351,7 +358,7 @@ const UserGeneratedPlans: React.FC = () => {
                                     onChange={(e) => handleFilterChange("search", e.target.value)}
                                 />
                             </div>
-                        </div>
+                        </div> */}
 
                         <div>
                             <Label htmlFor="tool-filter">Tool</Label>
@@ -370,7 +377,25 @@ const UserGeneratedPlans: React.FC = () => {
                             </Select>
                         </div>
 
+                        {/* Group */}
                         <div>
+                            <Label htmlFor="group-filter">Category</Label>
+                            <Select value={filters.group} onValueChange={(value) => handleFilterChange("group", value)}>
+                                <SelectTrigger id="group-filter">
+                                    <SelectValue placeholder="All category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All category</SelectItem>
+                                    {[...new Set(submissions?.map(item => item.category))]?.map((group) => (
+                                        <SelectItem key={group} value={group}>
+                                            {group}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* <div>
                             <Label htmlFor="api-filter">API Used</Label>
                             <Select value={filters.api} onValueChange={(value) => handleFilterChange("api", value)}>
                                 <SelectTrigger id="api-filter">
@@ -385,64 +410,67 @@ const UserGeneratedPlans: React.FC = () => {
                                     ))}
                                 </SelectContent>
                             </Select>
-                        </div>
+                        </div> */}
 
-                        <div>
-                            <Label>From Date</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !filters.dateFrom && "text-muted-foreground",
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={filters.dateFrom}
-                                        onSelect={(date) => handleFilterChange("dateFrom", date)}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <Label>From Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !filters.dateFrom && "text-muted-foreground",
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {filters.dateFrom ? format(filters.dateFrom, "PPP") : "Pick a date"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={filters.dateFrom}
+                                            onSelect={(date) => handleFilterChange("dateFrom", date)}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
 
-                        <div>
-                            <Label>To Date</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant={"outline"}
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !filters.dateTo && "text-muted-foreground",
-                                        )}
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={filters.dateTo}
-                                        onSelect={(date) => handleFilterChange("dateTo", date)}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
+                            <div>
+                                <Label>To Date</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !filters.dateTo && "text-muted-foreground",
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {filters.dateTo ? format(filters.dateTo, "PPP") : "Pick a date"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={filters.dateTo}
+                                            onSelect={(date) => handleFilterChange("dateTo", date)}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
 
-                        <div className="mt-6">
-                            <Button variant="outline" onClick={clearFilters}>
-                                Clear Filters
-                            </Button>
+
+                            <div className="mt-6">
+                                <Button variant="outline" onClick={clearFilters}>
+                                    Clear Filters
+                                </Button>
+                            </div>
                         </div>
 
 
@@ -455,12 +483,13 @@ const UserGeneratedPlans: React.FC = () => {
                         <Table>
                             <TableHeader className="bg-primary-red" >
                                 <TableRow className=" hover:bg-primary-red rounded-[10px]">
-                                    <TableHead className="text-white font-[700]">Name</TableHead>
-                                    <TableHead className="text-white font-[700]">Email</TableHead>
-                                    <TableHead className="text-white font-[700]">Company</TableHead>
+                                    {/* <TableHead className="text-white font-[700]">Name</TableHead> */}
+                                    {/* <TableHead className="text-white font-[700]">Email</TableHead> */}
+                                    {/* <TableHead className="text-white font-[700]">Company</TableHead> */}
                                     <TableHead className="text-white font-[700]">Tool</TableHead>
+                                    <TableHead className="text-white font-[700]">Category</TableHead>
                                     <TableHead className="text-white font-[700]">Date</TableHead>
-                                    <TableHead className="text-white font-[700]">API Used</TableHead>
+                                    {/* <TableHead className="text-white font-[700]">API Used</TableHead> */}
                                     <TableHead className="text-white font-[700]">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -468,12 +497,13 @@ const UserGeneratedPlans: React.FC = () => {
                                 {filteredSubmissions?.length > 0 ? (
                                     filteredSubmissions?.map((submission) => (
                                         <TableRow key={submission.id} className="h-8 px-2">
-                                            <TableCell className="font-medium py-2">{submission.name}</TableCell>
-                                            <TableCell className="py-2">{submission.email}</TableCell>
-                                            <TableCell className="py-2">{submission.company}</TableCell>
-                                            <TableCell className="py-2">{submission.tool}</TableCell>
-                                            <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
-                                            <TableCell className="py-2">{submission.apiUsed}</TableCell>
+                                            {/* <TableCell className="font-medium py-2">{submission?.name}</TableCell> */}
+                                            {/* <TableCell className="py-2">{submission?.email}</TableCell> */}
+                                            {/* <TableCell className="py-2">{submission?.company}</TableCell> */}
+                                            <TableCell className="py-2">{submission?.tool}</TableCell>
+                                            <TableCell className="py-2">{submission?.category || "--"}</TableCell>
+                                            <TableCell className="py-2">{formatDateTime(submission?.date)}</TableCell>
+                                            {/* <TableCell className="py-2">{submission?.apiUsed}</TableCell> */}
                                             <TableCell className="py-2">
                                                 <div className="flex space-x-2">
                                                     <Dialog>
@@ -549,7 +579,7 @@ const UserGeneratedPlans: React.FC = () => {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center">
+                                        <TableCell colSpan={8} className="h-24 text-center">
                                             No submissions found.
                                         </TableCell>
                                     </TableRow>
@@ -564,6 +594,7 @@ const UserGeneratedPlans: React.FC = () => {
             </Card>
 
 
+
             {/* Success Email Dialog */}
             <Dialog open={emailSuccessOpen} onOpenChange={setEmailSuccessOpen}>
                 <DialogContent className="sm:max-w-md border-2 border-primary-red">
@@ -572,12 +603,12 @@ const UserGeneratedPlans: React.FC = () => {
                             <CheckCircle className="h-6 w-6 text-white mr-2" />
                             Email Sent Successfully
                         </DialogTitle>
-                        <DialogDescription className="text-gray-100">
-                            Your report has been sent to:
-                        </DialogDescription>
                     </DialogHeader>
                     <div className="py-6 bg-white">
-                        <p className="text-center font-medium text-black">{sentToEmail}</p>
+                        <p className="text-center font-medium text-black">
+                            We have emailed the plan on{" "}
+                            <span className="text-primary-red font-semibold">{sentToEmail}</span> ID
+                        </p>
                     </div>
                     <DialogFooter className="p-4 bg-white">
                         <Button
@@ -589,6 +620,7 @@ const UserGeneratedPlans: React.FC = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
         </div>
     )
 }

@@ -17,7 +17,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog"
 
 
@@ -175,41 +174,6 @@ export default function ReportPage() {
   }
 
 
-  // const handleSendEmail = async () => {
-  //   // Get the report content element
-  //   const reportElement = document.getElementById('report-content')
-
-  //   if (!reportElement) {
-  //     toast.error("Could not generate PDF. Please try again.")
-  //     return
-  //   }
-
-  //   // Configure PDF options
-  //   const options = {
-  //     margin: [10, 10, 10, 10],
-  //     filename: `${tool?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
-  //     image: { type: 'jpeg', quality: 0.98 },
-  //     html2canvas: { scale: 2, useCORS: true },
-  //     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  //   }
-
-  //   const worker = html2pdf().set(options).from(reportElement);
-
-  //   // Get PDF as base64f
-  //   const blob = await worker.outputPdf("blob");
-  //   const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
-  //   let base64PDF = await fileToBase64(pdfFile)
-
-  //   await axios.post("/users/email", {
-  //     to: userAuth.user?.email,
-  //     subject: report.title || "",
-  //     body: "",
-  //     attachment: base64PDF
-  //   })
-
-  //   toast.success(`Your report has been sent to ${userAuth?.user?.email}`)
-  // }
-
   const handleSendEmail = async () => {
     setIsEmailSending(true);
     try {
@@ -337,10 +301,7 @@ export default function ReportPage() {
                   <FileText className="mr-2 h-4 w-4" />
                   Export DOCX
                 </Button>
-                {/* <Button className="bg-primary-red hover:bg-red-700 flex items-center" onClick={handleSendEmail}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send to Email
-                </Button> */}
+
                 <Button
                   className="bg-primary-red hover:bg-red-700 flex items-center"
                   onClick={handleSendEmail}
@@ -380,12 +341,18 @@ export default function ReportPage() {
               <CheckCircle className="h-6 w-6 text-white mr-2" />
               Email Sent Successfully
             </DialogTitle>
-            <DialogDescription className="text-gray-100">
+            {/* <DialogDescription className="text-gray-100">
               Your report has been sent to:
-            </DialogDescription>
+            </DialogDescription> */}
           </DialogHeader>
-          <div className="py-6 bg-white">
+          {/* <div className="py-6 bg-white">
             <p className="text-center font-medium text-black">{sentToEmail}</p>
+          </div> */}
+          <div className="py-6 bg-white">
+            <p className="text-center font-medium text-black">
+              We have emailed the plan on{" "}
+              <span className="text-primary-red font-semibold">{sentToEmail}</span> ID
+            </p>
           </div>
           <DialogFooter className="p-4 bg-white">
             <Button
