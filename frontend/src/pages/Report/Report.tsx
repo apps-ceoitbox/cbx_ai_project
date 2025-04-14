@@ -5,7 +5,6 @@ import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Download, Mail, FileText, Loader2, CheckCircle, LayoutDashboard } from "lucide-react";
-import { toolsData } from "@/lib/tools";
 import { useAxios, useData } from "@/context/AppContext";
 import html2pdf from 'html2pdf.js';
 import { Document, Packer, Paragraph, HeadingLevel } from "docx";
@@ -18,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { PromptInterface } from "../Admin/Admin"
 
 
 // Sample report data
@@ -50,12 +50,20 @@ export default function ReportPage() {
   const [report, setReport] = useState<any>(null);
   const axios = useAxios("user");
   const toolId = params.toolId as string
-  const tool = toolsData[toolId]
+  const [tool, setTool] = useState<PromptInterface | null>(null)
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
 
-
+  useEffect(() => {
+    const fetchTool = async () => {
+      const response = await axios.get(`/prompt/${toolId}`)
+      console.log(response.data.data)
+      setTool(response.data.data)
+    }
+    fetchTool()
+  }, [toolId])
+  console.log({tool})
   useEffect(() => {
     const timer = setTimeout(() => {
       setReport(generateResponse)
@@ -78,7 +86,7 @@ export default function ReportPage() {
     // Configure PDF options
     const options = {
       margin: [10, 10, 10, 10],
-      filename: `${tool?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+      filename: `${tool?.heading || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -158,7 +166,7 @@ export default function ReportPage() {
 
       // Generate and download DOCX
       Packer.toBlob(doc).then(blob => {
-        saveAs(blob, `${tool?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
+        saveAs(blob, `${tool?.heading || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
         toast.success("DOCX Downloaded")
       }).catch(error => {
         console.error("DOCX generation error:", error)
@@ -187,7 +195,7 @@ export default function ReportPage() {
       // Configure PDF options
       const options = {
         margin: [10, 10, 10, 10],
-        filename: `Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+        filename: `${tool?.heading || "Report"}_${new Date().toISOString().split('T')[0]}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -202,7 +210,7 @@ export default function ReportPage() {
 
       await axios.post("/users/email", {
         to: userAuth.user?.email,
-        subject: "Report" || "",
+        subject: tool?.heading || "Report" || "",
         body: "",
         attachment: base64PDF
       })
@@ -254,7 +262,7 @@ export default function ReportPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h1 style={{ minWidth: "100px" }} className="text-2xl font-bold">{tool ? tool.title : "Report"} Results</h1>
+          <h1 style={{ minWidth: "100px" }} className="text-2xl font-bold">{tool ? tool.heading : "Report"} Results</h1>
           <div style={{ minWidth: "100px" }} ></div>
         </div>
 
@@ -267,7 +275,7 @@ export default function ReportPage() {
           <div className="w-full max-w-4xl mx-auto" >
             <Card className="mb-6 border-2">
               <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                <CardTitle className="text-2xl">{tool?.title || "Report"}</CardTitle>
+                <CardTitle className="text-2xl">{tool?.heading || "Report"}</CardTitle>
                 <CardDescription className="text-gray-100">
                   Generated on{" "}
                   {new Date().toLocaleString("en-US", {

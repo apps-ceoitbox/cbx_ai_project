@@ -525,13 +525,13 @@ const UserGeneratedPlans: React.FC = () => {
                                                                         </CardDescription>
                                                                     </CardHeader>
 
-                                                                    <CardContent id="report-content" className="pt-6">
-                                                                        {submission?.generatedContent?.sections?.map((section: any, index: number) => (
+                                                                    <CardContent dangerouslySetInnerHTML={{ __html: submission?.generatedContent }} id="report-content" className="pt-6">
+                                                                        {/* {submission?.generatedContent?.sections?.map((section: any, index: number) => (
                                                                             <div key={index} className="mb-6">
                                                                                 <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
                                                                                 <p className="whitespace-pre-line">{formatBoldText(section.content)}</p>
                                                                             </div>
-                                                                        ))}
+                                                                        ))} */}
                                                                     </CardContent>
 
                                                                     <CardFooter className="flex flex-wrap gap-4 justify-center">
