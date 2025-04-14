@@ -75,10 +75,56 @@ export default class PromptController {
 }
 
 
+// function generatePrompt(userAnswers, promptData) {
+//     // Step 1: Format user answers
+//     let formattedAnswers = Object.entries(userAnswers)
+//         .map(([question, answer]) => `${question}: ${answer}`)
+//         .join("\n");
+
+//     // Step 2: Construct the AI prompt
+//     const prompt = `
+//         ${promptData.initialGreetingsMessage}
+
+//         Objective: ${promptData.objective}
+
+//         User Responses:
+//         ${formattedAnswers}
+
+//         Additional Knowledge Base:
+//         ${promptData.knowledgeBase}
+
+//         Additional Details :
+//         ${promptData.promptTemplate}
+
+//         Based on the above information, generate a structured JSON response with multiple sections, following this format:
+//         Do not include any other text or comments in your response.
+
+//         {
+//           "title": "${promptData.heading}",
+//           "sections": [
+//             {
+//               "title": "<Section Title 1>",
+//               "content": "<Detailed content based on user responses and the knowledge base>"
+//             },
+//             {
+//               "title": "<Section Title 2>",
+//               "content": "<Another detailed content>"
+//             },
+//             ...
+//           ]
+//         }
+
+//         The number of sections should be relevant to the user responses and knowledge base. Ensure the response is valid JSON.
+//     `;
+
+//     return prompt;
+// }
+
+
 function generatePrompt(userAnswers, promptData) {
     // Step 1: Format user answers
     let formattedAnswers = Object.entries(userAnswers)
-        .map(([question, answer]) => `${question}: ${answer}`)
+        .map(([question, answer]) => `<p><strong>${question}:</strong> ${answer}</p>`)
         .join("\n");
 
     // Step 2: Construct the AI prompt
@@ -87,34 +133,25 @@ function generatePrompt(userAnswers, promptData) {
 
         Objective: ${promptData.objective}
 
-        User Responses:
+        <h3>User Responses:</h3>
         ${formattedAnswers}
 
-        Additional Knowledge Base:
-        ${promptData.knowledgeBase}
+        <h3>Additional Knowledge Base:</h3>
+        <div>${promptData.knowledgeBase}</div>
 
-        Additional Details :
-        ${promptData.promptTemplate}
+        <h3>Additional Details:</h3>
+        <div>${promptData.promptTemplate}</div>
 
-        Based on the above information, generate a structured JSON response with multiple sections, following this format:
-        Do not include any other text or comments in your response.
+        Based on the above information, generate a complete HTML structure to display a rich UI.
+        The HTML must include:
 
-        {
-          "title": "${promptData.heading}",
-          "sections": [
-            {
-              "title": "<Section Title 1>",
-              "content": "<Detailed content based on user responses and the knowledge base>"
-            },
-            {
-              "title": "<Section Title 2>",
-              "content": "<Another detailed content>"
-            },
-            ...
-          ]
-        }
+        - A main heading using <h1> with the title: "${promptData.heading}"
+        - Multiple content sections with <section> and <h2> as headings
+        - Use <p>, <ul>, <table>, and placeholder <div> with class="chart" for charts if needed
+        - Include relevant data visualizations based on user responses (charts as placeholder <div> with explanatory content)
+        - Use semantic HTML where appropriate
 
-        The number of sections should be relevant to the user responses and knowledge base. Ensure the response is valid JSON.
+        Do NOT include any extra explanation or markdown, return only valid HTML content.
     `;
 
     return prompt;
