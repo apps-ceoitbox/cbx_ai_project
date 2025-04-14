@@ -5,7 +5,7 @@ import { Navigate, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Logo } from "@/components/logo"
 import { useAxios, useData } from "@/context/AppContext"
 import { toast } from "sonner"
@@ -189,23 +189,23 @@ export default function LoginPage() {
                   />
                   {errors.mobile && <p className="text-red-500 text-sm">{errors.mobile}</p>}
                 </div>
+
+                <Button
+                  disabled={!formData.userName || !formData.email}
+                  onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700 mt-5">
+                  {userAuth.isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging in...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
               </form>
             </CardContent>
 
-            <CardFooter>
-              <Button
-                disabled={!formData.userName || !formData.email}
-                onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700">
-                {userAuth.isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
-                  </>
-                ) : (
-                  "Login"
-                )}
-              </Button>
-            </CardFooter>
+
             <div className="py-2">
               <p className="text-center text-[14px] font-[500]">© 2025 CEOITBOX. All rights reserved.</p>
             </div>
