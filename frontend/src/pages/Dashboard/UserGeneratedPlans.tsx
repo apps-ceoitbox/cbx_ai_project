@@ -332,6 +332,7 @@ const UserGeneratedPlans: React.FC = () => {
                             onClick={() => {
                                 localStorage.removeItem("userToken")
                                 setUserAuth(p => ({ ...p, user: null, token: null }))
+                                toast.success("Logout successful")
                                 nav("/login")
                             }}>
                             <LogOut className="w-5 h-5" />

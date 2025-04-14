@@ -615,6 +615,7 @@ export default function AdminDashboard() {
                   token: null,
                   isLoading: false
                 })
+                toast.success("Logout successful")
                 nav("/admin/login")
               }}
             >

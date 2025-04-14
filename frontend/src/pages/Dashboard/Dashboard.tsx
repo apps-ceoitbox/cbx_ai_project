@@ -229,6 +229,7 @@ import {
   ShieldCheck,
   FolderX
 } from "lucide-react";
+import { toast } from "sonner"
 
 export interface PromptInterface {
   _id: string;
@@ -425,6 +426,7 @@ export default function Dashboard() {
             <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
               localStorage.removeItem("userToken")
               setUserAuth(p => ({ ...p, user: null, token: null }))
+              toast.success("Logout successful")
               nav("/login")
             }}>
               <LogOut className="w-5 h-5" />
