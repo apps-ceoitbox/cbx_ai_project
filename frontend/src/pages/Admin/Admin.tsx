@@ -55,10 +55,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-import { formatBoldText } from "../Report/Report"
 import html2pdf from 'html2pdf.js'
-import { Document, Packer, Paragraph, HeadingLevel } from "docx"
-import { saveAs } from "file-saver"
+// import { Document, Packer, Paragraph, HeadingLevel } from "docx"
+// import { saveAs } from "file-saver"
 
 export const templateCategories = [
   "Compliances",
@@ -523,77 +522,77 @@ export default function AdminDashboard() {
   }
 
   // Fixed DOCX download function
-  const handleDownloadDOCX = (submission) => {
-    if (!submission?.generatedContent) {
-      toast.error("No report data available.")
-      return
-    }
+  // const handleDownloadDOCX = (submission) => {
+  //   if (!submission?.generatedContent) {
+  //     toast.error("No report data available.")
+  //     return
+  //   }
 
-    try {
-      // Create a new Document
-      const doc = new Document({
-        sections: [{
-          properties: {},
-          children: [
-            new Paragraph({
-              text: submission.tool || "Report",
-              heading: HeadingLevel.TITLE,
-              thematicBreak: true,
-            }),
-            new Paragraph({
-              text: `Generated on ${new Date().toLocaleDateString()}`,
-              style: "Normal",
-            }),
-          ]
-        }]
-      })
+  //   try {
+  //     // Create a new Document
+  //     const doc = new Document({
+  //       sections: [{
+  //         properties: {},
+  //         children: [
+  //           new Paragraph({
+  //             text: submission.tool || "Report",
+  //             heading: HeadingLevel.TITLE,
+  //             thematicBreak: true,
+  //           }),
+  //           new Paragraph({
+  //             text: `Generated on ${new Date().toLocaleDateString()}`,
+  //             style: "Normal",
+  //           }),
+  //         ]
+  //       }]
+  //     })
 
-      // Create an array to hold all section paragraphs
-      const sectionParagraphs = []
+  //     // Create an array to hold all section paragraphs
+  //     const sectionParagraphs = []
 
-      // Add each section as paragraphs
-      submission.generatedContent.sections.forEach(section => {
-        // Strip markdown bold syntax from strings for DOCX
-        const title = section.title.replace(/\*\*/g, '')
-        const content = section.content.replace(/\*\*/g, '')
+  //     // Add each section as paragraphs
+  //     submission.generatedContent.sections.forEach(section => {
+  //       // Strip markdown bold syntax from strings for DOCX
+  //       const title = section.title.replace(/\*\*/g, '')
+  //       const content = section.content.replace(/\*\*/g, '')
 
-        sectionParagraphs.push(
-          new Paragraph({
-            text: title,
-            heading: HeadingLevel.HEADING_2,
-            spacing: {
-              before: 400,
-              after: 200,
-            },
-          })
-        )
+  //       sectionParagraphs.push(
+  //         new Paragraph({
+  //           text: title,
+  //           heading: HeadingLevel.HEADING_2,
+  //           spacing: {
+  //             before: 400,
+  //             after: 200,
+  //           },
+  //         })
+  //       )
 
-        sectionParagraphs.push(
-          new Paragraph({
-            text: content,
-            style: "Normal",
-          })
-        )
-      })
+  //       sectionParagraphs.push(
+  //         new Paragraph({
+  //           text: content,
+  //           style: "Normal",
+  //         })
+  //       )
+  //     })
 
-      // @ts-ignore
-      doc.addSection({
-        children: sectionParagraphs
-      })
+  //     // @ts-ignore
+  //     doc.addSection({
+  //       children: sectionParagraphs
+  //     })
 
-      // Generate and download DOCX
-      Packer.toBlob(doc).then(blob => {
-        saveAs(blob, `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
-        toast.success("DOCX Downloaded")
-      }).catch(error => {
-        console.error("DOCX generation error:", error)
-        toast.error("Failed to export DOCX. Please try again.")
-      })
-    } catch (error) {
-      console.error("DOCX generation error:", error)
-      toast.error("Failed to create DOCX. Please try again.")
-    }
-  }
+  //     // Generate and download DOCX
+  //     Packer.toBlob(doc).then(blob => {
+  //       saveAs(blob, `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
+  //       toast.success("DOCX Downloaded")
+  //     }).catch(error => {
+  //       console.error("DOCX generation error:", error)
+  //       toast.error("Failed to export DOCX. Please try again.")
+  //     })
+  //   } catch (error) {
+  //     console.error("DOCX generation error:", error)
+  //     toast.error("Failed to create DOCX. Please try again.")
+  //   }
+  // }
 
   // @ts-ignore
   const isAiProvidersChanged = !(JSON.stringify(apiProviders) == prevApiProviderString.current)
@@ -836,7 +835,7 @@ export default function AdminDashboard() {
                                           </CardDescription>
                                         </CardHeader>
 
-                                        <CardContent   dangerouslySetInnerHTML={{ __html: submission?.generatedContent }} id="report-content" className="pt-6">
+                                        <CardContent dangerouslySetInnerHTML={{ __html: submission?.generatedContent }} id="report-content" className="pt-6">
                                           {/* {submission?.generatedContent?.sections?.map((section: any, index: number) => (
                                             <div key={index} className="mb-6">
                                               <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
@@ -853,14 +852,14 @@ export default function AdminDashboard() {
                                             <Download className="mr-2 h-4 w-4" />
                                             Download PDF
                                           </Button>
-                                          <Button
+                                          {/* <Button
                                             variant="outline"
                                             className="flex items-center"
                                             onClick={() => handleDownloadDOCX(submission)}
                                           >
                                             <FileText className="mr-2 h-4 w-4" />
                                             Export DOCX
-                                          </Button>
+                                          </Button> */}
                                           <Button
                                             className="bg-primary-red hover:bg-red-700 flex items-center"
                                             onClick={() => handleSendEmail(submission)}

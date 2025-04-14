@@ -543,14 +543,14 @@ const UserGeneratedPlans: React.FC = () => {
                                                                             <Download className="mr-2 h-4 w-4" />
                                                                             Download PDF
                                                                         </Button>
-                                                                        <Button
+                                                                        {/* <Button
                                                                             variant="outline"
                                                                             className="flex items-center"
                                                                             onClick={() => handleDownloadDOCX(submission)}
                                                                         >
                                                                             <FileText className="mr-2 h-4 w-4" />
                                                                             Export DOCX
-                                                                        </Button>
+                                                                        </Button> */}
 
                                                                         <Button
                                                                             className="bg-primary-red hover:bg-red-700 flex items-center"
