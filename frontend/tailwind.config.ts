@@ -54,6 +54,11 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        brand: {
+          red: "#E63946",
+          black: "#000000",
+          white: "#FFFFFF",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -73,6 +78,10 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-slow": "pulse-slow 3s ease-in-out infinite",
+        "spin-slow": "spin-slow 8s linear infinite",
+        "fade-in": "fade-in 0.5s ease-in",
+        float: "float 3s ease-in-out infinite",
       },
     },
   },

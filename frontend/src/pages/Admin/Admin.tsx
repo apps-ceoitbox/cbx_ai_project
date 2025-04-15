@@ -31,6 +31,7 @@ import {
   Mail,
   CheckCircle,
   Info,
+  LayoutDashboard,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -56,6 +57,7 @@ import {
 } from "@/components/ui/dialog"
 
 import html2pdf from 'html2pdf.js'
+import Header from "./Header"
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
 
@@ -600,30 +602,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50" >
-      <header className="bg-black text-white p-4 px-10  shadow-md">
-        <div className="mx-auto flex justify-between items-center">
-          <Logo size="sm" />
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              className="bg-transparent text-white border-white hover:bg-primary-red hover:text-white"
-              onClick={() => {
-                localStorage.removeItem("adminToken")
-                setAdminAuth({
-                  user: null,
-                  token: null,
-                  isLoading: false
-                })
-                toast.success("Logout successful")
-                nav("/admin/login")
-              }}
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className=" mx-auto py-8 px-10">
         <h1 className="text-3xl font-bold mb-8 text-center text-red-500">Admin Dashboard</h1>

@@ -95,3 +95,42 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* AstroDISC */
+
+.cosmic-bg {
+  background-image: radial-gradient(
+      circle at top right,
+      rgba(230, 57, 70, 0.1) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(230, 57, 70, 0.1) 0%,
+      transparent 40%
+    ),
+    linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.03));
+  background-size: 100% 100%;
+}
+
+.star-field {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.5;
+  background-image: radial-gradient(
+      1px 1px at 25px 5px,
+      white,
+      rgba(255, 255, 255, 0)
+    ),
+    radial-gradient(1px 1px at 50px 25px, white, rgba(255, 255, 255, 0)),
+    radial-gradient(1px 1px at 125px 20px, white, rgba(255, 255, 255, 0)),
+    radial-gradient(1.5px 1.5px at 50px 75px, white, rgba(255, 255, 255, 0)),
+    radial-gradient(2px 2px at 15px 125px, white, rgba(255, 255, 255, 0)),
+    radial-gradient(2.5px 2.5px at 110px 80px, white, rgba(255, 255, 255, 0));
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}

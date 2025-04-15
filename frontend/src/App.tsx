@@ -1,21 +1,19 @@
-import { Route, Routes } from "react-router-dom"
-import Admin from "./pages/Admin/Admin"
-import AdminLogin from "./pages/Admin/AdminLogin"
-import Login from "./pages/Login/Login"
-import Dashboard from "./pages/Dashboard/Dashboard"
-import Tool from "./pages/Tool/Tool"
-import Report from "./pages/Report/Report"
-import HomePage from "./pages/Home/HomePage"
-import Footer from "./pages/Home/Footer"
-import NotFound from "./pages/NotFound"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useAxios, useData } from "./context/AppContext"
-import UserGeneratedPlans from "./pages/Dashboard/UserGeneratedPlans"
+import AppRoutes from "./components/AllRoutes/AppRoutes"
+import AppSidebar from "./components/AppSidebar";
+import { useLocation } from "react-router-dom";
 
 function App() {
   const { setUserAuth, setAdminAuth } = useData();
   const userAxios = useAxios("user");
   const adminAxios = useAxios("admin");
+  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+
+
+  const hiddenSidebarPaths = ["/login", "/", "/admin/login", "/admin", "/astro-disc-dashboard"];
+  const hideSidebar = hiddenSidebarPaths.includes(location.pathname);
 
   useEffect(() => {
     const userToken = localStorage.getItem("userToken");
@@ -39,6 +37,7 @@ function App() {
       })
     }
     const adminToken = localStorage.getItem("adminToken");
+
     if (adminToken) {
       setAdminAuth(p => ({
         ...p,
@@ -61,24 +60,20 @@ function App() {
   }, [])
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/generated-plans" element={<UserGeneratedPlans />} />
-        <Route path="/reports/:toolId" element={<Report />} />
-        <Route path="/tools/:toolId" element={<Tool />} />
-
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-
-        <Route path="*" element={<NotFound />} />
-
-      </Routes>
-      <Footer />
-    </>
+    <div className="flex w-full h-screen">
+      {!hideSidebar && (
+        <AppSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      )}
+      <main
+        className="flex-1 overflow-y-auto transition-all duration-300"
+        style={{
+          marginLeft: hideSidebar ? 0 : collapsed ? "5rem" : "15rem",
+        }}
+      >
+        <AppRoutes />
+      </main>
+    </div>
   )
 }
 

@@ -216,7 +216,7 @@ import { useNavigate } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, FilePlus, FileText, LogOut } from "lucide-react"
+import { ArrowLeft, FilePlus, FileText, Loader2, LogOut } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 import { templateCategories } from "../Admin/Admin"
 import {
@@ -368,16 +368,7 @@ export default function Dashboard() {
 
   const [tools, setTools] = useState<PromptInterface[]>([])
   const [selectedCategory, setSelectedCategory] = useState(null);
-
-  useEffect(() => {
-    if (!userAuth.user) {
-      nav("/login")
-    }
-  }, [userAuth, nav])
-
-  if (!userAuth.user) {
-    return null
-  }
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleToolClick = (toolId: string) => {
     nav(`/tools/${toolId}`)
@@ -385,13 +376,34 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchTools = async () => {
-      const response = await axios.get("/prompt")
-      setTools(response.data.data)
+      try {
+        setIsLoading(true)
+        const response = await axios.get("/prompt")
+        setTools(response?.data?.data)
+      } catch (error) {
+        console.error("Error fetching tools:", error)
+      } finally {
+        setIsLoading(false)
+      }
     }
+
     fetchTools()
   }, [])
 
+
+  useEffect(() => {
+    if (!userAuth.user) {
+      nav("/login")
+    }
+  }, [userAuth, nav])
+
+
+  if (!userAuth.user) {
+    return null
+  }
+
   const filteredTools = tools?.filter(tool => tool.category == selectedCategory && tool.visibility)
+
 
   const categoryIcons = {
     Operations: <Settings className="h-6 w-6" />,
@@ -403,16 +415,17 @@ export default function Dashboard() {
     Compliances: <ShieldCheck className="h-6 w-6" />,
   };
 
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="w-full min-h-screen bg-gray-50">
 
       <header className="bg-black text-white p-4 px-10  shadow-md">
         <div className="mx-auto flex justify-between items-center">
           <Logo size="sm" />
           <div className="flex items-center gap-4">
             <div className="text-sm">
-              <div className="font-medium">{userAuth.user.name}</div>
-              <div className="text-gray-300">{userAuth.user.company}</div>
+              <div className="font-medium">{userAuth?.user.name}</div>
+              <div className="text-gray-300">{userAuth?.user.company}</div>
             </div>
 
             <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
@@ -423,12 +436,13 @@ export default function Dashboard() {
               <FilePlus className="w-5 h-5" />
               Generated Plans
             </Button>
-            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
-              localStorage.removeItem("userToken")
-              setUserAuth(p => ({ ...p, user: null, token: null }))
-              toast.success("Logout successful")
-              nav("/login")
-            }}>
+            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
+              onClick={() => {
+                localStorage.removeItem("userToken")
+                setUserAuth(p => ({ ...p, user: null, token: null }))
+                toast.success("Logout successful")
+                nav("/login")
+              }}>
               <LogOut className="w-5 h-5" />
               Logout
             </Button>
@@ -506,6 +520,11 @@ export default function Dashboard() {
               ))
           }
         </div>}
+        {isLoading &&
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
+          </div>
+        }
       </main>
 
     </div>
