@@ -60,7 +60,7 @@ import html2pdf from 'html2pdf.js'
 // import { saveAs } from "file-saver"
 
 export const templateCategories = [
-  "Compliances",
+  // "Compliances",
   "Finance",
   "HR",
   "Marketing",
@@ -1246,15 +1246,15 @@ export default function AdminDashboard() {
                   </div>
                   <div className="rounded-md border">
                     <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Template Name</TableHead>
-                          <TableHead>Objective</TableHead>
-                          <TableHead>Default AI</TableHead>
-                          <TableHead>Group</TableHead>
-                          <TableHead >Created</TableHead>
-                          <TableHead>Last Modified</TableHead>
-                          <TableHead>Actions</TableHead>
+                      <TableHeader className="bg-primary-red">
+                        <TableRow className=" hover:bg-primary-red rounded-[10px]">
+                          <TableHead className="text-white font-[700]">Template Name</TableHead>
+                          <TableHead className="text-white font-[700]">Objective</TableHead>
+                          <TableHead className="text-white font-[700]">Default AI</TableHead>
+                          <TableHead className="text-white font-[700]">Group</TableHead>
+                          <TableHead className="text-white font-[700]">Created</TableHead>
+                          <TableHead className="text-white font-[700]">Last Modified</TableHead>
+                          <TableHead className="text-white font-[700]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
