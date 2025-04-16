@@ -1,6 +1,6 @@
 
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
     Table,
@@ -41,6 +41,8 @@ import {
     DialogContent,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { useAxios } from "@/context/AppContext";
+import useReRenderEffect from "@/hooks/useReRenderEffect";
 
 
 // Mock data for demonstration purposes
@@ -48,7 +50,7 @@ import {
 interface UserSubmission {
     id: string;
     submittedAt: Date;
-    userInfo: UserInfo;
+    userInfo: Pick<UserInfo, "fullName" | "placeOfBirth" | "gender" | "profession"> & { dateOfBirth: string; timeOfBirth: string; };
     discResults: DiscResults;
 }
 
@@ -156,9 +158,14 @@ const mockSubmissions: UserSubmission[] = [
 ];
 
 const AstroAdminDashboard = () => {
+    const axios = useAxios("admin")
     const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [apiProviders, setApiProviders] = useState([]);
+    const [selectedApiProvider, setSelectedApiProvider] = useState("");
+    const [selectedApiModel, setSelectedApiModel] = useState("");
+    const [formData, setFormData] = useState({});
     const itemsPerPage = 10;
 
     // Filter submissions based on search query
@@ -166,6 +173,8 @@ const AstroAdminDashboard = () => {
         submission.userInfo.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         submission.userInfo.profession.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const models = (apiProviders || []).find(item => item?.name == selectedApiProvider)?.models || [];
 
     // Paginate results
     const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
@@ -188,6 +197,29 @@ const AstroAdminDashboard = () => {
         alert("CSV export functionality would be implemented here");
     };
 
+    const handleSaveSettings = async (data = {}) => {
+        await axios.post("/astro", data)
+        setOpen(false)
+    }
+    const handleSaveAISettings = async (data = {}) => {
+        await axios.post("/astro", {
+            ...data
+        })
+    }
+
+    useEffect(() => {
+        axios.get("/aiSettings").then(res => {
+            setApiProviders(res.data.data.filter(item => {
+                return item.apiKey && item.models.length > 0
+            }))
+        })
+        axios.get("/astro").then(res => {
+            setFormData(res.data.data)
+            setSelectedApiProvider(res.data.data.aiProvider.name)
+            setSelectedApiModel(res.data.data.aiProvider.model)
+        })
+    }, [])
+
     return (
         <div className="min-h-screen flex flex-col cosmic-bg">
 
@@ -197,27 +229,56 @@ const AstroAdminDashboard = () => {
                         <h1 className="text-3xl font-bold text-red-500">Admin Dashboard</h1>
 
                         <div className="flex items-center gap-4">
-                            <Select>
+                            <Select value={selectedApiProvider} onValueChange={val => {
+                                setSelectedApiProvider(val)
+                                const newModel = apiProviders.find(item => item.name == val).models[0]
+                                setSelectedApiModel(newModel)
+                                handleSaveAISettings({
+                                    aiProvider: {
+                                        name: val,
+                                        model: newModel
+                                    },
+                                })
+                            }}>
+                                <SelectTrigger className="w-[250px]">
+                                    <SelectValue placeholder="Select an AI Provider" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>AI Providers</SelectLabel>
+                                        {
+                                            apiProviders.map(item => {
+                                                return <SelectItem value={item.name}>{item.name}</SelectItem>
+                                            })
+                                        }
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            <Select value={selectedApiModel} onValueChange={val => {
+                                setSelectedApiModel(val)
+                                handleSaveAISettings({
+                                    aiProvider: {
+                                        name: selectedApiProvider,
+                                        model: val
+                                    },
+                                })
+                            }}>
                                 <SelectTrigger className="w-[250px]">
                                     <SelectValue placeholder="Select an AI Model" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
                                         <SelectLabel>AI Models</SelectLabel>
-                                        <SelectItem value="ChatGPT (OpenAI)">ChatGPT (OpenAI)</SelectItem>
-                                        <SelectItem value="Claude (Anthropic)">Claude (Anthropic)</SelectItem>
-                                        <SelectItem value="Gemini (Google)">Gemini (Google)</SelectItem>
-                                        <SelectItem value="Groq (Groq)">Groq (Groq)</SelectItem>
-                                        <SelectItem value="Llama (Meta)">Llama (Meta)</SelectItem>
-                                        <SelectItem value="Deepseek">Deepseek</SelectItem>
-                                        <SelectItem value="Ollama (Self-hosted)">Ollama (Self-hosted)</SelectItem>
-                                        <SelectItem value="Perplexity">Perplexity</SelectItem>
-                                        <SelectItem value="Mistral">Mistral</SelectItem>
+                                        {
+                                            models.map(item => {
+                                                return <SelectItem value={item}>{item}</SelectItem>
+                                            })
+                                        }
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
 
-                            <AddPromptsDialogBox open={open} setOpen={setOpen} />
+                            <AddPromptsDialogBox formData={formData} open={open} setOpen={setOpen} onSubmit={handleSaveSettings} />
                         </div>
 
                     </div>

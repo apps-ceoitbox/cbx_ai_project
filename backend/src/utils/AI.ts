@@ -87,7 +87,7 @@ export class AI {
         }
     }
 
-    async generateResponse(prompt: string) {
+    async generateResponse(prompt: string, JSON=false) {
         switch (this.apiProvider.name) {
             case "ChatGPT (OpenAI)": { // Done
                 const response = await this.ai.chat.completions.create({
@@ -96,6 +96,9 @@ export class AI {
                     temperature: this.apiProvider.temperature,
                     max_tokens: this.apiProvider.maxTokens,
                 });
+                if(JSON) {
+                    return this.parseResponseToJSON(response.choices[0].message.content);
+                }
                 return this.parseResponse(response.choices[0].message.content);
             }
 
@@ -106,12 +109,18 @@ export class AI {
                     temperature: this.apiProvider.temperature,
                     messages: [{ role: "user", content: prompt }],
                 });
+                if(JSON) {
+                    return this.parseResponseToJSON(response.content[0].text);
+                }
                 return this.parseResponse(response.content[0].text);
             }
 
             case "Gemini (Google)": { // Done
                 const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
                 const response = await model.generateContent(prompt);
+                if(JSON) {
+                    return this.parseResponseToJSON(response.response.text());
+                }
                 return this.parseResponse(response.response.text());
             }
 
@@ -122,6 +131,9 @@ export class AI {
                     temperature: this.apiProvider.temperature,
                     max_tokens: this.apiProvider.maxTokens,
                 });
+                if(JSON) {
+                    return this.parseResponseToJSON(response.choices[0].message.content);
+                }
                 return this.parseResponse(response.choices[0].message.content);
             }
 
@@ -131,7 +143,9 @@ export class AI {
                     model: this.apiProvider.model || "mistral-large-latest",
                     messages: [{ role: 'user', content: prompt }],
                 });
-
+                if(JSON) {
+                    return this.parseResponseToJSON(chatResponse.choices[0].message.content as string);
+                }
                 return this.parseResponse(chatResponse.choices[0].message.content as string);
 
             }
@@ -154,7 +168,9 @@ export class AI {
                         Authorization: `Bearer ${this.apiProvider.apiKey}`
                     },
                 });
-                console.log(response.data)
+                if(JSON) {
+                    return this.parseResponseToJSON(response.data.choices[0].message.content as string);
+                }
                 return this.parseResponse(response.data.choices[0].message.content);
             }
 
@@ -174,21 +190,21 @@ export class AI {
         }
     }
 
-    // parseResponse(content: string) {
-    //     let parsedContent = cleanResponse(content);
+    parseResponseToJSON(content: string) {
+        let parsedContent = cleanResponse(content);
 
-    //     if (parsedContent.startsWith("```")) {
-    //         parsedContent = parsedContent.replace(/```json|```/g, "").trim();
-    //     }
+        if (parsedContent.startsWith("```")) {
+            parsedContent = parsedContent.replace(/```json|```/g, "").trim();
+        }
 
-    //     // Try parsing as JSON
-    //     try {
-    //         return JSON.parse(parsedContent);
-    //     } catch (error) {
-    //         console.log(error)
-    //         console.log(parsedContent)
-    //     }
-    // }
+        // Try parsing as JSON
+        try {
+            return JSON.parse(parsedContent);
+        } catch (error) {
+            console.log(error)
+            console.log(parsedContent)
+        }
+    }
     parseResponse(content: string) {
         let parsedContent = cleanResponse(content);
 

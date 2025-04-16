@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, CalendarIcon, MapPin, User } from "lucide-react";
+import { ArrowLeft, CalendarIcon, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { format } from "date-fns";
 
 interface UserInfoFormProps {
   onSubmit: (userInfo: UserInfo) => void;
-  setCurrentStep: () => void;
+  setCurrentStep: (p) => void;
 }
 
 enum AppStep {
@@ -26,8 +26,8 @@ enum AppStep {
 
 export interface UserInfo {
   fullName: string;
-  dateOfBirth: Date | undefined;
-  timeOfBirth: { hour: string; minute: string };
+  dateOfBirth: any;
+  timeOfBirth: any;
   placeOfBirth: string;
   gender: string;
   profession: string;

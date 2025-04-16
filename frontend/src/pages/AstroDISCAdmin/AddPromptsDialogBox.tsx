@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,19 +19,20 @@ import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 type Question = {
   question: string;
   options: string[];
-  isCollapsed: boolean;
+  isCollapsed?: boolean;
 };
 
 type AddPromptsDialogBoxProps = {
+  formData: Record<string, any>
   open: boolean;
   setOpen: (open: boolean) => void;
-  onSubmit: (promptContent: string, questions: Question[]) => void;
+  onSubmit: (p: { promptContent: string, questions: Question[] }) => void;
 };
 
 
-const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ open, setOpen, onSubmit }) => {
-  const [promptContent, setPromptContent] = useState('');
-  const [questions, setQuestions] = useState([
+const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ formData, open, setOpen, onSubmit }) => {
+  const [promptContent, setPromptContent] = useState(formData?.promptContent || '');
+  const [questions, setQuestions] = useState(formData?.questions || [
     { question: '', options: ['', '', '', ''], isCollapsed: false }
   ]);
 
@@ -67,7 +68,7 @@ const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ open, setOpen
 
   const handleSubmit = () => {
     // Format all data including prompt and questions
-    const formData = {
+    const formData: { promptContent: string, questions: Question[] } = {
       promptContent,
       questions: questions.filter(q => q.question.trim() !== '').map(q => ({
         question: q.question,
@@ -81,8 +82,13 @@ const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ open, setOpen
       onSubmit(formData);
     }
 
-    setOpen(false);
+    // setOpen(false);
   };
+
+  useEffect(() => {
+    setPromptContent(formData?.promptContent || "")
+    setQuestions(formData?.questions || [])
+  }, [formData])
 
   return (
     <div >
@@ -120,12 +126,12 @@ const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ open, setOpen
           <div className="border-t pt-4">
             <DialogHeader className="mb-4">
               <div className="flex justify-between items-center">
-                <DialogTitle>Questions ({questions.length}/15)</DialogTitle>
+                <DialogTitle>Questions ({(questions || [])?.length}/15)</DialogTitle>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={addQuestion}
-                  disabled={questions.length >= 15}
+                  disabled={(questions || []).length >= 15}
                   className="flex items-center gap-1"
                 >
                   <Plus size={16} /> Add Question
