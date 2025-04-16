@@ -22,10 +22,26 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, DownloadCloud } from "lucide-react";
+import { Search, DownloadCloud, Eye } from "lucide-react";
 import { UserInfo } from "@/components/AstroDISC/UserInfoForm";
 import { DiscResults } from "@/components/AstroDISC/DiscQuiz";
-import Header from "../Admin/Header";
+
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import AddPromptsDialogBox from "./AddPromptsDialogBox";
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+
 
 // Mock data for demonstration purposes
 // In a real application, this would come from your backend/database
@@ -140,6 +156,7 @@ const mockSubmissions: UserSubmission[] = [
 ];
 
 const AstroAdminDashboard = () => {
+    const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -173,11 +190,38 @@ const AstroAdminDashboard = () => {
 
     return (
         <div className="min-h-screen flex flex-col cosmic-bg">
-            <Header />
 
             <main className="flex-1 py-6 px-4 md:px-6 lg:px-8">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                    <div className="flex justify-between">
+                        <h1 className="text-3xl font-bold text-red-500">Admin Dashboard</h1>
+
+                        <div className="flex items-center gap-4">
+                            <Select>
+                                <SelectTrigger className="w-[250px]">
+                                    <SelectValue placeholder="Select an AI Model" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>AI Models</SelectLabel>
+                                        <SelectItem value="ChatGPT (OpenAI)">ChatGPT (OpenAI)</SelectItem>
+                                        <SelectItem value="Claude (Anthropic)">Claude (Anthropic)</SelectItem>
+                                        <SelectItem value="Gemini (Google)">Gemini (Google)</SelectItem>
+                                        <SelectItem value="Groq (Groq)">Groq (Groq)</SelectItem>
+                                        <SelectItem value="Llama (Meta)">Llama (Meta)</SelectItem>
+                                        <SelectItem value="Deepseek">Deepseek</SelectItem>
+                                        <SelectItem value="Ollama (Self-hosted)">Ollama (Self-hosted)</SelectItem>
+                                        <SelectItem value="Perplexity">Perplexity</SelectItem>
+                                        <SelectItem value="Mistral">Mistral</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+
+                            <AddPromptsDialogBox open={open} setOpen={setOpen} />
+                        </div>
+
+                    </div>
+
                     <p className="text-muted-foreground">View and manage AstroDISC user submissions</p>
                 </div>
 
@@ -247,14 +291,14 @@ const AstroAdminDashboard = () => {
                     <CardContent className="p-0">
                         <Table>
                             <TableCaption>A list of AstroDISC submissions.</TableCaption>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Birth Info</TableHead>
-                                    <TableHead>Profession</TableHead>
-                                    <TableHead>Primary Type</TableHead>
-                                    <TableHead>Submission Date</TableHead>
-                                    {/* <TableHead>Action</TableHead> */}
+                            <TableHeader className="bg-primary-red">
+                                <TableRow className=" hover:bg-primary-red rounded-[10px]">
+                                    <TableHead className="text-white font-[700]">Name</TableHead>
+                                    <TableHead className="text-white font-[700]">Birth Info</TableHead>
+                                    <TableHead className="text-white font-[700]">Profession</TableHead>
+                                    <TableHead className="text-white font-[700]">Primary Type</TableHead>
+                                    <TableHead className="text-white font-[700]">Submission Date</TableHead>
+                                    <TableHead className="text-white font-[700]">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -275,6 +319,20 @@ const AstroAdminDashboard = () => {
                                             </span>
                                         </TableCell>
                                         <TableCell>{formatDate(submission.submittedAt)}</TableCell>
+                                        <TableCell>
+
+                                            <Dialog >
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                                        <Eye
+                                                            className="h-4 w-4" />
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto">
+                                                    This is preview model
+                                                </DialogContent>
+                                            </Dialog>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
 

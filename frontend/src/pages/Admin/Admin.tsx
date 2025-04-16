@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -26,12 +25,10 @@ import {
   Eye,
   ArrowLeft,
   Download,
-  LogOut,
   Loader2,
   Mail,
   CheckCircle,
   Info,
-  LayoutDashboard,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -57,7 +54,7 @@ import {
 } from "@/components/ui/dialog"
 
 import html2pdf from 'html2pdf.js'
-import Header from "./Header"
+
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
 
@@ -83,7 +80,6 @@ export interface AiSettingsInterface {
   createdAt: Date;
   updatedAt: Date;
 }
-
 
 export interface PromptInterface {
   _id: string;
@@ -124,6 +120,7 @@ export default function AdminDashboard() {
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
 
   const fileToBase64 = (file) => {
@@ -188,10 +185,13 @@ export default function AdminDashboard() {
 
   const getAllUsersSubmissionsData = async () => {
     try {
+      setIsLoading(true);
       const res = await axios.get("/submission");
       setSubmissions(res?.data?.data)
     } catch (error) {
       console.log(error)
+    } finally {
+      setIsLoading(false);
     }
 
   }
@@ -602,7 +602,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50" >
-      <Header />
+
 
       <main className=" mx-auto py-8 px-10">
         <h1 className="text-3xl font-bold mb-8 text-center text-red-500">Admin Dashboard</h1>
@@ -1727,6 +1727,12 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {isLoading &&
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
+          </div>
+        }
       </main>
 
       {/* Success Email Dialog */}
@@ -1737,13 +1743,8 @@ export default function AdminDashboard() {
               <CheckCircle className="h-6 w-6 text-white mr-2" />
               Email Sent Successfully
             </DialogTitle>
-            {/* <DialogDescription className="text-gray-100">
-              Your report has been sent to:
-            </DialogDescription> */}
           </DialogHeader>
-          {/* <div className="py-6 bg-white">
-            <p className="text-center font-medium text-black">{sentToEmail}</p>
-          </div> */}
+
           <div className="py-6 bg-white">
             <p className="text-center font-medium text-black">
               We have emailed the plan on{" "}

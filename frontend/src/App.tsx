@@ -12,7 +12,7 @@ function App() {
   const [collapsed, setCollapsed] = useState(false);
 
 
-  const hiddenSidebarPaths = ["/login", "/", "/admin/login", "/admin", "/astro-disc-dashboard"];
+  const hiddenSidebarPaths = ["/login", "/", "/admin/login"];
   const hideSidebar = hiddenSidebarPaths.includes(location.pathname);
 
   useEffect(() => {
