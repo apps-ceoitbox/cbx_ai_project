@@ -134,3 +134,20 @@ body {
   background-repeat: repeat;
   background-size: 200px 200px;
 }
+
+/* HomePage.tsx */
+.lgScreenLogo {
+  display: none !important;
+}
+
+.logoAndComNameDiv {
+  display: flex !important;
+}
+@media screen and (max-width: 768px) {
+  .logoAndComNameDiv {
+    display: none !important;
+  }
+  .lgScreenLogo {
+    display: flex !important;
+  }
+}

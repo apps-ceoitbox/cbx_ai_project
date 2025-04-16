@@ -66,13 +66,17 @@ const HomePage = () => {
 
     return (
         <div style={{ position: "relative" }}>
-            <div style={{ position: "absolute" }} className="p-8">
+            <div style={{ position: "absolute" }} className="p-8 logoAndComNameDiv">
                 <Logo size="lg" className="mb-8" />
             </div>
             <div className="min-h-screen bg-black text-white flex flex-col">
                 <div className="flex-grow flex flex-col md:flex-row">
                     {/* Left Section */}
                     <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-16">
+                        <div className="flex items-start justify-start w-full lgScreenLogo">
+                            <Logo size="lg" className="mb-8" />
+                        </div>
+
                         <div className="max-w-lg animate-fadeIn">
                             <h1 className="text-4xl md:text-5xl font-bold mb-6">
                                 Master Your Business with AI

@@ -24,6 +24,7 @@ const AfterLoginHomePage = () => {
                 <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center ">
                     {/* <div className="relative w-full max-w-md aspect-square rounded-full bg-white overflow-hidden border-4 border-white shadow-xl"> */}
                     <img
+                        draggable="false"
                         src='/Banner.jpg'
                         // src="https://ceoitbox.com/wp-content/uploads/2022/05/Sanjeev-Jain-3.png.webp"
                         alt="Image"

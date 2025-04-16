@@ -128,7 +128,7 @@ export default function LoginPage() {
     <div
     // style={{ position: "relative" }}
     >
-      <div style={{ position: "relative" }} className="py-6 pl-8 bg-black ">
+      <div style={{ position: "relative" }} className="py-6 pl-8 bg-black">
         <Logo size="lg" />
       </div>
 
