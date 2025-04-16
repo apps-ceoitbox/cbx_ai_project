@@ -14,7 +14,7 @@ export interface SubmissionsInterface extends Document {
 
 const submissionsSchema: Schema = new Schema(
   {
-    fullName: { type: String, required: true, unique: true },
+    fullName: { type: String, required: true },
     email: { type: String },
     dateOfBirth: { type: String },
     timeOfBirth: { type: String },
