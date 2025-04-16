@@ -12,6 +12,7 @@ import { format } from "date-fns";
 
 interface UserInfoFormProps {
   onSubmit: (userInfo: UserInfo) => void;
+  setCurrentStep: Function
 }
 
 enum AppStep {
@@ -25,8 +26,8 @@ enum AppStep {
 
 export interface UserInfo {
   fullName: string;
-  dateOfBirth: Date | undefined;
-  timeOfBirth: { hour: string; minute: string };
+  dateOfBirth: String;
+  timeOfBirth: String;
   placeOfBirth: string;
   gender: string;
   profession: string;

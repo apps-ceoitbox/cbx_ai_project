@@ -32,7 +32,7 @@ import Header from "../Admin/Header";
 interface UserSubmission {
     id: string;
     submittedAt: Date;
-    userInfo: UserInfo;
+    userInfo: Pick<UserInfo, "fullName" | "placeOfBirth" | "gender" | "profession"> & { dateOfBirth: string; timeOfBirth: string; };
     discResults: DiscResults;
 }
 

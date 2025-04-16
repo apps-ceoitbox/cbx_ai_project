@@ -11,7 +11,6 @@ function App() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
-
   const hiddenSidebarPaths = ["/login", "/", "/admin/login", "/admin", "/astro-disc-dashboard"];
   const hideSidebar = hiddenSidebarPaths.includes(location.pathname);
 

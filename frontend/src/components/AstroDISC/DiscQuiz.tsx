@@ -16,7 +16,8 @@ export interface DiscResults {
   i: number;
   s: number;
   c: number;
-  dominantType: "D" | "I" | "S" | "C";
+  primaryType:  "D" | "I" | "S" | "C";
+  secondaryType: "D" | "I" | "S" | "C";
 }
 
 // Sample DISC questions
@@ -128,7 +129,8 @@ export function DiscQuiz({ onComplete }: DiscQuizProps) {
       i: counts.i,
       s: counts.s,
       c: counts.c,
-      dominantType
+      primaryType:dominantType,
+      secondaryType:dominantType
     };
   };
 

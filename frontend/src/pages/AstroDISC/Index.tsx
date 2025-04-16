@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { WelcomeScreen } from "@/components/AstroDISC/WelcomeScreen";
-import { UserInfoForm } from "@/components/AstroDISC/UserInfoForm";
-import { DiscQuiz } from "@/components/AstroDISC/DiscQuiz";
+import { UserInfo, UserInfoForm } from "@/components/AstroDISC/UserInfoForm";
+import { DiscQuiz, DiscResults } from "@/components/AstroDISC/DiscQuiz";
 import { AnalysisLoading } from "@/components/AstroDISC/AnalysisLoading";
 import { ResultsDisplay } from "@/components/AstroDISC/ResultsDisplay";
 
