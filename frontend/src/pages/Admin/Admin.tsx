@@ -29,6 +29,7 @@ import {
   Mail,
   CheckCircle,
   Info,
+  EyeOff,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -121,7 +122,7 @@ export default function AdminDashboard() {
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  console.log("promptsData", promptsData)
 
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -1239,7 +1240,19 @@ export default function AdminDashboard() {
                       <TableBody>
                         {filteredTemplates?.map((prompt) => (
                           <TableRow key={prompt._id}>
-                            <TableCell className="font-medium">{prompt.heading}</TableCell>
+                            <TableCell >
+                              <div className="flex items-center gap-1">
+                                <p> {prompt.heading}</p>
+                                <div>
+                                  {prompt.visibility ? (
+                                    <Eye size={16} className="text-gray-500" />
+                                  ) : (
+                                    <EyeOff size={16} className="text-gray-500" />
+                                  )}
+                                </div>
+                              </div>
+
+                            </TableCell>
                             <TableCell>{prompt.objective}</TableCell>
                             <TableCell>
                               {prompt.defaultAiProvider.name} ({prompt.defaultAiProvider.model})
