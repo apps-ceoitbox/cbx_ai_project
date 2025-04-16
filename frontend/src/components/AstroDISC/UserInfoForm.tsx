@@ -103,9 +103,9 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
                   selected={userInfo.dateOfBirth}
                   onSelect={(date) => setUserInfo({ ...userInfo, dateOfBirth: date })}
                   initialFocus
-                // captionLayout="dropdown"
-                // fromYear={1900}
-                // toYear={new Date().getFullYear()}
+                  captionLayout="dropdown"
+                  fromYear={1900}
+                  toYear={new Date().getFullYear()}
                 />
 
               </PopoverContent>
