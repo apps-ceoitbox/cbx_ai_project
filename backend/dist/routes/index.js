@@ -10,6 +10,7 @@ const authMiddleware_1 = require("../middlewares/authMiddleware");
 const aiSettings_routes_1 = __importDefault(require("./aiSettings.routes"));
 const prompt_routes_1 = __importDefault(require("./prompt.routes"));
 const submission_routes_1 = __importDefault(require("./submission.routes"));
+const astro_routes_1 = __importDefault(require("./astro.routes"));
 const router = (0, express_1.Router)();
 // Routes that don't require authentication
 router.use("/auth", auth_routes_1.default); // Register and login routes
@@ -20,4 +21,5 @@ router.use("/users", user_routes_1.default);
 router.use("/aiSettings", aiSettings_routes_1.default);
 router.use("/prompt", prompt_routes_1.default);
 router.use("/submission", submission_routes_1.default);
+router.use("/astro", astro_routes_1.default);
 exports.default = router;

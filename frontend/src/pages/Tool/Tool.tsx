@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
-import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,14 +9,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 import { PromptInterface } from "../Admin/Admin"
-import { toast } from "sonner"
 import Header from "../Dashboard/Header"
 
 export default function ToolQuestionsPage() {
   const axios = useAxios("user");
   const nav = useNavigate();
   const params = useParams();
-  const { userAuth, setUserAuth, setGenerateResponse } = useData();
+  const { userAuth, setGenerateResponse } = useData();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})

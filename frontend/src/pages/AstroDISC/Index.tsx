@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { WelcomeScreen } from "@/components/AstroDISC/WelcomeScreen";
 import { UserInfo, UserInfoForm } from "@/components/AstroDISC/UserInfoForm";
-import { DiscQuiz, DiscResults } from "@/components/AstroDISC/DiscQuiz";
+import { DiscQuiz } from "@/components/AstroDISC/DiscQuiz";
 import { AnalysisLoading } from "@/components/AstroDISC/AnalysisLoading";
 import { ResultsDisplay } from "@/components/AstroDISC/ResultsDisplay";
 import { useAxios, useData } from "@/context/AppContext";
@@ -21,7 +21,7 @@ const Index = () => {
   const axios = useAxios("user")
   const [currentStep, setCurrentStep] = useState<AppStep>(AppStep.WELCOME);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [discResults, setDiscResults] = useState<DiscResults | null>(null);
+  // const [discResults, setDiscResults] = useState<DiscResults | null>(null);
 
   const handleGetStarted = () => {
     setCurrentStep(AppStep.USER_INFO);
@@ -42,11 +42,11 @@ const Index = () => {
         ...userInfo,
         fullName: userAuth?.userName || ""
       }
-    }).then(res=>{
+    }).then(res => {
       setAstroResult(res.data.data);
-      setTimeout(()=>{
+      setTimeout(() => {
         setCurrentStep(AppStep.RESULTS);
-      },2000)
+      }, 2000)
     })
   };
 
@@ -57,7 +57,7 @@ const Index = () => {
   const handleRestart = () => {
     setCurrentStep(AppStep.WELCOME);
     setUserInfo(null);
-    setDiscResults(null);
+    // setDiscResults(null);
   };
 
   return (
@@ -78,7 +78,7 @@ const Index = () => {
         )}
 
         {currentStep === AppStep.ANALYZING && (
-          <AnalysisLoading onComplete={()=>{}} />
+          <AnalysisLoading onComplete={() => { }} />
         )}
 
         {currentStep === AppStep.RESULTS && userInfo && astroResult && (

@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label";
 import { useAxios } from "@/context/AppContext";
 import { Loader2 } from "lucide-react";
 
-interface DiscQuizProps {
-  onComplete: (results: DiscResults) => void;
-}
+// interface DiscQuizProps {
+//   onComplete: (results: DiscResults) => void;
+// }
 
 export interface DiscResults {
   d: number;

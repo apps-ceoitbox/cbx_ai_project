@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 const Header = () => {
     const nav = useNavigate();
     const location = useLocation();
-    const { userAuth, setUserAuth } = useData();
+    const { setUserAuth } = useData();
 
     const isToolsPage = location.pathname.startsWith("/tools/");
 

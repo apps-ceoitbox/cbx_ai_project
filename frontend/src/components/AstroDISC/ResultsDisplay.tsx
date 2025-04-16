@@ -14,11 +14,10 @@ import {
   ResponsiveContainer,
   Tooltip
 } from "recharts";
-import { Download } from "lucide-react"; //Share2
 import { useData } from "@/context/AppContext";
 import { useRef } from "react";
-import { toast } from "sonner";
-import html2pdf from 'html2pdf.js'
+// import { toast } from "sonner";
+// import html2pdf from 'html2pdf.js'
 
 interface ResultsDisplayProps {
   userInfo: UserInfo;
@@ -35,41 +34,41 @@ export function ResultsDisplay({ userInfo, onRestart }: ResultsDisplayProps) {
   const reportRef = useRef<HTMLDivElement>(null);
 
 
-  const handleDownload = () => {
-    if (!reportRef.current) return;
+  // const handleDownload = () => {
+  //   if (!reportRef.current) return;
 
-    // Configuration options for html2pdf
-    const opt = {
-      margin: 10,
-      filename: `AstroDISC-${personalityType?.title}-Report.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+  //   // Configuration options for html2pdf
+  //   const opt = {
+  //     margin: 10,
+  //     filename: `AstroDISC-${personalityType?.title}-Report.pdf`,
+  //     image: { type: 'jpeg', quality: 0.98 },
+  //     html2canvas: { scale: 2, useCORS: true },
+  //     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  //   };
 
-    // Show loading indication (if you have a toast system)
-    if (typeof toast !== 'undefined') {
-      toast.loading("Generating your PDF report...");
-    }
+  //   // Show loading indication (if you have a toast system)
+  //   if (typeof toast !== 'undefined') {
+  //     toast.loading("Generating your PDF report...");
+  //   }
 
-    // Generate and download the PDF
-    html2pdf().from(reportRef.current).set(opt).save()
-      .then(() => {
-        // Success notification
-        if (typeof toast !== 'undefined') {
-          toast.dismiss();
-          toast.success("Your PDF report has been downloaded!");
-        }
-        console.log("PDF downloaded successfully");
-      })
-      .catch(error => {
-        console.error("Error generating PDF:", error);
-        if (typeof toast !== 'undefined') {
-          toast.dismiss();
-          toast.error("Failed to generate PDF. Please try again.");
-        }
-      });
-  };
+  //   // Generate and download the PDF
+  //   html2pdf().from(reportRef.current).set(opt).save()
+  //     .then(() => {
+  //       // Success notification
+  //       if (typeof toast !== 'undefined') {
+  //         toast.dismiss();
+  //         toast.success("Your PDF report has been downloaded!");
+  //       }
+  //       console.log("PDF downloaded successfully");
+  //     })
+  //     .catch(error => {
+  //       console.error("Error generating PDF:", error);
+  //       if (typeof toast !== 'undefined') {
+  //         toast.dismiss();
+  //         toast.error("Failed to generate PDF. Please try again.");
+  //       }
+  //     });
+  // };
 
 
   // const handleShare = () => {
@@ -131,13 +130,13 @@ export function ResultsDisplay({ userInfo, onRestart }: ResultsDisplayProps) {
               <CardHeader>
                 <CardTitle>Your DISC Profile</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent >
                 <div className="h-64 mb-6">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis type="number" domain={[0, 100]} />
-                      <YAxis type="category" dataKey="name" />
+                      <YAxis type="category" dataKey="name" width={100} />
                       <Tooltip />
                       <Bar
                         dataKey="value"
@@ -320,14 +319,15 @@ export function ResultsDisplay({ userInfo, onRestart }: ResultsDisplayProps) {
             Share
           </Button> */}
 
-            <Button
+            {/* <Button
               onClick={handleDownload}
               variant="default"
               className="bg-brand-red hover:bg-red-700 flex items-center gap-2"
             >
               <Download className="h-4 w-4" />
               Download PDF
-            </Button>
+            </Button> */}
+            <div></div>
           </div>
 
 

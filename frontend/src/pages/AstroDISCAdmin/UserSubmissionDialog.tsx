@@ -74,7 +74,7 @@ const UserSubmissionDialog = ({ submission }) => {
                                     <BarChart data={submission?.generatedContent?.chartData} layout="vertical">
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis type="number" domain={[0, 100]} />
-                                        <YAxis type="category" dataKey="name" />
+                                        <YAxis type="category" dataKey="name" width={100} />
                                         <Tooltip />
                                         <Bar
                                             dataKey="value"

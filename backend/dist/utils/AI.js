@@ -79,8 +79,8 @@ class AI {
                 break;
         }
     }
-    generateResponse(prompt) {
-        return __awaiter(this, void 0, void 0, function* () {
+    generateResponse(prompt_1) {
+        return __awaiter(this, arguments, void 0, function* (prompt, JSON = false) {
             switch (this.apiProvider.name) {
                 case "ChatGPT (OpenAI)": { // Done
                     const response = yield this.ai.chat.completions.create({
@@ -89,6 +89,9 @@ class AI {
                         temperature: this.apiProvider.temperature,
                         max_tokens: this.apiProvider.maxTokens,
                     });
+                    if (JSON) {
+                        return this.parseResponseToJSON(response.choices[0].message.content);
+                    }
                     return this.parseResponse(response.choices[0].message.content);
                 }
                 case "Claude (Anthropic)": { // Done
@@ -98,11 +101,17 @@ class AI {
                         temperature: this.apiProvider.temperature,
                         messages: [{ role: "user", content: prompt }],
                     });
+                    if (JSON) {
+                        return this.parseResponseToJSON(response.content[0].text);
+                    }
                     return this.parseResponse(response.content[0].text);
                 }
                 case "Gemini (Google)": { // Done
                     const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
                     const response = yield model.generateContent(prompt);
+                    if (JSON) {
+                        return this.parseResponseToJSON(response.response.text());
+                    }
                     return this.parseResponse(response.response.text());
                 }
                 case "Perplexity": { // Done
@@ -112,6 +121,9 @@ class AI {
                         temperature: this.apiProvider.temperature,
                         max_tokens: this.apiProvider.maxTokens,
                     });
+                    if (JSON) {
+                        return this.parseResponseToJSON(response.choices[0].message.content);
+                    }
                     return this.parseResponse(response.choices[0].message.content);
                 }
                 case "Mistral": { // Done
@@ -120,6 +132,9 @@ class AI {
                         model: this.apiProvider.model || "mistral-large-latest",
                         messages: [{ role: 'user', content: prompt }],
                     });
+                    if (JSON) {
+                        return this.parseResponseToJSON(chatResponse.choices[0].message.content);
+                    }
                     return this.parseResponse(chatResponse.choices[0].message.content);
                 }
                 case "Ollama (Self-hosted)": { // Done
@@ -138,7 +153,9 @@ class AI {
                             Authorization: `Bearer ${this.apiProvider.apiKey}`
                         },
                     });
-                    console.log(response.data);
+                    if (JSON) {
+                        return this.parseResponseToJSON(response.data.choices[0].message.content);
+                    }
                     return this.parseResponse(response.data.choices[0].message.content);
                 }
                 // **********************
@@ -155,19 +172,20 @@ class AI {
             }
         });
     }
-    // parseResponse(content: string) {
-    //     let parsedContent = cleanResponse(content);
-    //     if (parsedContent.startsWith("```")) {
-    //         parsedContent = parsedContent.replace(/```json|```/g, "").trim();
-    //     }
-    //     // Try parsing as JSON
-    //     try {
-    //         return JSON.parse(parsedContent);
-    //     } catch (error) {
-    //         console.log(error)
-    //         console.log(parsedContent)
-    //     }
-    // }
+    parseResponseToJSON(content) {
+        let parsedContent = cleanResponse(content);
+        if (parsedContent.startsWith("```")) {
+            parsedContent = parsedContent.replace(/```json|```/g, "").trim();
+        }
+        // Try parsing as JSON
+        try {
+            return JSON.parse(parsedContent);
+        }
+        catch (error) {
+            console.log(error);
+            console.log(parsedContent);
+        }
+    }
     parseResponse(content) {
         let parsedContent = cleanResponse(content);
         if (parsedContent.startsWith("```")) {

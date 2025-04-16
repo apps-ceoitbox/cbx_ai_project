@@ -108,7 +108,7 @@ export default function AdminDashboard() {
   const nav = useNavigate()
   const axios = useAxios("admin");
 
-  const { adminAuth, setAdminAuth } = useData();
+  const { adminAuth } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [submissions, setSubmissions] = useState([]);

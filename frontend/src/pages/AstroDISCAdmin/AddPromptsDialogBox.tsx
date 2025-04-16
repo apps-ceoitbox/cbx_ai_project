@@ -34,7 +34,7 @@ type AddPromptsDialogBoxProps = {
 const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ formData, open, setOpen, onSubmit }) => {
   const [promptContent, setPromptContent] = useState(formData?.promptContent || '');
   const [questions, setQuestions] = useState(formData?.questions || [
-    { question: '', options: ['', '', '', ''], isCollapsed: true }
+    { question: '', options: ['', '', '', ''], isCollapsed: false }
   ]);
 
   const addQuestion = () => {
