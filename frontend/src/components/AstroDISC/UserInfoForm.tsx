@@ -82,7 +82,7 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <div className="space-y-2">
-            <Label htmlFor="dateOfBirth">Date of Birth</Label>
+            <Label htmlFor="dateOfBirth">Date of Birth*</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -154,7 +154,7 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="placeOfBirth">Place of Birth</Label>
+            <Label htmlFor="placeOfBirth">Place of Birth*</Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -197,7 +197,7 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
             />
           </div>
 
-          <Button type="submit" className="w-full bg-brand-red hover:bg-opacity-90 hover:bg-red-700">Continue to Assessment</Button>
+          <Button disabled={!userInfo?.dateOfBirth || !userInfo?.placeOfBirth} type="submit" className="w-full bg-brand-red hover:bg-opacity-90 hover:bg-red-700">Continue to Assessment</Button>
         </form>
       </motion.div>
     </div>

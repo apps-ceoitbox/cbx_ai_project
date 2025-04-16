@@ -77,7 +77,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black"
-                                style={{ background: location.pathname === "/dashboard" ? "rgb(229 9 20)" : "", color: location.pathname === "/dashboard" ? "#fff" : "black" }}
+                                style={{ background: (location.pathname === "/dashboard" || location.pathname === "/generated-plans") ? "rgb(229 9 20)" : "", color: (location.pathname === "/dashboard" || location.pathname === "/generated-plans") ? "#fff" : "black" }}
                             >
                                 <FilePlus size={18} />
                                 {!collapsed && "Generate Plans"}
