@@ -71,7 +71,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
       <Button
         onClick={onGetStarted}
         size="lg"
-        className="bg-brand-red hover:bg-opacity-90 hover:bg-red-700 text-white px-8 py-6 text-lg rounded-full"
+        className="bg-brand-red hover:bg-red-700 hover:bg-red-700 text-white px-8 py-6 text-lg rounded-full"
       >
         Get Started
       </Button>

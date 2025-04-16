@@ -3,7 +3,10 @@ import { HttpStatusCodes } from "../utils/errorCodes";
 import { asyncHandler } from "../utils/asyncHandler";
 import AiSettings from "../models/ai.model";
 import { AI, ApiProvider } from "../utils/AI";
-import AstroSettings, { AstroSettingsInterface } from "../models/astroSettings.model";
+import AstroSettings, {
+  AstroSettingsInterface,
+} from "../models/astroSettings.model";
+import AstroSubmissions from "../models/astroSubmission.model";
 dotenv.config();
 
 export default class AstroController {
@@ -11,9 +14,9 @@ export default class AstroController {
     const data: Partial<AstroSettingsInterface> = req.body;
 
     const result = await AstroSettings.findOneAndUpdate(
-      { name: "Astro" },              // Filter to find the document
-      { $set: data },   // Update fields
-      { new: true, upsert: true }   // Options: create if not found
+      { name: "Astro" }, // Filter to find the document
+      { $set: data }, // Update fields
+      { new: true, upsert: true } // Options: create if not found
     );
 
     res
@@ -22,17 +25,44 @@ export default class AstroController {
   });
 
   static getSettings = asyncHandler(async (req, res) => {
-    const data = await AstroSettings.findOne({ name: "Astro" })
+    const data = await AstroSettings.findOne({ name: "Astro" });
     res
       .status(HttpStatusCodes.OK)
       .json({ message: "Astro Settings fetched successfully", data: data });
   });
 
+  static getAllSubmissions = asyncHandler(async (req, res) => {
+    const submissions = await AstroSubmissions.find().sort({ createdAt: -1 });
+
+    const totalSubmissions = submissions.length;
+
+    // Count Type D and Type I dominant
+    let typeD = 0;
+    let typeI = 0;
+
+    submissions.forEach((sub) => {
+      const primary = sub.generatedContent?.personalityDetails?.primaryType;
+      if (primary === "D") typeD++;
+      if (primary === "I") typeI++;
+    });
+
+    const lastSubmission = submissions[0]?.createdAt || null;
+
+    res.status(HttpStatusCodes.OK).json({
+      message: "Submissions fetched successfully",
+      totalSubmissions,
+      typeDDominant: typeD,
+      typeIDominant: typeI,
+      lastSubmission,
+      data: submissions,
+    });
+  });
+
   static generateResponseByAI = asyncHandler(async (req, res) => {
     const questions: Record<string, string> = req.body.questions;
     const userData: Record<string, any> = req.body.userData;
-    userData.timeOfBirth = `${userData.timeOfBirth.hour}:${userData.timeOfBirth.minute}`
-    const data = await AstroSettings.findOne({ name: "Astro" })
+    userData.timeOfBirth = `${userData.timeOfBirth.hour}:${userData.timeOfBirth.minute}`;
+    const data = await AstroSettings.findOne({ name: "Astro" });
     const apiProvider = await AiSettings.findOne({
       name: data.aiProvider.name,
     });
@@ -49,17 +79,15 @@ export default class AstroController {
 
     const response = await ai.generateResponse(genPrompt, true);
 
-    // Submission.create({
-    //   name: req.user.userName,
-    //   email: req.user.email,
-    //   company: req.user.companyName,
-    //   category: prompt.category,
-    //   tool: prompt.heading,
-    //   date: new Date(),
-    //   apiUsed: apiProvider.name,
-    //   questionsAndAnswers: questions,
-    //   generatedContent: response,
-    // });
+    AstroSubmissions.create({
+      fullName: req.user.userName,
+      email: req.user.email,
+      dateOfBirth: userData.dateOfBirth,
+      timeOfBirth: userData.timeOfBirth,
+      placeOfBirth: userData.placeOfBirth,
+      profession: userData.profession,
+      generatedContent: response,
+    });
 
     res
       .status(HttpStatusCodes.OK)
@@ -67,8 +95,11 @@ export default class AstroController {
   });
 }
 
-
-function generatePrompt(answers = {}, userInfo: Record<string, string> = {}, promptText = "") {
+function generatePrompt(
+  answers = {},
+  userInfo: Record<string, string> = {},
+  promptText = ""
+) {
   const formattedAnswers = Object.entries(answers)
     .map(([q, a]) => `${q}: ${a}`)
     .join("\n");
@@ -99,6 +130,7 @@ DiscResult = {
   personalityDetails: {
     title: string (e.g. "The Strategist"),
     primaryType: string ("D", "I", "S", or "C" — based on the highest score in chartData),
+    secondaryType: string ("D", "I", "S", or "C" — based on the second highest score in chartData),
     keywords: array of 4–6 adjectives (e.g. ["Confident", "Analytical", ...]),
     workStyle: array of 3–5 personalized statements about the user's work approach,
     careers: array of 3–6 recommended career paths

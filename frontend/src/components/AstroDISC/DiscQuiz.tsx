@@ -22,59 +22,7 @@ export interface DiscResults {
   secondaryType: "D" | "I" | "S" | "C";
 }
 
-// Sample DISC questions
-// const questions = [
-//   {
-//     id: 1,
-//     question: "In a group setting, I tend to:",
-//     options: [
-//       { id: "d1", label: "Take charge and make decisions quickly", type: "d" },
-//       { id: "i1", label: "Engage and energize others", type: "i" },
-//       { id: "s1", label: "Listen carefully and support the team", type: "s" },
-//       { id: "c1", label: "Analyze all options before proceeding", type: "c" },
-//     ],
-//   },
-//   {
-//     id: 2,
-//     question: "When facing a challenge, I typically:",
-//     options: [
-//       { id: "d2", label: "Address it head-on with direct action", type: "d" },
-//       { id: "i2", label: "Look for creative solutions and involve others", type: "i" },
-//       { id: "s2", label: "Take a steady, patient approach", type: "s" },
-//       { id: "c2", label: "Thoroughly research and plan my approach", type: "c" },
-//     ],
-//   },
-//   {
-//     id: 3,
-//     question: "Others would likely describe me as:",
-//     options: [
-//       { id: "d3", label: "Confident, assertive, and results-oriented", type: "d" },
-//       { id: "i3", label: "Enthusiastic, expressive, and optimistic", type: "i" },
-//       { id: "s3", label: "Patient, reliable, and team-oriented", type: "s" },
-//       { id: "c3", label: "Precise, analytical, and detail-oriented", type: "c" },
-//     ],
-//   },
-//   {
-//     id: 4,
-//     question: "My ideal work environment is one that:",
-//     options: [
-//       { id: "d4", label: "Offers autonomy and opportunities to lead", type: "d" },
-//       { id: "i4", label: "Is social and collaborative with variety", type: "i" },
-//       { id: "s4", label: "Is stable and emphasizes teamwork", type: "s" },
-//       { id: "c4", label: "Is structured with clear expectations", type: "c" },
-//     ],
-//   },
-//   {
-//     id: 5,
-//     question: "When communicating, I prefer to:",
-//     options: [
-//       { id: "d5", label: "Be direct and get to the point quickly", type: "d" },
-//       { id: "i5", label: "Be animated and share stories", type: "i" },
-//       { id: "s5", label: "Be supportive and listen attentively", type: "s" },
-//       { id: "c5", label: "Be precise and focus on facts and details", type: "c" },
-//     ],
-//   },
-// ];
+
 
 export function DiscQuiz({ onComplete }: Record<string, any>) {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -132,7 +80,7 @@ export function DiscQuiz({ onComplete }: Record<string, any>) {
       className="max-w-2xl mx-auto p-6"
     >
       <div className="mb-8 text-center">
-        <h2 className="text-2xl font-bold mb-2">Personality Assessment</h2>
+        <h2 className="text-2xl font-bold mb-2 text-red-500">Personality Assessment</h2>
         <p className="text-muted-foreground">
           Question {currentQuestionIndex + 1} of {questions.length}
         </p>
@@ -184,7 +132,7 @@ export function DiscQuiz({ onComplete }: Record<string, any>) {
               <Button
                 onClick={handleNextQuestion}
                 disabled={!currentAnswer}
-                className="bg-brand-red hover:bg-opacity-90"
+                className="bg-brand-red hover:bg-red-700"
               >
                 {currentQuestionIndex < questions.length - 1 ? "Next Question" : "Complete Assessment"}
               </Button>

@@ -122,7 +122,6 @@ export default function AdminDashboard() {
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  console.log("promptsData", promptsData)
 
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {

@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { toast } from 'sonner';
 
 
 type Question = {
@@ -33,7 +34,7 @@ type AddPromptsDialogBoxProps = {
 const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ formData, open, setOpen, onSubmit }) => {
   const [promptContent, setPromptContent] = useState(formData?.promptContent || '');
   const [questions, setQuestions] = useState(formData?.questions || [
-    { question: '', options: ['', '', '', ''], isCollapsed: false }
+    { question: '', options: ['', '', '', ''], isCollapsed: true }
   ]);
 
   const addQuestion = () => {
@@ -76,13 +77,13 @@ const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ formData, ope
       }))
     };
 
-    // console.log("formData", formData)
+    console.log(formData?.promptContent)
 
     if (onSubmit) {
       onSubmit(formData);
     }
-
-    // setOpen(false);
+    toast.success("Prompt Updated")
+    setOpen(false);
   };
 
   useEffect(() => {
@@ -219,7 +220,8 @@ const AddPromptsDialogBox: React.FC<AddPromptsDialogBoxProps> = ({ formData, ope
               className="bg-red-500 hover:bg-red-600"
               onClick={handleSubmit}
             >
-              Save Prompt
+              {formData?.promptContent ? "Update Prompt" : "Save Prompt"}
+
             </Button>
           </DialogFooter>
         </DialogContent>

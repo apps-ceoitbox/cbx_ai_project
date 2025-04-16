@@ -9,6 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+// import { Calendar } from "react-day-picker";
 
 interface UserInfoFormProps {
   onSubmit: (userInfo: UserInfo) => void;
@@ -72,28 +73,13 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
       >
 
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold mb-2">Personal Details</h2>
+          <h2 className="text-2xl font-bold mb-2 text-red-500">Personal Details</h2>
           <p className="text-muted-foreground">
             Your birth details help us calculate your unique astrological profile
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
-          {/* <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                id="fullName"
-                placeholder="Enter your full name"
-                className="pl-10"
-                value={userInfo.fullName}
-                onChange={(e) => setUserInfo({ ...userInfo, fullName: e.target.value })}
-                required
-              />
-            </div>
-          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="dateOfBirth">Date of Birth</Label>
@@ -117,7 +103,11 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
                   selected={userInfo.dateOfBirth}
                   onSelect={(date) => setUserInfo({ ...userInfo, dateOfBirth: date })}
                   initialFocus
+                // captionLayout="dropdown"
+                // fromYear={1900}
+                // toYear={new Date().getFullYear()}
                 />
+
               </PopoverContent>
             </Popover>
           </div>

@@ -1,5 +1,4 @@
 
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -22,9 +21,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, DownloadCloud, Eye } from "lucide-react";
-import { UserInfo } from "@/components/AstroDISC/UserInfoForm";
-import { DiscResults } from "@/components/AstroDISC/DiscQuiz";
+import { Search, DownloadCloud, Eye, Loader2 } from "lucide-react";
 
 import {
     Select,
@@ -42,120 +39,11 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { useAxios } from "@/context/AppContext";
-import useReRenderEffect from "@/hooks/useReRenderEffect";
+import { formatDateTime } from "../Admin/Admin";
+import UserSubmissionDialog from "./UserSubmissionDialog";
 
 
-// Mock data for demonstration purposes
-// In a real application, this would come from your backend/database
-interface UserSubmission {
-    id: string;
-    submittedAt: Date;
-    userInfo: Pick<UserInfo, "fullName" | "placeOfBirth" | "gender" | "profession"> & { dateOfBirth: string; timeOfBirth: string; };
-    discResults: DiscResults;
-}
 
-const mockSubmissions: UserSubmission[] = [
-    {
-        id: "usr-001",
-        submittedAt: new Date(2025, 3, 10),
-        userInfo: {
-            fullName: "Jane Smith",
-            dateOfBirth: "1990-05-15",
-            timeOfBirth: "08:30",
-            placeOfBirth: "New York, USA",
-            gender: "Female",
-            profession: "Software Engineer"
-        },
-        discResults: {
-            d: 8,
-            i: 12,
-            s: 5,
-            c: 7,
-            primaryType: "I",
-            secondaryType: "D"
-        }
-    },
-    {
-        id: "usr-002",
-        submittedAt: new Date(2025, 3, 11),
-        userInfo: {
-            fullName: "John Doe",
-            dateOfBirth: "1985-09-22",
-            timeOfBirth: "14:15",
-            placeOfBirth: "London, UK",
-            gender: "Male",
-            profession: "Marketing Manager"
-        },
-        discResults: {
-            d: 10,
-            i: 6,
-            s: 9,
-            c: 11,
-            primaryType: "C",
-            secondaryType: "D"
-        }
-    },
-    {
-        id: "usr-003",
-        submittedAt: new Date(2025, 3, 12),
-        userInfo: {
-            fullName: "Maria Garcia",
-            dateOfBirth: "1992-11-07",
-            timeOfBirth: "22:45",
-            placeOfBirth: "Madrid, Spain",
-            gender: "Female",
-            profession: "Psychologist"
-        },
-        discResults: {
-            d: 4,
-            i: 5,
-            s: 14,
-            c: 9,
-            primaryType: "S",
-            secondaryType: "C"
-        }
-    },
-    {
-        id: "usr-004",
-        submittedAt: new Date(2025, 3, 13),
-        userInfo: {
-            fullName: "Raj Patel",
-            dateOfBirth: "1988-02-29",
-            timeOfBirth: "12:00",
-            placeOfBirth: "Mumbai, India",
-            gender: "Male",
-            profession: "Financial Analyst"
-        },
-        discResults: {
-            d: 15,
-            i: 7,
-            s: 6,
-            c: 8,
-            primaryType: "D",
-            secondaryType: "C"
-        }
-    },
-    {
-        id: "usr-005",
-        submittedAt: new Date(2025, 3, 14),
-        userInfo: {
-            fullName: "Emma Wilson",
-            dateOfBirth: "1995-07-19",
-            timeOfBirth: "03:30",
-            placeOfBirth: "Sydney, Australia",
-            gender: "Female",
-            profession: "UX Designer"
-        },
-        discResults: {
-            d: 6,
-            i: 15,
-            s: 8,
-            c: 5,
-            primaryType: "I",
-            secondaryType: "S"
-        }
-    }
-];
 
 const AstroAdminDashboard = () => {
     const axios = useAxios("admin")
@@ -165,37 +53,46 @@ const AstroAdminDashboard = () => {
     const [apiProviders, setApiProviders] = useState([]);
     const [selectedApiProvider, setSelectedApiProvider] = useState("");
     const [selectedApiModel, setSelectedApiModel] = useState("");
+    const [mockSubmissions, setMockSubmissions] = useState([]);
+    const [countsData, setCountsData] = useState<any>({})
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({});
     const itemsPerPage = 10;
 
     // Filter submissions based on search query
-    const filteredSubmissions = mockSubmissions.filter(submission =>
-        submission.userInfo.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        submission.userInfo.profession.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredSubmissions = mockSubmissions?.filter(submission =>
+        submission?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        submission?.profession?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const models = (apiProviders || []).find(item => item?.name == selectedApiProvider)?.models || [];
 
     // Paginate results
-    const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
-    const paginatedSubmissions = filteredSubmissions.slice(
+    const totalPages = Math.ceil(filteredSubmissions?.length / itemsPerPage);
+    const paginatedSubmissions = filteredSubmissions?.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
 
-    // Format date to a readable string
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
 
-    const handleExportCSV = () => {
-        // In a real implementation, this would generate and download a CSV
-        alert("CSV export functionality would be implemented here");
-    };
+    const getAllSubmissions = async () => {
+        try {
+            setIsLoading(true);
+            let res = await axios.get("/astro/submissions");
+            setMockSubmissions(res?.data?.data);
+            setCountsData(res?.data);
+            // console.log("ress", res)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsLoading(false)
+        }
+
+    }
+
+    useEffect(() => {
+        getAllSubmissions()
+    }, [])
 
     const handleSaveSettings = async (data = {}) => {
         await axios.post("/astro", data)
@@ -209,16 +106,65 @@ const AstroAdminDashboard = () => {
 
     useEffect(() => {
         axios.get("/aiSettings").then(res => {
-            setApiProviders(res.data.data.filter(item => {
+            setApiProviders(res?.data?.data.filter(item => {
                 return item.apiKey && item.models.length > 0
             }))
         })
         axios.get("/astro").then(res => {
-            setFormData(res.data.data)
-            setSelectedApiProvider(res.data.data.aiProvider.name)
-            setSelectedApiModel(res.data.data.aiProvider.model)
+            setFormData(res?.data?.data)
+            setSelectedApiProvider(res?.data?.data?.aiProvider?.name)
+            setSelectedApiModel(res?.data?.data?.aiProvider?.model)
         })
     }, [])
+
+    // Handle Export CSV
+    const handleExportCSV = () => {
+        const headers = [
+            "Full Name",
+            "Email",
+            "Date of Birth",
+            "Time of Birth",
+            "Place of Birth",
+            "Profession",
+            "Primary Type",
+            "Secondary Type",
+            "Submission Date"
+        ];
+
+        // Format submissions data for CSV
+        const csvData = filteredSubmissions.map(submission => [
+            submission?.fullName || "",
+            submission?.email || "",
+            submission?.dateOfBirth ? new Date(submission?.dateOfBirth).toISOString().split('T')[0] : "",
+            submission?.timeOfBirth || "",
+            submission?.placeOfBirth || "",
+            submission?.profession || "",
+            submission?.generatedContent?.personalityDetails?.primaryType || "",
+            submission?.personalityDetails?.secondaryType || "",
+            submission?.createdAt ? formatDateTime(submission?.createdAt) : ""
+        ]);
+
+        // Combine header and data rows
+        const csvContent = [
+            headers.join(','),
+            ...csvData.map(row => row.map(cell =>
+                // Handle commas and quotes in cell content
+                `"${String(cell).replace(/"/g, '""')}"`
+            ).join(','))
+        ].join('\n');
+
+        // Create and download the CSV file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `astrodisc-submissions-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
 
     return (
         <div className="min-h-screen flex flex-col cosmic-bg">
@@ -292,7 +238,7 @@ const AstroAdminDashboard = () => {
                             <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{mockSubmissions.length}</div>
+                            <div className="text-2xl font-bold">{countsData?.totalSubmissions}</div>
                         </CardContent>
                     </Card>
 
@@ -302,7 +248,7 @@ const AstroAdminDashboard = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {mockSubmissions.filter(s => s.discResults.primaryType === "D").length}
+                                {countsData?.typeDDominant || 0}
                             </div>
                         </CardContent>
                     </Card>
@@ -313,7 +259,8 @@ const AstroAdminDashboard = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {mockSubmissions.filter(s => s.discResults.primaryType === "I").length}
+                                {countsData?.typeIDominant || 0}
+
                             </div>
                         </CardContent>
                     </Card>
@@ -324,7 +271,8 @@ const AstroAdminDashboard = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="text-sm font-medium">
-                                {formatDate(new Date(Math.max(...mockSubmissions.map(s => s.submittedAt.getTime()))))}
+                                {formatDateTime(countsData?.lastSubmission)}
+
                             </div>
                         </CardContent>
                     </Card>
@@ -351,7 +299,7 @@ const AstroAdminDashboard = () => {
                 <Card>
                     <CardContent className="p-0">
                         <Table>
-                            <TableCaption>A list of AstroDISC submissions.</TableCaption>
+                            <TableCaption className="mb-2">A list of AstroDISC submissions.</TableCaption>
                             <TableHeader className="bg-primary-red">
                                 <TableRow className=" hover:bg-primary-red rounded-[10px]">
                                     <TableHead className="text-white font-[700]">Name</TableHead>
@@ -363,23 +311,31 @@ const AstroAdminDashboard = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {paginatedSubmissions.map((submission) => (
+                                {paginatedSubmissions?.map((submission) => (
                                     <TableRow key={submission.id}>
-                                        <TableCell className="font-medium">{submission.userInfo.fullName}</TableCell>
+                                        <TableCell className="font-medium">{submission?.fullName}</TableCell>
                                         <TableCell>
-                                            {submission.userInfo.dateOfBirth} at {submission.userInfo.timeOfBirth}<br />
-                                            <span className="text-xs text-muted-foreground">{submission.userInfo.placeOfBirth}</span>
+                                            {submission?.dateOfBirth && submission?.timeOfBirth && (
+                                                <>
+                                                    {new Date(submission.dateOfBirth).toISOString().split('T')[0]} at {submission.timeOfBirth}
+                                                    <br />
+                                                </>
+                                            )}
+                                            <span className="text-xs text-muted-foreground">
+                                                {submission?.placeOfBirth}
+                                            </span>
                                         </TableCell>
-                                        <TableCell>{submission.userInfo.profession}</TableCell>
+
+                                        <TableCell>{submission?.profession}</TableCell>
                                         <TableCell>
-                                            <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-medium text-primary">
-                                                {submission.discResults.primaryType}
+                                            <span className="inline-flex items-center justify-center rounded-full bg-red-100 px-2.5 py-0.5 text-sm font-medium text-primary-red">
+                                                {submission?.generatedContent?.personalityDetails?.primaryType}
                                             </span>
                                             <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium">
-                                                {submission.discResults.secondaryType}
+                                                {submission?.generatedContent?.personalityDetails?.secondaryType}
                                             </span>
                                         </TableCell>
-                                        <TableCell>{formatDate(submission.submittedAt)}</TableCell>
+                                        <TableCell>{formatDateTime(submission?.createdAt)}</TableCell>
                                         <TableCell>
 
                                             <Dialog >
@@ -389,18 +345,18 @@ const AstroAdminDashboard = () => {
                                                             className="h-4 w-4" />
                                                     </Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto">
-                                                    This is preview model
+                                                <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
+                                                    <UserSubmissionDialog submission={submission} />
                                                 </DialogContent>
                                             </Dialog>
                                         </TableCell>
                                     </TableRow>
                                 ))}
 
-                                {paginatedSubmissions.length === 0 && (
+                                {paginatedSubmissions?.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-6">
-                                            No results found for "{searchQuery}"
+                                            No results found for {searchQuery}
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -409,7 +365,7 @@ const AstroAdminDashboard = () => {
                     </CardContent>
                 </Card>
 
-                {filteredSubmissions.length > itemsPerPage && (
+                {filteredSubmissions?.length > itemsPerPage && (
                     <div className="mt-6">
                         <Pagination>
                             <PaginationContent>
@@ -449,11 +405,13 @@ const AstroAdminDashboard = () => {
                 </div>
             </main>
 
-            {/* <footer className="py-6 px-4 text-center text-sm text-muted-foreground border-t">
-                <p>© {new Date().getFullYear()} AstroDISC • Cosmic Personality Insights</p>
-            </footer> */}
+            {isLoading &&
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                    <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
+                </div>
+            }
         </div>
     );
 };
 
-export default AstroAdminDashboard;
+export default AstroAdminDashboard; 
