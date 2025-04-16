@@ -230,6 +230,7 @@ import {
   FolderX
 } from "lucide-react";
 import { toast } from "sonner"
+import Header from "./Header"
 
 export interface PromptInterface {
   _id: string;
@@ -362,7 +363,7 @@ const CategoryCard = ({ category, onClick, icon }) => {
 };
 
 export default function Dashboard() {
-  const { userAuth, setUserAuth } = useData();
+  const { userAuth } = useData();
   const axios = useAxios("user");
   const nav = useNavigate();
 
@@ -418,38 +419,7 @@ export default function Dashboard() {
 
   return (
     <div className="w-full min-h-screen bg-gray-50">
-
-      <header className="bg-black text-white p-4 px-10  shadow-md">
-        <div className="mx-auto flex justify-between items-center">
-          <Logo size="sm" />
-          <div className="flex items-center gap-4">
-            <div className="text-sm">
-              <div className="font-medium">{userAuth?.user.name}</div>
-              <div className="text-gray-300">{userAuth?.user.company}</div>
-            </div>
-
-            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-              onClick={() => {
-                nav("/generated-plans")
-              }}
-            >
-              <FilePlus className="w-5 h-5" />
-              Generated Plans
-            </Button>
-            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-              onClick={() => {
-                localStorage.removeItem("userToken")
-                setUserAuth(p => ({ ...p, user: null, token: null }))
-                toast.success("Logout successful")
-                nav("/login")
-              }}>
-              <LogOut className="w-5 h-5" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
+      <Header />
       <main className="px-10 mx-auto py-8">
         <div className="flex justify-between">
           <div >

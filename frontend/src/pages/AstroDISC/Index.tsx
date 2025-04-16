@@ -5,6 +5,7 @@ import { UserInfo, UserInfoForm } from "@/components/AstroDISC/UserInfoForm";
 import { DiscQuiz, DiscResults } from "@/components/AstroDISC/DiscQuiz";
 import { AnalysisLoading } from "@/components/AstroDISC/AnalysisLoading";
 import { ResultsDisplay } from "@/components/AstroDISC/ResultsDisplay";
+import { useAxios, useData } from "@/context/AppContext";
 
 // Define app steps
 enum AppStep {
@@ -16,6 +17,8 @@ enum AppStep {
 }
 
 const Index = () => {
+  const { userAuth, astroResult, setAstroResult } = useData()
+  const axios = useAxios("user")
   const [currentStep, setCurrentStep] = useState<AppStep>(AppStep.WELCOME);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [discResults, setDiscResults] = useState<DiscResults | null>(null);
@@ -29,14 +32,27 @@ const Index = () => {
     setCurrentStep(AppStep.DISC_QUIZ);
   };
 
-  const handleQuizComplete = (results: DiscResults) => {
-    setDiscResults(results);
+  const handleQuizComplete = (results) => {
+    // setDiscResults(results);
+
     setCurrentStep(AppStep.ANALYZING);
+    axios.post("/astro/generate", {
+      questions: results,
+      userData: {
+        ...userInfo,
+        fullName: userAuth?.userName || ""
+      }
+    }).then(res=>{
+      setAstroResult(res.data.data);
+      setTimeout(()=>{
+        setCurrentStep(AppStep.RESULTS);
+      },2000)
+    })
   };
 
-  const handleAnalysisComplete = () => {
-    setCurrentStep(AppStep.RESULTS);
-  };
+  // const handleAnalysisComplete = () => {
+  //   setCurrentStep(AppStep.RESULTS);
+  // };
 
   const handleRestart = () => {
     setCurrentStep(AppStep.WELCOME);
@@ -62,13 +78,12 @@ const Index = () => {
         )}
 
         {currentStep === AppStep.ANALYZING && (
-          <AnalysisLoading onComplete={handleAnalysisComplete} />
+          <AnalysisLoading onComplete={()=>{}} />
         )}
 
-        {currentStep === AppStep.RESULTS && userInfo && discResults && (
+        {currentStep === AppStep.RESULTS && userInfo && astroResult && (
           <ResultsDisplay
             userInfo={userInfo}
-            discResults={discResults}
             onRestart={handleRestart}
           />
         )}

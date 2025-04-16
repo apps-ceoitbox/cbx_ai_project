@@ -240,10 +240,7 @@ export default function ReportPage() {
         <div className=" mx-auto flex justify-between items-center">
           <Logo size="sm" />
           <div className="flex items-center gap-4">
-            <div className="text-sm">
-              <div className="font-medium">{userAuth?.user?.name}</div>
-              <div className="text-gray-300">{userAuth?.user?.company}</div>
-            </div>
+
             <Button
               variant="outline"
               className="text-black border-white hover:bg-primary-red hover:text-white"
@@ -252,6 +249,7 @@ export default function ReportPage() {
               <LayoutDashboard className="w-5 h-5" />
               Dashboard
             </Button>
+
           </div>
         </div>
       </header>

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, CalendarIcon, MapPin, User } from "lucide-react";
+import { ArrowLeft, CalendarIcon, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { format } from "date-fns";
 
 interface UserInfoFormProps {
   onSubmit: (userInfo: UserInfo) => void;
-  setCurrentStep: Function
+  setCurrentStep: (p) => void;
 }
 
 enum AppStep {
@@ -26,8 +26,8 @@ enum AppStep {
 
 export interface UserInfo {
   fullName: string;
-  dateOfBirth: String;
-  timeOfBirth: String;
+  dateOfBirth: any;
+  timeOfBirth: any;
   placeOfBirth: string;
   gender: string;
   profession: string;
@@ -45,8 +45,8 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userInfo.fullName || !userInfo.dateOfBirth || !userInfo.placeOfBirth) {
-      // Show validation errors (in a real app)
+    if (!userInfo.dateOfBirth || !userInfo.placeOfBirth) {
+
       return;
     }
     onSubmit(userInfo);
@@ -79,7 +79,8 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+
+          {/* <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -92,7 +93,7 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
                 required
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="dateOfBirth">Date of Birth</Label>

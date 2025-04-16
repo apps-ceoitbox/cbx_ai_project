@@ -11,6 +11,7 @@ import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 import { PromptInterface } from "../Admin/Admin"
 import { toast } from "sonner"
+import Header from "../Dashboard/Header"
 
 export default function ToolQuestionsPage() {
   const axios = useAxios("user");
@@ -95,26 +96,7 @@ export default function ToolQuestionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-      <header className="bg-black text-white p-4 shadow-md px-10">
-        <div className=" mx-auto flex justify-between items-center">
-          <Logo size="sm" />
-          <div className="flex items-center gap-4">
-            <div className="text-sm">
-              <div className="font-medium">{userAuth?.user?.name}</div>
-              <div className="text-gray-300">{userAuth?.user?.company}</div>
-            </div>
-            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white" onClick={() => {
-              localStorage.removeItem("userToken")
-              setUserAuth(p => ({ ...p, user: null, token: null }))
-              toast.success("Logout successful")
-              nav("/login")
-            }}>
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="container mx-auto py-8 px-10">
         <div className="flex items-center justify-between mb-8" >

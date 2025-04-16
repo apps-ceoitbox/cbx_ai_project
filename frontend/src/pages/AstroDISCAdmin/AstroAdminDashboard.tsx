@@ -1,6 +1,6 @@
 
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
     Table,
@@ -22,10 +22,28 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, DownloadCloud } from "lucide-react";
+import { Search, DownloadCloud, Eye } from "lucide-react";
 import { UserInfo } from "@/components/AstroDISC/UserInfoForm";
 import { DiscResults } from "@/components/AstroDISC/DiscQuiz";
-import Header from "../Admin/Header";
+
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import AddPromptsDialogBox from "./AddPromptsDialogBox";
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { useAxios } from "@/context/AppContext";
+import useReRenderEffect from "@/hooks/useReRenderEffect";
+
 
 // Mock data for demonstration purposes
 // In a real application, this would come from your backend/database
@@ -140,8 +158,14 @@ const mockSubmissions: UserSubmission[] = [
 ];
 
 const AstroAdminDashboard = () => {
+    const axios = useAxios("admin")
+    const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [apiProviders, setApiProviders] = useState([]);
+    const [selectedApiProvider, setSelectedApiProvider] = useState("");
+    const [selectedApiModel, setSelectedApiModel] = useState("");
+    const [formData, setFormData] = useState({});
     const itemsPerPage = 10;
 
     // Filter submissions based on search query
@@ -149,6 +173,8 @@ const AstroAdminDashboard = () => {
         submission.userInfo.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         submission.userInfo.profession.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const models = (apiProviders || []).find(item => item?.name == selectedApiProvider)?.models || [];
 
     // Paginate results
     const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
@@ -171,13 +197,92 @@ const AstroAdminDashboard = () => {
         alert("CSV export functionality would be implemented here");
     };
 
+    const handleSaveSettings = async (data = {}) => {
+        await axios.post("/astro", data)
+        setOpen(false)
+    }
+    const handleSaveAISettings = async (data = {}) => {
+        await axios.post("/astro", {
+            ...data
+        })
+    }
+
+    useEffect(() => {
+        axios.get("/aiSettings").then(res => {
+            setApiProviders(res.data.data.filter(item => {
+                return item.apiKey && item.models.length > 0
+            }))
+        })
+        axios.get("/astro").then(res => {
+            setFormData(res.data.data)
+            setSelectedApiProvider(res.data.data.aiProvider.name)
+            setSelectedApiModel(res.data.data.aiProvider.model)
+        })
+    }, [])
+
     return (
         <div className="min-h-screen flex flex-col cosmic-bg">
-            <Header />
 
             <main className="flex-1 py-6 px-4 md:px-6 lg:px-8">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                    <div className="flex justify-between">
+                        <h1 className="text-3xl font-bold text-red-500">Admin Dashboard</h1>
+
+                        <div className="flex items-center gap-4">
+                            <Select value={selectedApiProvider} onValueChange={val => {
+                                setSelectedApiProvider(val)
+                                const newModel = apiProviders.find(item => item.name == val).models[0]
+                                setSelectedApiModel(newModel)
+                                handleSaveAISettings({
+                                    aiProvider: {
+                                        name: val,
+                                        model: newModel
+                                    },
+                                })
+                            }}>
+                                <SelectTrigger className="w-[250px]">
+                                    <SelectValue placeholder="Select an AI Provider" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>AI Providers</SelectLabel>
+                                        {
+                                            apiProviders.map(item => {
+                                                return <SelectItem value={item.name}>{item.name}</SelectItem>
+                                            })
+                                        }
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            <Select value={selectedApiModel} onValueChange={val => {
+                                setSelectedApiModel(val)
+                                handleSaveAISettings({
+                                    aiProvider: {
+                                        name: selectedApiProvider,
+                                        model: val
+                                    },
+                                })
+                            }}>
+                                <SelectTrigger className="w-[250px]">
+                                    <SelectValue placeholder="Select an AI Model" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel>AI Models</SelectLabel>
+                                        {
+                                            models.map(item => {
+                                                return <SelectItem value={item}>{item}</SelectItem>
+                                            })
+                                        }
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+
+                            <AddPromptsDialogBox formData={formData} open={open} setOpen={setOpen} onSubmit={handleSaveSettings} />
+                        </div>
+
+                    </div>
+
                     <p className="text-muted-foreground">View and manage AstroDISC user submissions</p>
                 </div>
 
@@ -247,14 +352,14 @@ const AstroAdminDashboard = () => {
                     <CardContent className="p-0">
                         <Table>
                             <TableCaption>A list of AstroDISC submissions.</TableCaption>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Birth Info</TableHead>
-                                    <TableHead>Profession</TableHead>
-                                    <TableHead>Primary Type</TableHead>
-                                    <TableHead>Submission Date</TableHead>
-                                    {/* <TableHead>Action</TableHead> */}
+                            <TableHeader className="bg-primary-red">
+                                <TableRow className=" hover:bg-primary-red rounded-[10px]">
+                                    <TableHead className="text-white font-[700]">Name</TableHead>
+                                    <TableHead className="text-white font-[700]">Birth Info</TableHead>
+                                    <TableHead className="text-white font-[700]">Profession</TableHead>
+                                    <TableHead className="text-white font-[700]">Primary Type</TableHead>
+                                    <TableHead className="text-white font-[700]">Submission Date</TableHead>
+                                    <TableHead className="text-white font-[700]">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -275,6 +380,20 @@ const AstroAdminDashboard = () => {
                                             </span>
                                         </TableCell>
                                         <TableCell>{formatDate(submission.submittedAt)}</TableCell>
+                                        <TableCell>
+
+                                            <Dialog >
+                                                <DialogTrigger asChild>
+                                                    <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                                        <Eye
+                                                            className="h-4 w-4" />
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto">
+                                                    This is preview model
+                                                </DialogContent>
+                                            </Dialog>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
 

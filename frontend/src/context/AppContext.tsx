@@ -46,12 +46,13 @@ export const AppProvider = ({ children }) => {
 
 
   const [generateResponse, setGenerateResponse] = useState("");
+  const [astroResult, setAstroResult] = useState(null);
 
 
   return (
     <AppContext.Provider
       value={{
-        adminAuth, setAdminAuth, userAuth, setUserAuth, generateResponse, setGenerateResponse
+        adminAuth, setAdminAuth, userAuth, setUserAuth, generateResponse, setGenerateResponse, astroResult, setAstroResult
       }}
     >
       {children}

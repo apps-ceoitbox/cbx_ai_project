@@ -41,6 +41,7 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog"
+import Header from "./Header"
 
 const UserGeneratedPlans: React.FC = () => {
     const { userAuth, setUserAuth } = useData();
@@ -314,8 +315,8 @@ const UserGeneratedPlans: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-
-            <header className="bg-black text-white p-4 px-10 shadow-md">
+            <Header />
+            {/* <header className="bg-black text-white p-4 px-10 shadow-md">
                 <div className=" mx-auto flex justify-between items-center">
                     <Logo size="sm" />
                     <div className="flex items-center gap-4">
@@ -340,13 +341,13 @@ const UserGeneratedPlans: React.FC = () => {
                         </Button>
                     </div>
                 </div>
-            </header>
+            </header> */}
 
             <Card
                 className=" mt-10 py-8 mx-10 ">
                 <CardContent>
                     {/* Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         {/* <div>
                             <Label htmlFor="search">Search</Label>
                             <div className="relative">
