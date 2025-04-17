@@ -22,6 +22,16 @@ const astroSettings_model_1 = __importDefault(require("../models/astroSettings.m
 const astroSubmission_model_1 = __importDefault(require("../models/astroSubmission.model"));
 dotenv_1.default.config();
 class AstroController {
+    static getUserSubmission(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const submission = yield astroSubmission_model_1.default.find({
+                email: req.user.email,
+            }).sort({ createdAt: -1 });
+            res
+                .status(errorCodes_1.HttpStatusCodes.OK)
+                .json({ message: "Submission fetched successfully", data: submission });
+        });
+    }
 }
 _a = AstroController;
 AstroController.saveSettings = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -82,6 +92,7 @@ AstroController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, re
         maxTokens: apiProvider.maxTokens,
     });
     const response = yield ai.generateResponse(genPrompt, true);
+    console.log(response);
     astroSubmission_model_1.default.create({
         fullName: req.user.userName,
         email: req.user.email,
@@ -107,9 +118,9 @@ function generatePrompt(answers = {}, userInfo = {}, promptText = "") {
     return `
 ${promptText}
 
-Using the information below, generate a JavaScript object named DiscResult with the following structure:
+Using the information below, generate a JavaScript object with the following structure:
 
-DiscResult = {
+{
   chartData: [
     { name: "Dominance", value: number (0-100) },
     { name: "Influence", value: number (0-100) },
@@ -140,6 +151,6 @@ ${formattedAnswers}
 ### User Information:
 ${formattedUserInfo}
 
-Output ONLY the JSON object named DiscResult — no explanations, markdown, or extra comments.
+Output ONLY the JSON object — no explanations, variable name, markdown, or extra comments.
 `;
 }

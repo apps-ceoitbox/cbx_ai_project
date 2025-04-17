@@ -32,7 +32,7 @@ function MAIL(_a) {
             }
         });
         const mailOptions = {
-            from: 'apps@ceoitbox.com',
+            from: 'CBX AI <apps@ceoitbox.com>',
             to,
             subject: subject,
             html: template == "OTP" ? EmailTemplate(body) : body,

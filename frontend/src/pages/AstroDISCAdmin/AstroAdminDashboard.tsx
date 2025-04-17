@@ -329,7 +329,7 @@ const AstroAdminDashboard = () => {
                                         <TableCell>{submission?.profession || "--"}</TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center justify-center rounded-full bg-red-100 px-2.5 py-0.5 text-sm font-medium text-primary-red">
-                                                {submission?.generatedContent?.personalityDetails?.primaryType}
+                                                {submission?.generatedContent?.personalityDetails?.primaryType || "--"}
                                             </span>
                                             <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium">
                                                 {submission?.generatedContent?.personalityDetails?.secondaryType}

@@ -1,11 +1,9 @@
 
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableHead,
     TableHeader,
@@ -37,7 +35,7 @@ import Header from "./Header";
 
 
 const UserSubmissions = () => {
-    const axios = useAxios("admin")
+    const axios = useAxios("user")
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [mockSubmissions, setMockSubmissions] = useState([]);
@@ -63,7 +61,7 @@ const UserSubmissions = () => {
     const getAllSubmissions = async () => {
         try {
             setIsLoading(true);
-            let res = await axios.get("/astro/submissions");
+            let res = await axios.get("/astro/user/submissions");
             setMockSubmissions(res?.data?.data);
             // console.log("ress", res)
         } catch (error) {
@@ -75,7 +73,7 @@ const UserSubmissions = () => {
     }
 
     useEffect(() => {
-        getAllSubmissions()
+        getAllSubmissions();
     }, [])
 
 
@@ -183,7 +181,7 @@ const UserSubmissions = () => {
                                         <TableCell>{submission?.profession || "--"}</TableCell>
                                         <TableCell>
                                             <span className="inline-flex items-center justify-center rounded-full bg-red-100 px-2.5 py-0.5 text-sm font-medium text-primary-red">
-                                                {submission?.generatedContent?.personalityDetails?.primaryType}
+                                                {submission?.generatedContent?.personalityDetails?.primaryType || "--"}
                                             </span>
                                             <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium">
                                                 {submission?.generatedContent?.personalityDetails?.secondaryType}
@@ -199,7 +197,7 @@ const UserSubmissions = () => {
                                                             className="h-4 w-4" />
                                                     </Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
+                                                <DialogContent style={{ zIndex: 999 }} className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
                                                     <UserSubmissionDialog submission={submission} />
                                                 </DialogContent>
                                             </Dialog>

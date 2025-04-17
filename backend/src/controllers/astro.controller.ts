@@ -58,6 +58,15 @@ export default class AstroController {
     });
   });
 
+  static async getUserSubmission(req, res) {
+    const submission = await AstroSubmissions.find({
+      email: req.user.email,
+    }).sort({ createdAt: -1 });
+    res
+      .status(HttpStatusCodes.OK)
+      .json({ message: "Submission fetched successfully", data: submission });
+  }
+
   static generateResponseByAI = asyncHandler(async (req, res) => {
     const questions: Record<string, string> = req.body.questions;
     const userData: Record<string, any> = req.body.userData;
@@ -78,7 +87,7 @@ export default class AstroController {
     });
 
     const response = await ai.generateResponse(genPrompt, true);
-    console.log(response)
+    console.log(response);
 
     AstroSubmissions.create({
       fullName: req.user.userName,

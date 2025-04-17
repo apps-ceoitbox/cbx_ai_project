@@ -299,7 +299,7 @@ const UserGeneratedPlans: React.FC = () => {
         <!DOCTYPE html>
         <html>
           <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
-            <p>Dear ${userAuth?.user?.userName}</p>
+            <p>Dear ${userAuth?.user?.userName},</p>
             <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
           </body>
         </html>`,
@@ -323,32 +323,7 @@ const UserGeneratedPlans: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
-            {/* <header className="bg-black text-white p-4 px-10 shadow-md">
-                <div className=" mx-auto flex justify-between items-center">
-                    <Logo size="sm" />
-                    <div className="flex items-center gap-4">
 
-                        <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
-                            onClick={() => {
-                                nav("/dashboard")
-                            }}
-                        >
-                            <LayoutDashboard className="w-5 h-5" />
-                            Dashboard
-                        </Button>
-                        <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-                            onClick={() => {
-                                localStorage.removeItem("userToken")
-                                setUserAuth(p => ({ ...p, user: null, token: null }))
-                                toast.success("Logout successful")
-                                nav("/login")
-                            }}>
-                            <LogOut className="w-5 h-5" />
-                            Logout
-                        </Button>
-                    </div>
-                </div>
-            </header> */}
 
             <Card
                 className=" mt-10 py-8 mx-10 ">
@@ -481,10 +456,7 @@ const UserGeneratedPlans: React.FC = () => {
                                 </Button>
                             </div>
                         </div>
-
-
                     </div>
-
 
 
                     {/* Submissions table */}
@@ -492,13 +464,9 @@ const UserGeneratedPlans: React.FC = () => {
                         <Table>
                             <TableHeader className="bg-primary-red" >
                                 <TableRow className=" hover:bg-primary-red rounded-[10px]">
-                                    {/* <TableHead className="text-white font-[700]">Name</TableHead> */}
-                                    {/* <TableHead className="text-white font-[700]">Email</TableHead> */}
-                                    {/* <TableHead className="text-white font-[700]">Company</TableHead> */}
                                     <TableHead className="text-white font-[700]">Tool</TableHead>
                                     <TableHead className="text-white font-[700]">Category</TableHead>
                                     <TableHead className="text-white font-[700]">Date</TableHead>
-                                    {/* <TableHead className="text-white font-[700]">API Used</TableHead> */}
                                     <TableHead className="text-white font-[700]">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -506,23 +474,19 @@ const UserGeneratedPlans: React.FC = () => {
                                 {filteredSubmissions?.length > 0 ? (
                                     filteredSubmissions?.map((submission) => (
                                         <TableRow key={submission.id} className="h-8 px-2">
-                                            {/* <TableCell className="font-medium py-2">{submission?.name}</TableCell> */}
-                                            {/* <TableCell className="py-2">{submission?.email}</TableCell> */}
-                                            {/* <TableCell className="py-2">{submission?.company}</TableCell> */}
                                             <TableCell className="py-2">{submission?.tool}</TableCell>
                                             <TableCell className="py-2">{submission?.category || "--"}</TableCell>
                                             <TableCell className="py-2">{formatDateTime(submission?.date)}</TableCell>
-                                            {/* <TableCell className="py-2">{submission?.apiUsed}</TableCell> */}
                                             <TableCell className="py-2">
                                                 <div className="flex space-x-2">
-                                                    <Dialog>
+                                                    <Dialog >
                                                         <DialogTrigger asChild>
                                                             <Button className=" text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
 
                                                         </DialogTrigger>
-                                                        <DialogContent className="max-w-[70vw] max-h-[90vh] overflow-auto">
+                                                        <DialogContent style={{ zIndex: 999 }} className="max-w-[70vw] max-h-[90vh] overflow-auto">
 
                                                             <div className="w-full  mx-auto mt-4" >
                                                                 <Card className="mb-6 border-2">

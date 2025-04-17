@@ -8,6 +8,7 @@ const astro_controller_1 = __importDefault(require("../controllers/astro.control
 const router = (0, express_1.Router)();
 router.get("/", astro_controller_1.default.getSettings);
 router.get("/submissions", astro_controller_1.default.getAllSubmissions);
+router.get("/user/submissions", astro_controller_1.default.getUserSubmission);
 router.post("/", astro_controller_1.default.saveSettings);
 router.post("/generate", astro_controller_1.default.generateResponseByAI);
 exports.default = router;

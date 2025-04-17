@@ -15,7 +15,8 @@ const Header = () => {
 
     return (
         <header className="bg-black text-white p-4 px-10  shadow-md"
-            style={{ position: "sticky", top: 0, zIndex: 999 }}>
+        // style={{ position: "sticky", top: 0, zIndex: 999 }}
+        >
             <div className="mx-auto flex justify-between items-center">
                 {/* <Logo size="sm" /> */}
                 <div></div>

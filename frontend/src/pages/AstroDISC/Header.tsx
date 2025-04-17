@@ -12,10 +12,22 @@ const Header = () => {
 
     return (
         <header className="bg-black text-white p-4 px-10  shadow-md"
-            style={{ position: "sticky", top: 0, zIndex: 999 }}>
+        // style={{ position: "sticky", top: 0, zIndex: 999 }}
+        >
             <div className="mx-auto flex justify-between items-center">
 
-                <div></div>
+                <div>
+                    {location.pathname === "/astro-reports" &&
+                        <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
+                            onClick={() => {
+                                nav(-1);
+                            }}
+                        >
+                            <ArrowLeft className="w-5 h-5 " />
+                            Back
+                        </Button>
+                    }
+                </div>
                 <div className="flex items-center gap-4">
                     {location.pathname !== "/astro-reports" &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
@@ -28,16 +40,7 @@ const Header = () => {
                         </Button>
                     }
 
-                    {location.pathname === "/astro-reports" &&
-                        <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
-                            onClick={() => {
-                                nav(-1);
-                            }}
-                        >
-                            <ArrowLeft className="w-5 h-5 " />
-                            Back
-                        </Button>
-                    }
+
 
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
                         onClick={() => {
@@ -51,7 +54,7 @@ const Header = () => {
                     </Button>
                 </div>
             </div>
-        </header>
+        </header >
 
     )
 }
