@@ -1,4 +1,5 @@
 
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -18,21 +19,12 @@ import {
     PaginationNext,
     PaginationPrevious
 } from "@/components/ui/pagination";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, DownloadCloud, Eye, Loader2 } from "lucide-react";
 
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import AddPromptsDialogBox from "./AddPromptsDialogBox";
+
 import {
     Dialog,
     DialogContent,
@@ -40,23 +32,16 @@ import {
 } from '@/components/ui/dialog';
 import { useAxios } from "@/context/AppContext";
 import { formatDateTime } from "../Admin/Admin";
-import UserSubmissionDialog from "./UserSubmissionDialog";
+import UserSubmissionDialog from "../AstroDISCAdmin/UserSubmissionDialog";
+import Header from "./Header";
 
 
-
-
-const AstroAdminDashboard = () => {
+const UserSubmissions = () => {
     const axios = useAxios("admin")
-    const [open, setOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [apiProviders, setApiProviders] = useState([]);
-    const [selectedApiProvider, setSelectedApiProvider] = useState("");
-    const [selectedApiModel, setSelectedApiModel] = useState("");
     const [mockSubmissions, setMockSubmissions] = useState([]);
-    const [countsData, setCountsData] = useState<any>({})
     const [isLoading, setIsLoading] = useState(false);
-    const [formData, setFormData] = useState({});
     const itemsPerPage = 10;
 
     // Filter submissions based on search query
@@ -65,7 +50,7 @@ const AstroAdminDashboard = () => {
         submission?.profession?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const models = (apiProviders || []).find(item => item?.name == selectedApiProvider)?.models || [];
+
 
     // Paginate results
     const totalPages = Math.ceil(filteredSubmissions?.length / itemsPerPage);
@@ -80,7 +65,6 @@ const AstroAdminDashboard = () => {
             setIsLoading(true);
             let res = await axios.get("/astro/submissions");
             setMockSubmissions(res?.data?.data);
-            setCountsData(res?.data);
             // console.log("ress", res)
         } catch (error) {
             console.log(error)
@@ -94,28 +78,6 @@ const AstroAdminDashboard = () => {
         getAllSubmissions()
     }, [])
 
-    const handleSaveSettings = async (data = {}) => {
-        await axios.post("/astro", data)
-        setOpen(false)
-    }
-    const handleSaveAISettings = async (data = {}) => {
-        await axios.post("/astro", {
-            ...data
-        })
-    }
-
-    useEffect(() => {
-        axios.get("/aiSettings").then(res => {
-            setApiProviders(res?.data?.data.filter(item => {
-                return item.apiKey && item.models.length > 0
-            }))
-        })
-        axios.get("/astro").then(res => {
-            setFormData(res?.data?.data)
-            setSelectedApiProvider(res?.data?.data?.aiProvider?.name)
-            setSelectedApiModel(res?.data?.data?.aiProvider?.model)
-        })
-    }, [])
 
     // Handle Export CSV
     const handleExportCSV = () => {
@@ -166,118 +128,11 @@ const AstroAdminDashboard = () => {
     };
 
 
+
     return (
         <div className="min-h-screen flex flex-col cosmic-bg">
-
+            <Header />
             <main className="flex-1 py-6 px-4 md:px-6 lg:px-8">
-                <div className="mb-6">
-                    <div className="flex justify-between">
-                        <h1 className="text-3xl font-bold text-red-500">Admin Dashboard</h1>
-
-                        <div className="flex items-center gap-4">
-                            <Select value={selectedApiProvider} onValueChange={val => {
-                                setSelectedApiProvider(val)
-                                const newModel = apiProviders.find(item => item.name == val).models[0]
-                                setSelectedApiModel(newModel)
-                                handleSaveAISettings({
-                                    aiProvider: {
-                                        name: val,
-                                        model: newModel
-                                    },
-                                })
-                            }}>
-                                <SelectTrigger className="w-[250px]">
-                                    <SelectValue placeholder="Select an AI Provider" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>AI Providers</SelectLabel>
-                                        {
-                                            apiProviders.map(item => {
-                                                return <SelectItem value={item.name}>{item.name}</SelectItem>
-                                            })
-                                        }
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                            <Select value={selectedApiModel} onValueChange={val => {
-                                setSelectedApiModel(val)
-                                handleSaveAISettings({
-                                    aiProvider: {
-                                        name: selectedApiProvider,
-                                        model: val
-                                    },
-                                })
-                            }}>
-                                <SelectTrigger className="w-[250px]">
-                                    <SelectValue placeholder="Select an AI Model" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>AI Models</SelectLabel>
-                                        {
-                                            models.map(item => {
-                                                return <SelectItem value={item}>{item}</SelectItem>
-                                            })
-                                        }
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-
-                            <AddPromptsDialogBox formData={formData} open={open} setOpen={setOpen} onSubmit={handleSaveSettings} />
-                        </div>
-
-                    </div>
-
-                    <p className="text-muted-foreground">View and manage AstroDISC user submissions</p>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{countsData?.totalSubmissions}</div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Type D Dominant</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {countsData?.typeDDominant || 0}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Type I Dominant</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {countsData?.typeIDominant || 0}
-
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Last Submission</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-sm font-medium">
-                                {formatDateTime(countsData?.lastSubmission)}
-
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
                 <div className="mb-6 flex justify-between items-center">
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -299,7 +154,6 @@ const AstroAdminDashboard = () => {
                 <Card>
                     <CardContent className="p-0">
                         <Table>
-                            <TableCaption className="mb-2">A list of AstroDISC submissions.</TableCaption>
                             <TableHeader className="bg-primary-red">
                                 <TableRow className=" hover:bg-primary-red rounded-[10px]">
                                     <TableHead className="text-white font-[700]">Name</TableHead>
@@ -356,7 +210,7 @@ const AstroAdminDashboard = () => {
                                 {paginatedSubmissions?.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center py-6">
-                                            No results found for {searchQuery}
+                                            No results found
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -398,11 +252,6 @@ const AstroAdminDashboard = () => {
                     </div>
                 )}
 
-                <div className="mt-8 text-center">
-                    <Link to="/admin">
-                        <Button variant="outline">Return to App</Button>
-                    </Link>
-                </div>
             </main>
 
             {isLoading &&
@@ -414,4 +263,4 @@ const AstroAdminDashboard = () => {
     );
 };
 
-export default AstroAdminDashboard; 
+export default UserSubmissions; 

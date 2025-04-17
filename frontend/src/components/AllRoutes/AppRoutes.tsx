@@ -1,6 +1,7 @@
 import AdminDashboard from '@/pages/Admin/Admin'
 import AdminLoginPage from '@/pages/Admin/AdminLogin'
 import Index from '@/pages/AstroDISC/Index'
+import UserSubmissions from '@/pages/AstroDISC/UserSubmissions'
 import AstroAdminDashboard from '@/pages/AstroDISCAdmin/AstroAdminDashboard'
 import Dashboard from '@/pages/Dashboard/Dashboard'
 import UserGeneratedPlans from '@/pages/Dashboard/UserGeneratedPlans'
@@ -33,6 +34,7 @@ const AppRoutes = () => {
 
                 {/* AstroDISC */}
                 <Route path="/astro-disc" element={<Index />} />
+                <Route path="/astro-reports" element={<UserSubmissions />} />
                 <Route path="/astro-disc-dashboard" element={<AstroAdminDashboard />} />
 
                 <Route path="*" element={<NotFound />} />

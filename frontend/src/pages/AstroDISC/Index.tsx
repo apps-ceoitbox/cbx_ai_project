@@ -6,6 +6,7 @@ import { DiscQuiz } from "@/components/AstroDISC/DiscQuiz";
 import { AnalysisLoading } from "@/components/AstroDISC/AnalysisLoading";
 import { ResultsDisplay } from "@/components/AstroDISC/ResultsDisplay";
 import { useAxios, useData } from "@/context/AppContext";
+import Header from "./Header";
 
 // Define app steps
 enum AppStep {
@@ -18,7 +19,7 @@ enum AppStep {
 
 const Index = () => {
   const { userAuth, astroResult, setAstroResult } = useData()
-  const axios = useAxios("user")
+  const axios = useAxios("user");
   const [currentStep, setCurrentStep] = useState<AppStep>(AppStep.WELCOME);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   // const [discResults, setDiscResults] = useState<DiscResults | null>(null);
@@ -50,46 +51,43 @@ const Index = () => {
     })
   };
 
-  // const handleAnalysisComplete = () => {
-  //   setCurrentStep(AppStep.RESULTS);
-  // };
-
   const handleRestart = () => {
     setCurrentStep(AppStep.WELCOME);
     setUserInfo(null);
-    // setDiscResults(null);
   };
 
+
   return (
-    <div className="min-h-screen flex flex-col cosmic-bg">
+    <div>
+      <Header />
+      <div className="min-h-screen flex flex-col cosmic-bg">
+        <main className="flex-1 py-4">
+          {currentStep === AppStep.WELCOME && (
+            <WelcomeScreen onGetStarted={handleGetStarted} />
+          )}
+
+          {currentStep === AppStep.USER_INFO && (
+            <UserInfoForm onSubmit={handleUserInfoSubmit} setCurrentStep={setCurrentStep} />
+          )}
+
+          {currentStep === AppStep.DISC_QUIZ && (
+            <DiscQuiz onComplete={handleQuizComplete} />
+          )}
+
+          {currentStep === AppStep.ANALYZING && (
+            <AnalysisLoading onComplete={() => { }} />
+          )}
+
+          {currentStep === AppStep.RESULTS && userInfo && astroResult && (
+            <ResultsDisplay
+              userInfo={userInfo}
+              onRestart={handleRestart}
+            />
+          )}
+        </main>
 
 
-      <main className="flex-1 py-4">
-        {currentStep === AppStep.WELCOME && (
-          <WelcomeScreen onGetStarted={handleGetStarted} />
-        )}
-
-        {currentStep === AppStep.USER_INFO && (
-          <UserInfoForm onSubmit={handleUserInfoSubmit} setCurrentStep={setCurrentStep} />
-        )}
-
-        {currentStep === AppStep.DISC_QUIZ && (
-          <DiscQuiz onComplete={handleQuizComplete} />
-        )}
-
-        {currentStep === AppStep.ANALYZING && (
-          <AnalysisLoading onComplete={() => { }} />
-        )}
-
-        {currentStep === AppStep.RESULTS && userInfo && astroResult && (
-          <ResultsDisplay
-            userInfo={userInfo}
-            onRestart={handleRestart}
-          />
-        )}
-      </main>
-
-
+      </div>
     </div>
   );
 };

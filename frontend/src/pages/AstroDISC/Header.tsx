@@ -1,30 +1,26 @@
-// import { Logo } from '@/components/logo'
 import { Button } from '@/components/ui/button'
-import { useData } from '@/context/AppContext'
-import { FilePlus, LayoutDashboard, LogOut } from 'lucide-react'
+import { useData } from '@/context/AppContext';
+import { ArrowLeft, LayoutDashboard, LogOut } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from 'sonner';
 
 const Header = () => {
     const nav = useNavigate();
     const location = useLocation();
     const { setUserAuth } = useData();
 
-    const isToolsPage = location.pathname.startsWith("/tools/");
-
 
     return (
         <header className="bg-black text-white p-4 px-10  shadow-md"
             style={{ position: "sticky", top: 0, zIndex: 999 }}>
             <div className="mx-auto flex justify-between items-center">
-                {/* <Logo size="sm" /> */}
+
                 <div></div>
                 <div className="flex items-center gap-4">
-
-                    {location.pathname !== "/dashboard" &&
+                    {location.pathname !== "/astro-reports" &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
-                                nav("/dashboard")
+                                nav("/astro-reports")
                             }}
                         >
                             <LayoutDashboard className="w-5 h-5" />
@@ -32,14 +28,14 @@ const Header = () => {
                         </Button>
                     }
 
-                    {location.pathname !== "/generated-plans" && !isToolsPage &&
-                        <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
+                    {location.pathname === "/astro-reports" &&
+                        <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
-                                nav("/generated-plans")
+                                nav(-1);
                             }}
                         >
-                            <FilePlus className="w-5 h-5" />
-                            Generated Plans
+                            <ArrowLeft className="w-5 h-5 " />
+                            Back
                         </Button>
                     }
 
@@ -56,6 +52,7 @@ const Header = () => {
                 </div>
             </div>
         </header>
+
     )
 }
 

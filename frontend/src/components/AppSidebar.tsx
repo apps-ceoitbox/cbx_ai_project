@@ -3,7 +3,7 @@ import {
     ChevronLeft,
     ChevronRight,
     FilePlus,
-    // Rocket,
+    Rocket,
     LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -83,16 +83,16 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             </Button>
                         </Link>
 
-                        {/* <Link to="/astro-disc">
+                        <Link to="/astro-disc">
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
-                                style={{ background: location.pathname === "/astro-disc" ? "rgb(229 9 20)" : "", color: location.pathname === "/astro-disc" ? "#fff" : "black" }}
+                                style={{ background: (location.pathname === "/astro-disc" || location.pathname === "/astro-reports") ? "rgb(229 9 20)" : "", color: (location.pathname === "/astro-disc" || location.pathname === "/astro-reports") ? "#fff" : "black" }}
                             >
                                 <Rocket size={18} />
                                 {!collapsed && "AstroDISC"}
                             </Button>
-                        </Link> */}
+                        </Link>
                     </div>
                 }
 
@@ -110,7 +110,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             </Button>
                         </Link>
 
-                        {/* <Link to="/astro-disc-dashboard">
+                        <Link to="/astro-disc-dashboard">
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
@@ -119,7 +119,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                 <LayoutDashboard className="w-5 h-5" />
                                 {!collapsed && "Astro dashboard"}
                             </Button>
-                        </Link> */}
+                        </Link>
 
                     </div>
                 }
