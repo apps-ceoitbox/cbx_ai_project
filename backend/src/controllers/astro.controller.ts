@@ -78,6 +78,7 @@ export default class AstroController {
     });
 
     const response = await ai.generateResponse(genPrompt, true);
+    console.log(response)
 
     AstroSubmissions.create({
       fullName: req.user.userName,
@@ -112,9 +113,9 @@ function generatePrompt(
   return `
 ${promptText}
 
-Using the information below, generate a JavaScript object named DiscResult with the following structure:
+Using the information below, generate a JavaScript object with the following structure:
 
-DiscResult = {
+{
   chartData: [
     { name: "Dominance", value: number (0-100) },
     { name: "Influence", value: number (0-100) },
@@ -145,6 +146,6 @@ ${formattedAnswers}
 ### User Information:
 ${formattedUserInfo}
 
-Output ONLY the JSON object named DiscResult — no explanations, markdown, or extra comments.
+Output ONLY the JSON object — no explanations, variable name, markdown, or extra comments.
 `;
 }

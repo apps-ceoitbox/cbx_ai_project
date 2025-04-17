@@ -26,7 +26,7 @@ export async function MAIL({ to, subject, body, attachment, template = null }: M
     }
   });
   const mailOptions = {
-    from: 'apps@ceoitbox.com',
+    from: 'CBX AI <apps@ceoitbox.com>',
     to,
     subject: subject,
     html: template == "OTP" ? EmailTemplate(body) : body,
