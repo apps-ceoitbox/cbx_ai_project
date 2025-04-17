@@ -108,7 +108,7 @@ export default function AdminDashboard() {
   const nav = useNavigate()
   const axios = useAxios("admin");
 
-  const { adminAuth } = useData();
+  const { adminAuth, userAuth } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [submissions, setSubmissions] = useState([]);
@@ -300,7 +300,14 @@ export default function AdminDashboard() {
       await axios.post("/users/email", {
         to: submission?.email,
         subject: submission.tool || "",
-        body: "",
+        body: `
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+            <p>Dear ${userAuth?.user?.userName}</p>
+            <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
+          </body>
+        </html>`,
         attachment: base64PDF
       })
 

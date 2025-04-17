@@ -295,7 +295,14 @@ const UserGeneratedPlans: React.FC = () => {
             await axios.post("/users/email", {
                 to: userAuth.user?.email,
                 subject: submission.tool || "",
-                body: "",
+                body: `
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+            <p>Dear ${userAuth?.user?.userName}</p>
+            <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
+          </body>
+        </html>`,
                 attachment: base64PDF
             })
 
