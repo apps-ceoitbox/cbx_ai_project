@@ -153,10 +153,10 @@ export function ResultsDisplay({ userInfo, onRestart }: ResultsDisplayProps) {
                   <p>
                     As a <span className="font-medium text-brand-red">{personalityType?.title}</span>,
                     you excel in environments that value your
-                    {astroResult.primaryType === "D" && " directness and ability to achieve results."}
-                    {astroResult.primaryType === "I" && " enthusiasm and people-focused approach."}
-                    {astroResult.primaryType === "S" && " reliability and supportive nature."}
-                    {astroResult.primaryType === "C" && " precision and analytical thinking."}
+                    {astroResult.personalityDetails.primaryType === "D" && " directness and ability to achieve results."}
+                    {astroResult.personalityDetails.primaryType === "I" && " enthusiasm and people-focused approach."}
+                    {astroResult.personalityDetails.primaryType === "S" && " reliability and supportive nature."}
+                    {astroResult.personalityDetails.primaryType === "C" && " precision and analytical thinking."}
                   </p>
                   <p>
                     Your profile shows a primary {astroResult?.personalityDetails?.primaryType} style, with supporting elements of

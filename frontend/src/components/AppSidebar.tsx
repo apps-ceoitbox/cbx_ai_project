@@ -4,7 +4,6 @@ import {
     ChevronRight,
     FilePlus,
     Rocket,
-    LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -107,7 +106,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black"
                                 style={{ background: location.pathname === "/admin" ? "rgb(229 9 20)" : "", color: location.pathname === "/admin" ? "#fff" : "black" }}
                             >
-                                <LayoutDashboard className="w-5 h-5" />
+                                <FilePlus className="w-5 h-5" />
                                 {!collapsed && "Plan Dashboard"}
                             </Button>
                         </Link>
@@ -118,7 +117,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
                                 style={{ background: location.pathname === "/astro-disc-dashboard" ? "rgb(229 9 20)" : "", color: location.pathname === "/astro-disc-dashboard" ? "#fff" : "black" }}
                             >
-                                <LayoutDashboard className="w-5 h-5" />
+                                <Rocket className="w-5 h-5" />
                                 {!collapsed && "Astro dashboard"}
                             </Button>
                         </Link>

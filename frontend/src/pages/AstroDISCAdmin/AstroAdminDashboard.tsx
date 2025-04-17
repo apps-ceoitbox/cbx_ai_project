@@ -371,6 +371,7 @@ const AstroAdminDashboard = () => {
                             <PaginationContent>
                                 <PaginationItem>
                                     <PaginationPrevious
+                                        style={{ cursor: "pointer" }}
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                         className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                                     />
@@ -379,6 +380,7 @@ const AstroAdminDashboard = () => {
                                 {Array.from({ length: totalPages }).map((_, i) => (
                                     <PaginationItem key={i}>
                                         <PaginationLink
+                                            style={{ cursor: "pointer" }}
                                             isActive={currentPage === i + 1}
                                             onClick={() => setCurrentPage(i + 1)}
                                         >
@@ -389,6 +391,7 @@ const AstroAdminDashboard = () => {
 
                                 <PaginationItem>
                                     <PaginationNext
+                                        style={{ cursor: "pointer" }}
                                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                         className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
                                     />
