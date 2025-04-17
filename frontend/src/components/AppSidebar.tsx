@@ -3,7 +3,7 @@ import {
     ChevronLeft,
     ChevronRight,
     FilePlus,
-    Rocket,
+    // Rocket,
     LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import clsx from "clsx";
 import { useData } from "@/context/AppContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
 
 function AppSidebar({ collapsed, setCollapsed }) {
     const nav = useNavigate();
@@ -84,7 +83,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             </Button>
                         </Link>
 
-                        <Link to="/astro-disc">
+                        {/* <Link to="/astro-disc">
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
@@ -93,7 +92,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                 <Rocket size={18} />
                                 {!collapsed && "AstroDISC"}
                             </Button>
-                        </Link>
+                        </Link> */}
                     </div>
                 }
 
@@ -111,7 +110,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             </Button>
                         </Link>
 
-                        <Link to="/astro-disc-dashboard">
+                        {/* <Link to="/astro-disc-dashboard">
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
@@ -120,7 +119,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                 <LayoutDashboard className="w-5 h-5" />
                                 {!collapsed && "Astro dashboard"}
                             </Button>
-                        </Link>
+                        </Link> */}
 
                     </div>
                 }

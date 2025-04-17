@@ -93,8 +93,8 @@ export default function LoginPage() {
 
         localStorage.setItem("userToken", res?.data?.token);
         toast.success("Login successful")
-        // nav("/dashboard")
-        nav("/home")
+        nav("/dashboard")
+        // nav("/home")
       }
     } catch (error) {
       console.error("Login error:", error);
