@@ -15,16 +15,16 @@ const Header = () => {
             <div className="mx-auto flex justify-between items-center">
 
                 <div>
-                    {/* {location.pathname === "/astro-reports" && */}
-                    <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
-                        onClick={() => {
-                            nav(-1);
-                        }}
-                    >
-                        <ArrowLeft className="w-5 h-5 " />
-                        Back
-                    </Button>
-                    {/* } */}
+                    {location.pathname !== "/document-reader" &&
+                        <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
+                            onClick={() => {
+                                nav(-1);
+                            }}
+                        >
+                            <ArrowLeft className="w-5 h-5 " />
+                            Back
+                        </Button>
+                    }
                 </div>
                 <div className="flex items-center gap-4">
                     {/* {location.pathname !== "/astro-reports" &&
