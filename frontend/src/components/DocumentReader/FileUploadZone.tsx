@@ -122,7 +122,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                 <FileUp className="mx-auto h-12 w-12 text-appGray-500" />
                 <h3 className="mt-4 text-lg font-semibold">Drag & Drop Files</h3>
                 <p className="text-sm text-appGray-500 mt-2">
-                    Supported formats: PDF, DOCX, TXT, CSV, MD (Max {maxFileSize}MB per file)
+                    Supported formats: PDF, DOCX, TXT, CSV, MD, Image (Max {maxFileSize}MB per file)
                 </p>
                 <p className="text-xs text-appGray-500 mt-1">
                     Total upload allowed: {maxTotalSize}MB (Max {maxFiles} files)

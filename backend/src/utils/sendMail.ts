@@ -52,8 +52,6 @@ export async function MAIL({ to, subject, body, attachment, template = null }: M
 }
 
 
-
-
 function EmailTemplate(OTP) {
   return `<!DOCTYPE html>
     <html lang="en">

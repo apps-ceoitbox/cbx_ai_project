@@ -8,8 +8,24 @@ import { ProcessingStatus } from "@/components/DocumentReader/ProcessingStatus";
 import { ProcessingOptions, ProcessingOptionType } from "@/components/DocumentReader/ProcessingOptions";
 import { processDocument } from "../services/documentProcessingService";
 import Header from "./Header";
+import axios from "axios";
+import { useAxios } from "@/context/AppContext";
+
+function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  
 
 const DocumentReader = () => {
+    const axios = useAxios("user")
     const [files, setFiles] = useState<File[]>([]);
     const [processingOption, setProcessingOption] = useState<ProcessingOptionType>(null);
     const [documentType, setDocumentType] = useState("");
@@ -51,19 +67,42 @@ const DocumentReader = () => {
         try {
             setStatus("processing");
             setProgress(0);
-            setError(undefined);
+            // setError(undefined);
 
-            const result = await processDocument(
-                files,
-                processingOption,
-                documentType,
-                goal,
-                (progressValue) => {
-                    setProgress(progressValue);
+            let tempFiles:any[] = files.map((file) => fileToBase64(file));
+            tempFiles = await Promise.all(tempFiles);
+            tempFiles = files.map((file, index) => {
+                return {
+                    name: file.name,
+                    base64: tempFiles[index],
+                    type: file.type
                 }
-            );
+            });
+            const temp = {
+                files: tempFiles,
+                processingOption: processingOption,
+                documentType: documentType,
+                goal: goal
+            }
 
-            setResults(result);
+            const response = await axios.post("/document/process", temp);
+            setResults({
+                processingOption,
+                result: response.data
+            })
+
+            console.log(response);
+            // const result = await processDocument(
+            //     files,
+            //     processingOption,
+            //     documentType,
+            //     goal,
+            //     (progressValue) => {
+            //         setProgress(progressValue);
+            //     }
+            // );
+
+            // setResults(result);
             setStatus("complete");
             toast.success("Document processed successfully");
         } catch (err) {
@@ -108,7 +147,33 @@ const DocumentReader = () => {
                                 maxFileSize={10}
                                 maxTotalSize={50}
                                 maxFiles={5}
-                                acceptedFileTypes={[".pdf", ".docx", ".txt", ".csv", ".md", "application/pdf", "text/plain"]}
+                                acceptedFileTypes={[
+                                    ".pdf",
+                                    ".docx",
+                                    ".txt",
+                                    ".csv",
+                                    ".md",
+                                    "application/pdf",
+                                    "text/plain",
+                                  
+                                    // Image extensions
+                                    ".jpg",
+                                    ".jpeg",
+                                    ".png",
+                                    ".gif",
+                                    ".bmp",
+                                    ".webp",
+                                    ".svg",
+                                  
+                                    // Image MIME types
+                                    "image/jpeg",
+                                    "image/png",
+                                    "image/gif",
+                                    "image/bmp",
+                                    "image/webp",
+                                    "image/svg+xml"
+                                  ]
+                                  }
                             />
                         </section>
 
@@ -162,7 +227,6 @@ const DocumentReader = () => {
                     </>
                 ) : (
                     <ResultsDisplay
-                        processingOption={processingOption}
                         results={results}
                         onReset={handleReset}
                     />
