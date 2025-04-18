@@ -32,6 +32,7 @@ import { useAxios } from "@/context/AppContext";
 import { formatDateTime } from "../Admin/Admin";
 import UserSubmissionDialog from "../AstroDISCAdmin/UserSubmissionDialog";
 import Header from "./Header";
+import { formatTime12Hour } from "@/components/Custom/customFunctions";
 
 
 const UserSubmissions = () => {
@@ -169,7 +170,7 @@ const UserSubmissions = () => {
                                         <TableCell>
                                             {submission?.dateOfBirth && submission?.timeOfBirth && (
                                                 <>
-                                                    {new Date(submission.dateOfBirth).toISOString().split('T')[0]} at {submission.timeOfBirth}
+                                                    {new Date(submission.dateOfBirth).toLocaleDateString("en-IN")} at {formatTime12Hour(submission.timeOfBirth)}
                                                     <br />
                                                 </>
                                             )}

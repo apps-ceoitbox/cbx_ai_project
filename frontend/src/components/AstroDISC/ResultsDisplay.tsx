@@ -15,7 +15,7 @@ import {
   Tooltip
 } from "recharts";
 import { useData } from "@/context/AppContext";
-import { useRef } from "react";
+import { formatCustomTime12Hour } from "../Custom/customFunctions";
 // import { toast } from "sonner";
 // import html2pdf from 'html2pdf.js'
 
@@ -30,9 +30,6 @@ export function ResultsDisplay({ userInfo, onRestart }: ResultsDisplayProps) {
   const { astroResult, userAuth } = useData();
   const chartData = astroResult?.chartData || [];
   const personalityType = astroResult?.personalityDetails || {};
-
-  const reportRef = useRef<HTMLDivElement>(null);
-
 
   // const handleDownload = () => {
   //   if (!reportRef.current) return;
@@ -76,242 +73,272 @@ export function ResultsDisplay({ userInfo, onRestart }: ResultsDisplayProps) {
   // };
 
   return (
+    // <div>
+    //   <div style={{ position: "relative", left: 20 }}>
+    //     <Button
+    //       variant="outline"
+    //       onClick={onRestart}
+    //       className="order-2 sm:order-1"
+    //     >
+    //       Start New Assessment
+    //     </Button>
+    //   </div>
+
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-4xl mx-auto p-4 py-8"
+      className="max-w-4xl mx-auto "
     >
-      <div ref={reportRef}>
-        <div className="text-center mb-8">
-          <motion.h1
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-3xl md:text-4xl font-bold mb-2"
-          >
-            <span className="text-brand-red">{personalityType?.title}</span>
-          </motion.h1>
 
-          <motion.div
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-wrap justify-center gap-2 mb-4"
-          >
-            {personalityType?.keywords?.map((keyword, index) => (
-              <span
-                key={index}
-                className="bg-secondary px-3 py-1 rounded-full text-sm"
-              >
-                {keyword}
-              </span>
-            ))}
-          </motion.div>
 
-          <motion.p
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-muted-foreground"
-          >
-            Your AstroDISC assessment for {userAuth?.user?.userName}
-          </motion.p>
-        </div>
+      <div className="text-center mb-8">
+        <motion.h1
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-3xl md:text-4xl font-bold mb-2"
+        >
+          <span className="text-brand-red">{personalityType?.title}</span>
+        </motion.h1>
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-8">
-            <TabsTrigger value="profile">Personality Profile</TabsTrigger>
-            <TabsTrigger value="work">Work Style</TabsTrigger>
-            <TabsTrigger value="astro">Astrological Insights</TabsTrigger>
-          </TabsList>
 
-          <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your DISC Profile</CardTitle>
-              </CardHeader>
-              <CardContent >
-                <div className="h-64 mb-6">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" domain={[0, 100]} />
-                      <YAxis type="category" dataKey="name" width={100} />
-                      <Tooltip />
-                      <Bar
-                        dataKey="value"
-                        fill="#E63946"
-                        radius={[0, 4, 4, 0]}
-                        label={{ position: 'right', formatter: (value) => `${Math.round(value)}%` }}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+        <motion.div
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="flex flex-wrap justify-center gap-2 mb-4"
+        >
+          {personalityType?.keywords?.map((keyword, index) => (
+            <span
+              key={index}
+              className="bg-secondary px-3 py-1 rounded-full text-sm"
+            >
+              {keyword}
+            </span>
+          ))}
+        </motion.div>
 
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold">Profile Overview</h3>
-                  <p>
-                    As a <span className="font-medium text-brand-red">{personalityType?.title}</span>,
-                    you excel in environments that value your
-                    {astroResult.personalityDetails.primaryType === "D" && " directness and ability to achieve results."}
-                    {astroResult.personalityDetails.primaryType === "I" && " enthusiasm and people-focused approach."}
-                    {astroResult.personalityDetails.primaryType === "S" && " reliability and supportive nature."}
-                    {astroResult.personalityDetails.primaryType === "C" && " precision and analytical thinking."}
-                  </p>
-                  <p>
-                    Your profile shows a primary {astroResult?.personalityDetails?.primaryType} style, with supporting elements of
-                    {astroResult.d > 0 && astroResult.personalityDetails.primaryType !== "D" ? " Dominance," : ""}
-                    {astroResult.i > 0 && astroResult.personalityDetails.primaryType !== "I" ? " Influence," : ""}
-                    {astroResult.s > 0 && astroResult.personalityDetails.primaryType !== "S" ? " Steadiness," : ""}
-                    {astroResult.c > 0 && astroResult.personalityDetails.primaryType !== "C" ? " Conscientiousness," : ""}
-                    {"creating your unique behavioral blueprint."}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+        <motion.p
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-muted-foreground"
+        >
+          Your AstroDISC assessment for {userAuth?.user?.userName}
+        </motion.p>
+      </div>
 
-          <TabsContent value="work" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Work Style & Career Insights</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-semibold mb-3">Your Natural Work Style</h3>
-                  <ul className="space-y-2">
-                    {personalityType?.workStyle?.map((trait, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-brand-red mt-1">•</span>
-                        <span>{trait}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+      <Tabs defaultValue="profile" className="w-full">
 
-                <div>
-                  <h3 className="text-xl font-semibold mb-3">Suggested Career Paths</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {personalityType?.careers?.map((career, index) => (
-                      <div key={index} className="bg-muted p-3 rounded-md">
-                        {career}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        <TabsList className="grid grid-cols-3 mb-8">
+          <TabsTrigger
+            value="profile"
+            className="flex items-center justify-center py-2 text-black bg-white border border-gray-300 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white">
+            Personality Profile
+          </TabsTrigger>
+          <TabsTrigger
+            value="work"
+            className="flex items-center justify-center py-2 text-black bg-white border border-gray-300 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white">
+            Work Style
+          </TabsTrigger>
+          <TabsTrigger
+            value="astro"
+            className="flex items-center justify-center py-2 text-black bg-white border border-gray-300 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white">
+            Astrological Insights
+          </TabsTrigger>
+        </TabsList>
 
-                <div>
-                  <h3 className="text-xl font-semibold mb-3">Workplace Recommendations</h3>
-                  <p>
-                    {astroResult?.personalityDetails?.primaryType === "D" && "Look for roles that offer autonomy, challenges, and opportunities to lead. Environments that reward results and provide variety will keep you engaged."}
-                    {astroResult?.personalityDetails?.primaryType === "I" && "Seek collaborative environments with frequent social interaction. Roles that leverage your communication skills and offer recognition will be most fulfilling."}
-                    {astroResult?.personalityDetails?.primaryType === "S" && "Thrive in stable, harmonious workplaces with clear expectations. Team-based roles that value consistency and support will align with your strengths."}
-                    {astroResult?.personalityDetails?.primaryType === "C" && "Excel in structured environments with attention to quality and precision. Roles requiring analytical thinking and expertise will showcase your abilities."}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          <TabsContent value="astro" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Vedic Astrological Insights</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-muted-foreground">
-                  Based on your birth details: {userInfo?.dateOfBirth?.toLocaleDateString()} at {userInfo?.timeOfBirth?.hour}:{userInfo?.timeOfBirth?.minute} in {userInfo?.placeOfBirth}
+        <TabsContent value="profile" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your DISC Profile</CardTitle>
+            </CardHeader>
+            <CardContent >
+              <div className="h-64 mb-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" domain={[0, 100]} />
+                    <YAxis type="category" dataKey="name" width={140} />
+                    <Tooltip />
+                    <Bar
+                      dataKey="value"
+                      fill="#E63946"
+                      radius={[0, 4, 4, 0]}
+                      label={{ position: 'right', formatter: (value) => `${Math.round(value)}%` }}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold">Profile Overview</h3>
+                <p>
+                  As a <span className="font-medium text-brand-red">{personalityType?.title}</span>,
+                  you excel in environments that value your
+                  {astroResult.personalityDetails.primaryType === "D" && " directness and ability to achieve results."}
+                  {astroResult.personalityDetails.primaryType === "I" && " enthusiasm and people-focused approach."}
+                  {astroResult.personalityDetails.primaryType === "S" && " reliability and supportive nature."}
+                  {astroResult.personalityDetails.primaryType === "C" && " precision and analytical thinking."}
                 </p>
+                <p>
+                  Your profile shows a primary {astroResult?.personalityDetails?.primaryType} style, with supporting elements of
+                  {astroResult.d > 0 && astroResult.personalityDetails.primaryType !== "D" ? " Dominance," : ""}
+                  {astroResult.i > 0 && astroResult.personalityDetails.primaryType !== "I" ? " Influence," : ""}
+                  {astroResult.s > 0 && astroResult.personalityDetails.primaryType !== "S" ? " Steadiness," : ""}
+                  {astroResult.c > 0 && astroResult.personalityDetails.primaryType !== "C" ? " Conscientiousness," : ""}
+                  {"creating your unique behavioral blueprint."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                <div>
-                  <h3 className="text-xl font-semibold mb-3">Planetary Influences</h3>
-                  <div className="space-y-3">
-                    {astroResult?.astrologicalInsights?.map((insight, index) => (
-                      <p key={index}>{insight}</p>
-                    ))}
-                  </div>
+        <TabsContent value="work" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Work Style & Career Insights</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-xl font-semibold mb-3">Your Natural Work Style</h3>
+                <ul className="space-y-2">
+                  {personalityType?.workStyle?.map((trait, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-brand-red mt-1">•</span>
+                      <span>{trait}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold mb-3">Suggested Career Paths</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {personalityType?.careers?.map((career, index) => (
+                    <div key={index} className="bg-muted p-3 rounded-md">
+                      {career}
+                    </div>
+                  ))}
                 </div>
+              </div>
 
-                <div>
-                  <h3 className="text-xl font-semibold mb-3">Cosmic-Behavioral Integration</h3>
-                  <p className="mb-2">
-                    Your {astroResult.personalityDetails?.primaryType}-type DISC profile aligns with the astrological influences in your chart, particularly:
-                  </p>
-                  <ul className="space-y-2">
-                    {astroResult?.personalityDetails?.primaryType === "D" && (
-                      <>
-                        <li className="flex items-start gap-2">
-                          <span className="text-brand-red mt-1">•</span>
-                          <span>Strong Mars placement reinforcing your direct, action-oriented approach</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-brand-red mt-1">•</span>
-                          <span>Sun in a position of authority and leadership</span>
-                        </li>
-                      </>
-                    )}
-                    {astroResult?.personalityDetails?.primaryType === "I" && (
-                      <>
-                        <li className="flex items-start gap-2">
-                          <span className="text-brand-red mt-1">•</span>
-                          <span>Venus placement enhancing your social and persuasive abilities</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-brand-red mt-1">•</span>
-                          <span>Mercury supporting your expressive communication style</span>
-                        </li>
-                      </>
-                    )}
-                    {astroResult?.personalityDetails?.primaryType === "S" && (
-                      <>
-                        <li className="flex items-start gap-2">
-                          <span className="text-brand-red mt-1">•</span>
-                          <span>Moon in a position enhancing emotional stability and empathy</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-brand-red mt-1">•</span>
-                          <span>Venus supporting your harmonious relationship approach</span>
-                        </li>
-                      </>
-                    )}
-                    {astroResult?.personalityDetails?.primaryType === "C" && (
-                      <>
-                        <li className="flex items-start gap-2">
-                          <span className="text-brand-red mt-1">•</span>
-                          <span>Mercury placement enhancing your analytical and precise thinking</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-brand-red mt-1">•</span>
-                          <span>Saturn supporting your methodical and structured approach</span>
-                        </li>
-                      </>
-                    )}
-                  </ul>
+              <div>
+                <h3 className="text-xl font-semibold mb-3">Workplace Recommendations</h3>
+                <p>
+                  {astroResult?.personalityDetails?.primaryType === "D" && "Look for roles that offer autonomy, challenges, and opportunities to lead. Environments that reward results and provide variety will keep you engaged."}
+                  {astroResult?.personalityDetails?.primaryType === "I" && "Seek collaborative environments with frequent social interaction. Roles that leverage your communication skills and offer recognition will be most fulfilling."}
+                  {astroResult?.personalityDetails?.primaryType === "S" && "Thrive in stable, harmonious workplaces with clear expectations. Team-based roles that value consistency and support will align with your strengths."}
+                  {astroResult?.personalityDetails?.primaryType === "C" && "Excel in structured environments with attention to quality and precision. Roles requiring analytical thinking and expertise will showcase your abilities."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="astro" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Vedic Astrological Insights</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <p className="text-muted-foreground">
+                Based on your birth details: {new Date(userInfo?.dateOfBirth).toLocaleDateString("en-IN")} at {formatCustomTime12Hour(userInfo?.timeOfBirth)} in {userInfo?.placeOfBirth}
+              </p>
+
+              <div>
+                <h3 className="text-xl font-semibold mb-3">Planetary Influences</h3>
+                <div className="space-y-3">
+                  {astroResult?.astrologicalInsights?.map((insight, index) => (
+                    <p key={index}>{insight}</p>
+                  ))}
                 </div>
+              </div>
 
-                <div className="bg-muted p-4 rounded-md">
-                  <p className="text-sm">
-                    <strong>Note:</strong> This is a simplified interpretation. For a comprehensive Vedic astrology reading,
-                    we recommend consulting with a professional astrologer who can provide detailed analysis
-                    of your full birth chart.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              <div>
+                <h3 className="text-xl font-semibold mb-3">Cosmic-Behavioral Integration</h3>
+                <p className="mb-2">
+                  Your {astroResult.personalityDetails?.primaryType}-type DISC profile aligns with the astrological influences in your chart, particularly:
+                </p>
+                <ul className="space-y-2">
+                  {astroResult?.personalityDetails?.primaryType === "D" && (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand-red mt-1">•</span>
+                        <span>Strong Mars placement reinforcing your direct, action-oriented approach</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand-red mt-1">•</span>
+                        <span>Sun in a position of authority and leadership</span>
+                      </li>
+                    </>
+                  )}
+                  {astroResult?.personalityDetails?.primaryType === "I" && (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand-red mt-1">•</span>
+                        <span>Venus placement enhancing your social and persuasive abilities</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand-red mt-1">•</span>
+                        <span>Mercury supporting your expressive communication style</span>
+                      </li>
+                    </>
+                  )}
+                  {astroResult?.personalityDetails?.primaryType === "S" && (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand-red mt-1">•</span>
+                        <span>Moon in a position enhancing emotional stability and empathy</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand-red mt-1">•</span>
+                        <span>Venus supporting your harmonious relationship approach</span>
+                      </li>
+                    </>
+                  )}
+                  {astroResult?.personalityDetails?.primaryType === "C" && (
+                    <>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand-red mt-1">•</span>
+                        <span>Mercury placement enhancing your analytical and precise thinking</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-brand-red mt-1">•</span>
+                        <span>Saturn supporting your methodical and structured approach</span>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
 
-        <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4">
-          <Button
-            variant="outline"
-            onClick={onRestart}
-            className="order-2 sm:order-1"
-          >
-            Start New Assessment
-          </Button>
+              <div className="bg-muted p-4 rounded-md">
+                <p className="text-sm">
+                  <strong>Note:</strong> This is a simplified interpretation. For a comprehensive Vedic astrology reading,
+                  we recommend consulting with a professional astrologer who can provide detailed analysis
+                  of your full birth chart.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-          <div className="flex gap-2 order-1 sm:order-2">
-            {/* <Button
+      <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4">
+        <Button
+          variant="outline"
+          onClick={onRestart}
+          className="order-2 sm:order-1"
+        >
+          Start New Assessment
+        </Button>
+
+        <div className="flex gap-2 order-1 sm:order-2">
+          {/* <Button
             onClick={handleShare}
             className="flex items-center gap-2"
           >
@@ -319,7 +346,7 @@ export function ResultsDisplay({ userInfo, onRestart }: ResultsDisplayProps) {
             Share
           </Button> */}
 
-            {/* <Button
+          {/* <Button
               onClick={handleDownload}
               variant="default"
               className="bg-brand-red hover:bg-red-700 flex items-center gap-2"
@@ -327,14 +354,11 @@ export function ResultsDisplay({ userInfo, onRestart }: ResultsDisplayProps) {
               <Download className="h-4 w-4" />
               Download PDF
             </Button> */}
-            <div></div>
-          </div>
-
-
+          <div></div>
         </div>
       </div>
-
     </motion.div>
+    // </div >
   );
 }
 

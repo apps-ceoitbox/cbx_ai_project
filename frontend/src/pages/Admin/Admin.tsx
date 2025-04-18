@@ -615,7 +615,7 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold mb-8 text-center text-red-500">Admin Dashboard</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          {/* <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="dashboard"
               className="flex items-center text-[#e50914] data-[state=active]:text-black"
             >
@@ -632,8 +632,34 @@ export default function AdminDashboard() {
               <FileText className="mr-2 h-4 w-4" />
               Manage Templates
             </TabsTrigger>
-
+          </TabsList> */}
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger
+              value="dashboard"
+              className="flex items-center justify-center py-2 text-black bg-white border border-gray-200 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Submissions
+            </TabsTrigger>
+            <TabsTrigger
+              value="ai-settings"
+              className="flex items-center justify-center py-2 text-black bg-white border border-gray-200 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              AI Platform Settings
+            </TabsTrigger>
+            <TabsTrigger
+              value="manage-prompts"
+              className="flex items-center justify-center py-2 text-black bg-white border border-gray-200 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Manage Templates
+            </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="dashboard">
             <Card>

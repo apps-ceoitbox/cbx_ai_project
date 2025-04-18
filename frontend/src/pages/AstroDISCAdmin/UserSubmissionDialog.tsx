@@ -11,6 +11,7 @@ import {
     ResponsiveContainer,
     Tooltip
 } from "recharts";
+import { formatTime12Hour } from "@/components/Custom/customFunctions";
 
 
 const UserSubmissionDialog = ({ submission }) => {
@@ -58,10 +59,26 @@ const UserSubmissionDialog = ({ submission }) => {
 
             <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid grid-cols-3 mb-8">
-                    <TabsTrigger value="profile">Personality Profile</TabsTrigger>
-                    <TabsTrigger value="work">Work Style</TabsTrigger>
-                    <TabsTrigger value="astro">Astrological Insights</TabsTrigger>
+                    <TabsTrigger
+                        value="profile"
+                        className="flex items-center justify-center py-2 text-black bg-white border border-gray-300 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white">
+                        Personality Profile
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="work"
+                        className="flex items-center justify-center py-2 text-black bg-white border border-gray-300 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white">
+                        Work Style
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="astro"
+                        className="flex items-center justify-center py-2 text-black bg-white border border-gray-300 
+               data-[state=active]:bg-[#e50914] data-[state=active]:text-white">
+                        Astrological Insights
+                    </TabsTrigger>
                 </TabsList>
+
 
                 <TabsContent value="profile" className="space-y-6">
                     <Card>
@@ -74,7 +91,7 @@ const UserSubmissionDialog = ({ submission }) => {
                                     <BarChart data={submission?.generatedContent?.chartData} layout="vertical">
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis type="number" domain={[0, 100]} />
-                                        <YAxis type="category" dataKey="name" width={100} />
+                                        <YAxis type="category" dataKey="name" width={140} />
                                         <Tooltip />
                                         <Bar
                                             dataKey="value"
@@ -158,7 +175,7 @@ const UserSubmissionDialog = ({ submission }) => {
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <p className="text-muted-foreground">
-                                Based on your birth details: {new Date(submission.dateOfBirth).toISOString().split('T')[0]} at {submission?.timeOfBirth?.hour}:{submission?.timeOfBirth?.minute} in {submission?.placeOfBirth}
+                                Based on your birth details:  {new Date(submission.dateOfBirth).toLocaleDateString("en-IN")} at {formatTime12Hour(submission?.timeOfBirth)} in {submission?.placeOfBirth}
                             </p>
 
                             <div>

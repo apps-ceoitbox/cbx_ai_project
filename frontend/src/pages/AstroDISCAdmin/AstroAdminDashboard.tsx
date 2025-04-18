@@ -41,6 +41,7 @@ import {
 import { useAxios } from "@/context/AppContext";
 import { formatDateTime } from "../Admin/Admin";
 import UserSubmissionDialog from "./UserSubmissionDialog";
+import { formatTime12Hour } from "@/components/Custom/customFunctions";
 
 
 
@@ -317,7 +318,7 @@ const AstroAdminDashboard = () => {
                                         <TableCell>
                                             {submission?.dateOfBirth && submission?.timeOfBirth && (
                                                 <>
-                                                    {new Date(submission.dateOfBirth).toISOString().split('T')[0]} at {submission.timeOfBirth}
+                                                    {new Date(submission.dateOfBirth).toLocaleDateString("en-IN")} at {formatTime12Hour(submission.timeOfBirth)}
                                                     <br />
                                                 </>
                                             )}

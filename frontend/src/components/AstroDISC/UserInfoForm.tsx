@@ -9,7 +9,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-// import { Calendar } from "react-day-picker";
 
 interface UserInfoFormProps {
   onSubmit: (userInfo: UserInfo) => void;
@@ -35,6 +34,7 @@ export interface UserInfo {
 }
 
 export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
+  const [open, setOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo>({
     fullName: "",
     dateOfBirth: undefined,
@@ -43,6 +43,8 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
     gender: "",
     profession: "",
   });
+
+  console.log("userInfo", userInfo)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +85,12 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="dateOfBirth">Date of Birth*</Label>
-            <Popover>
+            <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className="w-full justify-start text-left font-normal pl-10 relative"
+                  onClick={() => setOpen(true)}
                 >
                   <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   {userInfo.dateOfBirth ? (
@@ -101,7 +104,12 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
                 <Calendar
                   mode="single"
                   selected={userInfo.dateOfBirth}
-                  onSelect={(date) => setUserInfo({ ...userInfo, dateOfBirth: date })}
+                  onSelect={(date) => {
+                    if (date) {
+                      setUserInfo({ ...userInfo, dateOfBirth: date });
+                      setOpen(false);
+                    }
+                  }}
                   initialFocus
                   captionLayout="dropdown"
                   fromYear={1900}

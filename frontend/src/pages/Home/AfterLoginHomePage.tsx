@@ -16,13 +16,6 @@ const AfterLoginHomePage = () => {
                         <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Our CBX AI Tool</h1>
                         <p className="text-gray-600 mb-6">Your workspace is ready. Navigate using the sidebar to explore all available features.</p>
 
-                        {/* <Alert className="mb-6 border-red-200 bg-red-50">
-                            <AlertTitle className="text-red-800">Getting Started</AlertTitle>
-                            <AlertDescription className="text-red-700">
-                                Welcome! Explore the sidebar menu to access your tools and options. Simply click on any item to begin working on your tasks and get started.
-                            </AlertDescription>
-                        </Alert> */}
-
                         <Button
                             onClick={() => navigate("/dashboard")}
                             className="text-lg px-8 py-6 bg-red-500 hover:bg-red-700"
@@ -38,9 +31,8 @@ const AfterLoginHomePage = () => {
                     <img
                         draggable="false"
                         src='/Banner.jpg'
-                        // src="https://ceoitbox.com/wp-content/uploads/2022/05/Sanjeev-Jain-3.png.webp"
                         alt="Image"
-                        className="object-fill w-full h-full"
+                        className="object-contain w-full h-full"
                     />
                     {/* </div> */}
                 </div>
