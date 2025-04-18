@@ -59,6 +59,26 @@ const config = {
           black: "#000000",
           white: "#FFFFFF",
         },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+
+        appRed: "#ea384c",
+        appBlack: "#222222",
+        appGray: {
+          100: "#F1F0FB",
+          300: "#C8C8C9",
+          500: "#8E9196",
+          700: "#555555",
+          900: "#333333",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

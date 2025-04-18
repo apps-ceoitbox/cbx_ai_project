@@ -4,6 +4,7 @@ import {
     ChevronRight,
     FilePlus,
     Rocket,
+    FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -94,6 +95,20 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                 {!collapsed && "AstroDISC"}
                             </Button>
                         </Link>
+
+
+                        <Link to="/document-reader">
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
+                                style={{ background: (location.pathname === "/document-reader" || location.pathname === "/document-reader") ? "rgb(229 9 20)" : "", color: (location.pathname === "/document-reader" || location.pathname === "/document-reader") ? "#fff" : "black" }}
+                            >
+                                <FileText size={18} />
+                                {!collapsed && "Document Reader"}
+                            </Button>
+                        </Link>
+
+
                     </div>
                 }
 

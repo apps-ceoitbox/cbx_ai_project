@@ -5,6 +5,9 @@ import UserSubmissions from '@/pages/AstroDISC/UserSubmissions'
 import AstroAdminDashboard from '@/pages/AstroDISCAdmin/AstroAdminDashboard'
 import Dashboard from '@/pages/Dashboard/Dashboard'
 import UserGeneratedPlans from '@/pages/Dashboard/UserGeneratedPlans'
+import DocumentReader from '@/pages/DocumentReader/DocumentReader'
+import ReportsDashboard from '@/pages/DocumentReader/ReportsDashboard'
+import Settings from '@/pages/DocumentReader/Settings'
 import AfterLoginHomePage from '@/pages/Home/AfterLoginHomePage'
 import Footer from '@/pages/Home/Footer'
 import HomePage from '@/pages/Home/HomePage'
@@ -36,6 +39,11 @@ const AppRoutes = () => {
                 <Route path="/astro-disc" element={<Index />} />
                 <Route path="/astro-reports" element={<UserSubmissions />} />
                 <Route path="/astro-disc-dashboard" element={<AstroAdminDashboard />} />
+
+                {/* DocumentReader */}
+                <Route path="/document-reader" element={<DocumentReader />} />
+                <Route path="/documents-dashboard" element={<ReportsDashboard />} />
+                <Route path="/settings" element={<Settings />} />
 
                 <Route path="*" element={<NotFound />} />
 
