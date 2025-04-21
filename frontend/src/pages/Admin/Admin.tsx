@@ -1285,7 +1285,12 @@ export default function AdminDashboard() {
                               </div>
 
                             </TableCell>
-                            <TableCell>{prompt.objective}</TableCell>
+                            <TableCell>
+                              {/* {prompt.objective} */}
+                              <div className="max-w-[200px] truncate" title={prompt.objective}>
+                                {prompt.objective}
+                              </div>
+                            </TableCell>
                             <TableCell>
                               {prompt.defaultAiProvider.name} ({prompt.defaultAiProvider.model})
                             </TableCell>
