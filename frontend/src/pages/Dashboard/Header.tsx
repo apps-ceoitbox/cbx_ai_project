@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext'
 import { FilePlus, LayoutDashboard, LogOut } from 'lucide-react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -9,8 +10,22 @@ const Header = () => {
     const nav = useNavigate();
     const location = useLocation();
     const { setUserAuth } = useData();
+    // const [isMobile, setIsMobile] = useState(false);
 
     const isToolsPage = location.pathname.startsWith("/tools/");
+
+
+    // useEffect(() => {
+    //         const checkScreenSize = () => {
+    //             setIsMobile(window.innerWidth < 768);
+    //         };
+    //         // Initial check
+    //         checkScreenSize();
+    //         // Add resize listener
+    //         window.addEventListener('resize', checkScreenSize);
+    //         // Cleanup
+    //         return () => window.removeEventListener('resize', checkScreenSize);
+    //     }, []);
 
 
     return (

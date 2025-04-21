@@ -41,7 +41,7 @@ const HomePage = () => {
                             draggable="false"
                             src="/Banner.jpg"
                             alt="Business Professional"
-                            className="w-full h-full object-fill"
+                            className="w-full h-full object-contain"
                         />
                     </div>
                 </div>
