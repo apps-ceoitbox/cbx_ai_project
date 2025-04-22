@@ -100,7 +100,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
-                                style={{ background: (location.pathname === "/document-reader" || location.pathname === "/document-reader") ? "rgb(229 9 20)" : "", color: (location.pathname === "/document-reader" || location.pathname === "/document-reader") ? "#fff" : "black" }}
+                                style={{ background: (location.pathname === "/document-reader" || location.pathname === "/documents-dashboard") ? "rgb(229 9 20)" : "", color: (location.pathname === "/document-reader" || location.pathname === "/documents-dashboard") ? "#fff" : "black" }}
                             >
                                 <FileText size={18} />
                                 {!collapsed && "Document Reader"}
@@ -140,7 +140,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
-                                style={{ background: (location.pathname === "/document-reader-settings" || location.pathname === "/document-reader-settings") ? "rgb(229 9 20)" : "", color: (location.pathname === "/document-reader-settings" || location.pathname === "/document-reader-settings") ? "#fff" : "black" }}
+                                style={{ background: (location.pathname === "/document-reader-settings") ? "rgb(229 9 20)" : "", color: (location.pathname === "/document-reader-settings") ? "#fff" : "black" }}
                             >
                                 <FileText size={18} />
                                 {!collapsed && "Document Reader"}

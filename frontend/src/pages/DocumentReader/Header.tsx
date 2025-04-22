@@ -1,7 +1,7 @@
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext';
-import { ArrowLeft, LogOut, Menu, X } from 'lucide-react'; //LayoutDashboard
+import { ArrowLeft, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner';
@@ -39,7 +39,7 @@ const Header = () => {
     return (
         <header className="bg-black text-white p-4  lg:px-10 md:px-4  shadow-md">
             <div className="mx-auto flex justify-between items-center">
-                {isMobile ? <Logo size="sm" /> : <div></div>}
+                {isMobile && <Logo size="sm" />}
                 <div>
                     {location.pathname !== "/document-reader" &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
@@ -53,7 +53,7 @@ const Header = () => {
                     }
                 </div>
                 <div className="flex items-center gap-4">
-                    {/* {location.pathname !== "/astro-reports" &&
+                    {location.pathname !== "/astro-reports" && location.pathname !== "/documents-dashboard" &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
                                 nav("/documents-dashboard")
@@ -62,7 +62,7 @@ const Header = () => {
                             <LayoutDashboard className="w-5 h-5" />
                             Dashboard
                         </Button>
-                    } */}
+                    }
 
 
 

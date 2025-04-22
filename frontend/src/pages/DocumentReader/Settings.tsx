@@ -1,6 +1,6 @@
 
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Table,
     TableBody,
@@ -21,7 +21,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, DownloadCloud, Eye, Loader2 } from "lucide-react";
+import { Search, DownloadCloud, Eye, Loader2, Copy, Check, Download, Mail } from "lucide-react";
 
 import {
     Select,
@@ -35,14 +35,16 @@ import {
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { useAxios } from "@/context/AppContext";
 import { formatDateTime } from "../Admin/Admin";
 import AddDoucmentReaderPromt from "./AddDoucmentReaderPromt";
 import AdminHeader from "@/components/Custom/AdminHeader";
-
-
+import html2pdf from 'html2pdf.js'
+import { toast } from "sonner";
+import SendEmailDialog from "@/components/Custom/SendEmailDialog";
 
 
 const Settings = () => {
@@ -58,6 +60,11 @@ const Settings = () => {
     const [formData, setFormData] = useState({});
     const itemsPerPage = 10;
     const [isMobile, setIsMobile] = useState(false);
+    const [copied, setCopied] = React.useState(false);
+    const [isEmailSending, setIsEmailSending] = useState(false);
+    const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
+    const [sentToEmail, setSentToEmail] = useState("");
+    const contentRef = React.useRef<HTMLDivElement>(null);
 
 
     useEffect(() => {
@@ -69,11 +76,12 @@ const Settings = () => {
         return () => window.removeEventListener('resize', checkScreenSize);
     }, []);
 
-
     // Filter submissions based on search query
     const filteredSubmissions = mockSubmissions?.filter(submission =>
-        submission?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        submission?.profession?.toLowerCase().includes(searchQuery.toLowerCase())
+        submission?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        submission?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        submission?.documentType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        submission?.processingOption?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const models = (apiProviders || []).find(item => item?.name == selectedApiProvider)?.models || [];
@@ -89,10 +97,9 @@ const Settings = () => {
     const getAllSubmissions = async () => {
         try {
             setIsLoading(true);
-            let res = await axios.get("/astro/submissions");
+            let res = await axios.get("/document/submissions");
             setMockSubmissions(res?.data?.data);
-            // setCountsData(res?.data);
-            // console.log("ress", res)
+            console.log("res", res)
         } catch (error) {
             console.log(error)
         } finally {
@@ -109,6 +116,7 @@ const Settings = () => {
         await axios.post("/document", data)
         setOpen(false)
     }
+
     const handleSaveAISettings = async (data = {}) => {
         await axios.post("/document", {
             ...data
@@ -133,25 +141,20 @@ const Settings = () => {
         const headers = [
             "Full Name",
             "Email",
-            "Date of Birth",
-            "Time of Birth",
-            "Place of Birth",
-            "Profession",
-            "Secondary Type",
-            "Submission Date"
+            "Document Type",
+            "Processing Option",
+            "Submission Date",
+            "Result",
         ];
 
-        // Format submissions data for CSV
-        const csvData = filteredSubmissions.map(submission => [
-            submission?.fullName || "",
+        // Format submissions data for CSV 
+        const csvData = filteredSubmissions?.map(submission => [
+            submission?.name || "",
             submission?.email || "",
-            submission?.dateOfBirth ? new Date(submission?.dateOfBirth).toISOString().split('T')[0] : "",
-            submission?.timeOfBirth || "",
-            submission?.placeOfBirth || "",
-            submission?.profession || "",
-            submission?.generatedContent?.personalityDetails?.primaryType || "",
-            submission?.personalityDetails?.secondaryType || "",
-            submission?.createdAt ? formatDateTime(submission?.createdAt) : ""
+            submission?.documentType || "",
+            submission?.processingOption || "",
+            submission?.createdAt ? formatDateTime(submission?.createdAt) : "",
+            submission?.result || "",
         ]);
 
         // Combine header and data rows
@@ -168,11 +171,146 @@ const Settings = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', `astrodisc-submissions-${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute('download', `doucment-submissions-${new Date().toISOString().split('T')[0]}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const handleCopyToClipboard = () => {
+        if (!contentRef.current) return;
+
+        const content = contentRef.current.innerText || contentRef.current.textContent || "";
+
+        navigator.clipboard.writeText(content).then(() => {
+            setCopied(true);
+            toast.success("Content copied to clipboard");
+
+            setTimeout(() => {
+                setCopied(false);
+            }, 3000);
+        }).catch(err => {
+            toast.error("Failed to copy content");
+            console.error("Failed to copy content: ", err);
+        });
+    };
+
+    const handleDownload = (submission) => {
+        if (!contentRef.current) return;
+
+        const filename = `${getTitleByOption(submission).replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+        const options = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Create PDF from the content div
+        html2pdf()
+            .from(contentRef.current)
+            .set(options)
+            .save()
+            .then(() => {
+                toast.success("Report downloaded successfully");
+            })
+            .catch(err => {
+                toast.error("Failed to generate PDF");
+                console.error("PDF generation failed: ", err);
+            });
+    };
+
+    const getTitleByOption = (submission) => {
+        switch (submission.processingOption) {
+            case "summarize":
+                return "Document Summary";
+            case "questions":
+                return "Questions & Answers";
+            case "insights":
+                return "Document Insights";
+            case "report":
+                return "Custom Report";
+            default:
+                return "Results";
+        }
+    };
+
+
+    const handleSendEmail = async (submission) => {
+        setIsEmailSending(true);
+        try {
+            const reportElement = document.getElementById('report-content')
+
+            if (!reportElement) {
+                toast.error("Could not generate PDF. Please try again.")
+                setIsEmailSending(false);
+                return
+            }
+
+            // Configure PDF options
+            const options = {
+                margin: [10, 10, 10, 10],
+                filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }
+
+            const worker = html2pdf().set(options).from(reportElement);
+
+            // Get PDF as base64
+            const blob = await worker.outputPdf("blob");
+            const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+            let base64PDF = await fileToBase64(pdfFile)
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(submission.result, 'text/html');
+            const h1Text = doc.querySelector('h1')?.textContent || 'Default Subject';
+
+            await axios.post("/users/email", {
+                to: submission?.email,
+                subject: h1Text || "",
+                body: `
+                <!DOCTYPE html>
+                <html>
+                  <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+                    <p>Dear ${submission?.name},</p>
+                    <p>Please find enclosed the ${h1Text} Plan as requested by you.</p>
+                  </body>
+                </html>`,
+                attachment: base64PDF
+            })
+
+            // Save the email for displaying in success popup
+            setSentToEmail(submission?.email);
+
+            // Show success popup
+            setEmailSuccessOpen(true);
+        } catch (error) {
+            console.error("Email sending error:", error);
+            toast.error("Failed to send email. Please try again.");
+        } finally {
+            // Set loading state back to false
+            setIsEmailSending(false);
+        }
+    }
+
+    const fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // @ts-ignore
+                const base64String = reader.result.split(',')[1];
+                resolve(base64String);
+            };
+
+            reader.onerror = reject;
+
+            reader.readAsDataURL(file);
+        });
     };
 
 
@@ -181,10 +319,14 @@ const Settings = () => {
             {isMobile && <AdminHeader />}
             <main className="flex-1 py-6 px-4 md:px-6 lg:px-8">
                 <div className="mb-6">
-                    <div className="flex justify-between">
-                        <h1 className="text-3xl font-bold text-red-500">Admin Dashboard</h1>
+                    <div className="flex justify-between flex-wrap items-center gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold text-red-500">Admin Dashboard</h1>
+                            <p className="text-muted-foreground">View and manage Doucment Reader user submissions</p>
+                        </div>
 
-                        <div className="flex items-center gap-4">
+
+                        <div className="flex items-center flex-wrap  gap-4">
                             <Select value={selectedApiProvider} onValueChange={val => {
                                 setSelectedApiProvider(val)
                                 const newModel = apiProviders.find(item => item.name == val).models[0]
@@ -196,11 +338,11 @@ const Settings = () => {
                                     },
                                 })
                             }}>
-                                <SelectTrigger className="w-[250px]">
+                                <SelectTrigger className="w-[250px]" disabled>
                                     <SelectValue placeholder="Select an AI Provider" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
+                                <SelectContent >
+                                    <SelectGroup >
                                         <SelectLabel>AI Providers</SelectLabel>
                                         {
                                             apiProviders.map(item => {
@@ -239,39 +381,16 @@ const Settings = () => {
 
                     </div>
 
-                    <p className="text-muted-foreground">View and manage Doucment Reader user submissions</p>
+
                 </div>
 
-                {/* <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{countsData?.totalSubmissions}</div>
-                        </CardContent>
-                    </Card>
 
-
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Last Submission</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-sm font-medium">
-                                {formatDateTime(countsData?.lastSubmission)}
-
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div> */}
-
-                <div className="mb-6 flex justify-between items-center">
+                <div className="mb-6 flex justify-between items-center gap-2">
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             type="search"
-                            placeholder="Search by name or profession..."
+                            placeholder="Search by name, email, document type..."
                             className="pl-8"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -291,7 +410,9 @@ const Settings = () => {
                             <TableHeader className="bg-primary-red">
                                 <TableRow className=" hover:bg-primary-red rounded-[10px]">
                                     <TableHead className="text-white font-[700]">Name</TableHead>
-                                    <TableHead className="text-white font-[700]">Profession</TableHead>
+                                    <TableHead className="text-white font-[700]">Email</TableHead>
+                                    <TableHead className="text-white font-[700]">Document Type</TableHead>
+                                    <TableHead className="text-white font-[700]">Processing Option</TableHead>
                                     <TableHead className="text-white font-[700]">Submission Date</TableHead>
                                     <TableHead className="text-white font-[700]">Action</TableHead>
                                 </TableRow>
@@ -299,23 +420,64 @@ const Settings = () => {
                             <TableBody>
                                 {paginatedSubmissions?.map((submission) => (
                                     <TableRow key={submission.id}>
-                                        <TableCell className="font-medium">{submission?.fullName}</TableCell>
-                                        <TableCell>{submission?.profession || "--"}</TableCell>
+                                        <TableCell className="font-medium">{submission?.name}</TableCell>
+                                        <TableCell>{submission?.email}</TableCell>
+                                        <TableCell>{submission?.documentType || "--"}</TableCell>
+                                        <TableCell>{submission?.processingOption || "--"}</TableCell>
                                         <TableCell>{formatDateTime(submission?.createdAt)}</TableCell>
                                         <TableCell>
-
-                                            <Dialog >
+                                            <Dialog>
                                                 <DialogTrigger asChild>
-                                                    <Button variant="outline" size="sm" className="text-red-500" title="Remove">
-                                                        <Eye
-                                                            className="h-4 w-4" />
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-red-500"
+                                                        title="View"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
                                                     </Button>
                                                 </DialogTrigger>
-                                                <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto">
-                                                    {/* <UserSubmissionDialog submission={submission} /> */}
+
+                                                <DialogContent
+                                                    className="sm:max-w-4xl max-h-[95vh] overflow-y-auto"
+                                                >
+                                                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: submission?.result }} />
+                                                    <DialogFooter>
+                                                        <div className="flex gap-2">
+                                                            <Button variant="outline" onClick={handleCopyToClipboard}>
+                                                                {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                                                                {copied ? "Copied" : "Copy"}
+                                                            </Button>
+                                                            {submission.processingOption !== "report" && (
+                                                                <Button variant="outline" onClick={() => handleDownload(submission)}>
+                                                                    <Download className="mr-2 h-4 w-4" />
+                                                                    Download
+                                                                </Button>
+                                                            )}
+                                                            <Button
+                                                                className="bg-primary-red hover:bg-red-700 flex items-center"
+                                                                onClick={() => handleSendEmail(submission)}
+                                                                disabled={isEmailSending}
+                                                            >
+                                                                {isEmailSending ? (
+                                                                    <>
+                                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                        Sending...
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <Mail className="mr-2 h-4 w-4" />
+                                                                        Send to Email
+                                                                    </>
+                                                                )}
+                                                            </Button>
+                                                        </div>
+                                                    </DialogFooter>
                                                 </DialogContent>
+
                                             </Dialog>
                                         </TableCell>
+
                                     </TableRow>
                                 ))}
 
@@ -379,6 +541,12 @@ const Settings = () => {
                     <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
                 </div>
             }
+
+            <SendEmailDialog
+                emailSuccessOpen={emailSuccessOpen}
+                setEmailSuccessOpen={setEmailSuccessOpen}
+                sentToEmail={sentToEmail}
+            />
         </div>
     );
 };
