@@ -96,7 +96,7 @@ export default function ToolQuestionsPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <main className="container mx-auto py-8 px-10">
+      <main className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 mx-auto py-8">
         <div className="flex items-center justify-between mb-8" >
           <Button
             style={{ minWidth: "100px", color: "#ffffff", border: "none" }}

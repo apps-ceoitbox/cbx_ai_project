@@ -40,6 +40,7 @@ import {
 import { useAxios } from "@/context/AppContext";
 import { formatDateTime } from "../Admin/Admin";
 import AddDoucmentReaderPromt from "./AddDoucmentReaderPromt";
+import AdminHeader from "@/components/Custom/AdminHeader";
 
 
 
@@ -56,6 +57,18 @@ const Settings = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({});
     const itemsPerPage = 10;
+    const [isMobile, setIsMobile] = useState(false);
+
+
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
+
 
     // Filter submissions based on search query
     const filteredSubmissions = mockSubmissions?.filter(submission =>
@@ -165,7 +178,7 @@ const Settings = () => {
 
     return (
         <div className="min-h-screen flex flex-col cosmic-bg">
-
+            {isMobile && <AdminHeader />}
             <main className="flex-1 py-6 px-4 md:px-6 lg:px-8">
                 <div className="mb-6">
                     <div className="flex justify-between">

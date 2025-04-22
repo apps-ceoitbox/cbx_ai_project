@@ -1,34 +1,77 @@
+import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext';
-import { ArrowLeft, LayoutDashboard, LogOut } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner';
 
 const Header = () => {
     const nav = useNavigate();
     const location = useLocation();
-    const { setUserAuth } = useData();
+    const { setUserAuth, mobileMenuOpen, setMobileMenuOpen } = useData();
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
+
+    const MobileMenuButton = () => (
+        <Button
+            variant="ghost"
+            size="icon"
+            className="bg-white shadow-md text-black"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </Button>
+    );
 
 
     return (
-        <header className="bg-black text-white p-4 px-10  shadow-md"
-        // style={{ position: "sticky", top: 0, zIndex: 999 }}
+        <header className="bg-black text-white p-4  lg:px-10 md:px-4  shadow-md"
         >
             <div className="mx-auto flex justify-between items-center">
+                {isMobile && <Logo size="sm" />}
 
-                <div>
-                    {location.pathname === "/astro-reports" &&
+                {!isMobile &&
+                    <div>
+                        {location.pathname === "/astro-reports" &&
+                            <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
+                                onClick={() => {
+                                    nav(-1);
+                                }}
+                            >
+                                <ArrowLeft className="w-5 h-5 " />
+
+                                {isMobile ? "" : "Back"}
+                            </Button>
+                        }
+                    </div>
+                }
+
+                <div className="flex items-center gap-4">
+
+
+                    {
+                        isMobile &&
+                        location.pathname === "/astro-reports" &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
                                 nav(-1);
                             }}
                         >
                             <ArrowLeft className="w-5 h-5 " />
-                            Back
+                            {isMobile ? "" : "Back"}
                         </Button>
                     }
-                </div>
-                <div className="flex items-center gap-4">
+
+
                     {location.pathname !== "/astro-reports" &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
@@ -36,10 +79,9 @@ const Header = () => {
                             }}
                         >
                             <LayoutDashboard className="w-5 h-5" />
-                            Dashboard
+                            {isMobile ? "" : "Dashboard"}
                         </Button>
                     }
-
 
 
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
@@ -50,8 +92,12 @@ const Header = () => {
                             nav("/login")
                         }}>
                         <LogOut className="w-5 h-5" />
-                        Logout
+                        {isMobile ? "" : "Logout"}
                     </Button>
+
+                    {isMobile &&
+                        <MobileMenuButton />
+                    }
                 </div>
             </div>
         </header >

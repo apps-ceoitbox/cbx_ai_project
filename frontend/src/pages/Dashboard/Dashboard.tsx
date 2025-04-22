@@ -40,7 +40,7 @@ interface DefaultAiProvider {
   model: string;
 }
 
-// Category card component with animations and backgrounds
+// Category card component with animations and backgrounds 
 const CategoryCard = ({ category, onClick, icon }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -166,13 +166,13 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchTools = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const response = await axios.get("/prompt")
-        setTools(response?.data?.data)
+        setTools(response?.data?.data);
       } catch (error) {
         console.error("Error fetching tools:", error)
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
@@ -208,13 +208,17 @@ export default function Dashboard() {
   return (
     <div className="w-full min-h-screen bg-gray-50">
       <Header />
-      <main className="px-10 mx-auto py-8">
+      <main className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 mx-auto py-8">
         <div className="flex justify-between">
-          <div >
 
-            <h1 className="text-3xl font-bold mb-2">Welcome, {userAuth.user.userName}</h1>
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
+              Welcome, {userAuth?.user?.userName}
+            </h1>
+
             <p className="text-gray-600 mb-8">Select a {selectedCategory ? "tool" : "category"} to get started</p>
           </div>
+
           {selectedCategory &&
             <Button
               onClick={() => setSelectedCategory(null)}
@@ -224,8 +228,8 @@ export default function Dashboard() {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
-
           }
+
         </div>
 
         {!selectedCategory && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

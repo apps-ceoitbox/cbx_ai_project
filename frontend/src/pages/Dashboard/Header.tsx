@@ -1,19 +1,16 @@
-// import { Logo } from '@/components/logo'
+import { Logo } from '@/components/logo'
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext'
-import { FilePlus, LayoutDashboard, LogOut, } from 'lucide-react' //Menu, X
+import { FilePlus, LayoutDashboard, LogOut, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { toast } from 'sonner';
 
 const Header = () => {
     const nav = useNavigate();
     const location = useLocation();
-    const { setUserAuth,
-        //  mobileMenuOpen, setMobileMenuOpen
-    } = useData();
+    const { setUserAuth, mobileMenuOpen, setMobileMenuOpen } = useData();
     const [isMobile, setIsMobile] = useState(false);
-
     const isToolsPage = location.pathname.startsWith("/tools/");
 
 
@@ -21,32 +18,30 @@ const Header = () => {
         const checkScreenSize = () => {
             setIsMobile(window.innerWidth < 768);
         };
-        // Initial check
         checkScreenSize();
-        // Add resize listener
         window.addEventListener('resize', checkScreenSize);
-        // Cleanup
         return () => window.removeEventListener('resize', checkScreenSize);
     }, []);
 
-    // const MobileMenuButton = () => (
-    //     <Button
-    //         variant="ghost"
-    //         size="icon"
-    //         className="bg-white shadow-md text-black"
-    //         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-    //     >
-    //         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-    //     </Button>
-    // );
+
+    const MobileMenuButton = () => (
+        <Button
+            variant="ghost"
+            size="icon"
+            className="bg-white shadow-md text-black"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </Button>
+    );
 
 
     return (
         <header className="bg-black text-white p-4  lg:px-10 md:px-4 shadow-md"
         >
             <div className="mx-auto flex justify-between items-center">
-                {/* {isMobile ? <Logo size="sm" /> : <div></div>} */}
-                <div></div>
+                {isMobile ? <Logo size="sm" /> : <div></div>}
+
 
                 <div className="flex items-center gap-4">
 
@@ -85,9 +80,9 @@ const Header = () => {
                         {isMobile ? "" : "Logout"}
                     </Button>
 
-                    {/* {isMobile &&
+                    {isMobile &&
                         <MobileMenuButton />
-                    } */}
+                    }
                 </div>
             </div>
         </header>

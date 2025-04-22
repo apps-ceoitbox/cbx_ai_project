@@ -4,6 +4,7 @@ import {
     FilePlus,
     Rocket,
     X,
+    FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -125,6 +126,17 @@ function AppSidebarDrawer() {
                                             AstroDISC
                                         </Button>
                                     </Link>
+
+                                    <Link to="/document-reader" onClick={handleMenuItemClick}>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
+                                            style={{ background: (location.pathname === "/document-reader" || location.pathname === "/document-reader") ? "rgb(229 9 20)" : "", color: (location.pathname === "/document-reader" || location.pathname === "/document-reader") ? "#fff" : "black" }}
+                                        >
+                                            <FileText size={22} />
+                                            Document Reader
+                                        </Button>
+                                    </Link>
                                 </div>
                             )}
 
@@ -157,6 +169,22 @@ function AppSidebarDrawer() {
                                             Astro dashboard
                                         </Button>
                                     </Link>
+
+                                    <Link to="/document-reader-settings" onClick={handleMenuItemClick}>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start gap-3 text-lg py-6 hover:bg-red-100 text-black"
+                                            style={{
+                                                background: location.pathname === "/document-reader-settings" ? "rgb(229 9 20)" : "",
+                                                color: location.pathname === "/document-reader-settings" ? "#fff" : "black"
+                                            }}
+                                        >
+                                            <FileText size={22} />
+                                            Document Reader
+                                        </Button>
+                                    </Link>
+
+
                                 </div>
                             )}
                         </ScrollArea>

@@ -57,6 +57,7 @@ import {
 import html2pdf from 'html2pdf.js'
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import AdminHeader from "@/components/Custom/AdminHeader"
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
@@ -126,6 +127,17 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [isMobile, setIsMobile] = useState(false);
+
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -141,7 +153,6 @@ export default function AdminDashboard() {
       reader.readAsDataURL(file); // Triggers the conversion
     });
   };
-
 
   const handleProviderChange = (providerName: string) => {
     setSelectedProviderName(providerName);
@@ -621,7 +632,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50" >
-
+      {isMobile &&
+        <AdminHeader />}
 
       <main className=" mx-auto py-8 px-10">
         <h1 className="text-3xl font-bold mb-8 text-center text-red-500">Admin Dashboard</h1>
