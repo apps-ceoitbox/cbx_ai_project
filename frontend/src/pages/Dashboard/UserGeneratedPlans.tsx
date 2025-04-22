@@ -330,7 +330,7 @@ const UserGeneratedPlans: React.FC = () => {
                 className="mt-10 mb-5 mx-4 sm:mx-6 md:mx-8 lg:mx-10 xl:mx-12 py-8">
                 <CardContent>
                     {/* Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         {/* <div>
                             <Label htmlFor="search">Search</Label>
                             <div className="relative">
@@ -487,7 +487,7 @@ const UserGeneratedPlans: React.FC = () => {
                                                             </Button>
 
                                                         </DialogTrigger>
-                                                        <DialogContent style={{ zIndex: 999 }} className="max-w-[70vw] max-h-[90vh] overflow-auto">
+                                                        <DialogContent style={{ zIndex: 999 }} className="max-w-[90vw] sm:max-w-[80vw] md:max-w-[70vw] max-h-[90vh] overflow-auto"  >
 
                                                             <div className="w-full  mx-auto mt-4" >
                                                                 <Card className="border-2">
@@ -594,4 +594,4 @@ const UserGeneratedPlans: React.FC = () => {
     )
 }
 
-export default UserGeneratedPlans
+export default UserGeneratedPlans; 

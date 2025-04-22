@@ -132,7 +132,8 @@ const UserSubmissions = () => {
         <div className="min-h-screen flex flex-col cosmic-bg">
             <Header />
             <main className="flex-1 py-6 px-4 md:px-6 lg:px-8">
-                <div className="mb-6 flex justify-between items-center">
+                <div className="mb-6 flex flex-wrap justify-between items-center gap-4">
+
                     <div className="relative w-full max-w-sm">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
