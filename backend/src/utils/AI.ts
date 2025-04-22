@@ -46,7 +46,7 @@
 
 const aiInstructions = {
     summarize: "Read the content carefully and summarize it in 3–5 concise bullet points, highlighting the most important ideas.",
-    questions: "Based on the content, generate 3–5 engaging and relevant questions that prompt deeper thinking or discussion.",
+    questions: "Give answers to the questions asked by the user listed below in the goal section",
     insights: "Identify and explain 2–3 key insights or implications that can be drawn from the content. Focus on value and meaning.",
     report: "Write a structured report that includes a title, summary, list of key insights, and thought-provoking questions. Maintain a formal tone and organize it into clear sections."
 };
