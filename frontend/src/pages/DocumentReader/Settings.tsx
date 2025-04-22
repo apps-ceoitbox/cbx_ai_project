@@ -106,11 +106,11 @@ const Settings = () => {
     }, [])
 
     const handleSaveSettings = async (data = {}) => {
-        await axios.post("/astro", data)
+        await axios.post("/document", data)
         setOpen(false)
     }
     const handleSaveAISettings = async (data = {}) => {
-        await axios.post("/astro", {
+        await axios.post("/document", {
             ...data
         })
     }
@@ -121,7 +121,7 @@ const Settings = () => {
                 return item.apiKey && item.models.length > 0
             }))
         })
-        axios.get("/astro").then(res => {
+        axios.get("/document").then(res => {
             setFormData(res?.data?.data)
             setSelectedApiProvider(res?.data?.data?.aiProvider?.name)
             setSelectedApiModel(res?.data?.data?.aiProvider?.model)

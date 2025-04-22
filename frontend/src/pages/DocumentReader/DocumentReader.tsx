@@ -83,7 +83,15 @@ const DocumentReader = () => {
                 documentType: documentType,
                 goal: goal
             }
-
+            
+            let progressValue = 0;
+            let intervalID = setInterval(() => {
+                progressValue += 10;
+                setProgress(progressValue);
+                if (progressValue >= 100) {
+                    clearInterval(intervalID);
+                }
+            }, 500)
             const response = await axios.post("/document/process", temp);
             setResults({
                 processingOption,

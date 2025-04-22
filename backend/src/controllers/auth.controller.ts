@@ -102,18 +102,14 @@ export default class AuthController {
         if (!user) {
             let newUser = await User.create({ userName, email, companyName, mobile });
 
-            const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, {
-                expiresIn: '1h',
-            });
+            const token = jwt.sign({ userId: newUser._id }, JWT_SECRET);
 
             res.status(HttpStatusCodes.CREATED).json({ message: 'User registered successfully', data: newUser, token });
             return
         }
 
         // Generate JWT
-        const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
-            expiresIn: '1h',
-        });
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET);
 
         res.status(HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user });
     })
