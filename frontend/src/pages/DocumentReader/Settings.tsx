@@ -420,12 +420,12 @@ const Settings = () => {
                             <TableBody>
                                 {paginatedSubmissions?.map((submission) => (
                                     <TableRow key={submission.id}>
-                                        <TableCell className="font-medium">{submission?.name}</TableCell>
-                                        <TableCell>{submission?.email}</TableCell>
-                                        <TableCell>{submission?.documentType || "--"}</TableCell>
-                                        <TableCell>{submission?.processingOption || "--"}</TableCell>
-                                        <TableCell>{formatDateTime(submission?.createdAt)}</TableCell>
-                                        <TableCell>
+                                        <TableCell className="font-medium py-2">{submission?.name}</TableCell>
+                                        <TableCell className="py-2">{submission?.email}</TableCell>
+                                        <TableCell className="py-2">{submission?.documentType || "--"}</TableCell>
+                                        <TableCell className="py-2">{submission?.processingOption || "--"}</TableCell>
+                                        <TableCell className="py-2">{formatDateTime(submission?.createdAt)}</TableCell>
+                                        <TableCell className="py-2">
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button
