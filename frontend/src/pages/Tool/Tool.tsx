@@ -97,7 +97,7 @@ export default function ToolQuestionsPage() {
       <Header />
 
       <main className="px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 mx-auto py-8">
-        <div className="flex items-center justify-between mb-8" >
+        {/* <div className="flex items-center justify-between mb-8" >
           <Button
             style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
             className=" bg-primary-red  hover:bg-red-700 transition-colors duration-200"
@@ -107,6 +107,23 @@ export default function ToolQuestionsPage() {
           </Button>
           <h1 style={{ minWidth: "100px" }} className="text-2xl font-bold">{tool?.heading}</h1>
           <div style={{ minWidth: "100px" }}></div>
+        </div> */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+          <Button
+            style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+            className="bg-primary-red hover:bg-red-700 transition-colors duration-200"
+            variant="ghost"
+            onClick={() => nav("/dashboard")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+
+          <h1 className="text-xl sm:text-2xl font-bold text-center sm:text-left min-w-[100px]">
+            {tool?.heading}
+          </h1>
+
+          <div className="min-w-[100px] h-0 sm:h-auto" />
         </div>
 
         <div className="w-full max-w-2xl mx-auto">

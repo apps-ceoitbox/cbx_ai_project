@@ -326,10 +326,11 @@ const UserGeneratedPlans: React.FC = () => {
 
 
             <Card
-                className=" mt-10 py-8 mx-10 ">
+                // className=" mt-10 py-8 mx-10 "> 
+                className="mt-10 mb-5 mx-4 sm:mx-6 md:mx-8 lg:mx-10 xl:mx-12 py-8">
                 <CardContent>
                     {/* Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
                         {/* <div>
                             <Label htmlFor="search">Search</Label>
                             <div className="relative">
@@ -449,12 +450,12 @@ const UserGeneratedPlans: React.FC = () => {
                                 </Popover>
                             </div>
 
-
                             <div className="mt-6">
                                 <Button variant="outline" onClick={clearFilters}>
                                     Clear Filters
                                 </Button>
                             </div>
+
                         </div>
                     </div>
 
@@ -489,7 +490,7 @@ const UserGeneratedPlans: React.FC = () => {
                                                         <DialogContent style={{ zIndex: 999 }} className="max-w-[70vw] max-h-[90vh] overflow-auto">
 
                                                             <div className="w-full  mx-auto mt-4" >
-                                                                <Card className="mb-6 border-2">
+                                                                <Card className="border-2">
                                                                     <CardHeader className="bg-primary-red text-white rounded-t-lg">
                                                                         <CardTitle className="text-2xl">{submission?.tool}</CardTitle>
                                                                         <CardDescription className="text-gray-100">
@@ -498,12 +499,7 @@ const UserGeneratedPlans: React.FC = () => {
                                                                     </CardHeader>
 
                                                                     <CardContent dangerouslySetInnerHTML={{ __html: submission?.generatedContent }} id="report-content" className="pt-6">
-                                                                        {/* {submission?.generatedContent?.sections?.map((section: any, index: number) => (
-                                                                            <div key={index} className="mb-6">
-                                                                                <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
-                                                                                <p className="whitespace-pre-line">{formatBoldText(section.content)}</p>
-                                                                            </div>
-                                                                        ))} */}
+
                                                                     </CardContent>
 
                                                                     <CardFooter className="flex flex-wrap gap-4 justify-center">
