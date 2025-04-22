@@ -3,6 +3,7 @@ import { useAxios, useData } from "./context/AppContext"
 import AppRoutes from "./components/AllRoutes/AppRoutes"
 import AppSidebar from "./components/AppSidebar";
 import { useLocation } from "react-router-dom";
+// import AppSidebarDrawer from "./components/SidebarDrawer/AppSidebarDrawer";
 
 function App() {
   const { setUserAuth, setAdminAuth } = useData();
@@ -10,10 +11,22 @@ function App() {
   const adminAxios = useAxios("admin");
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-
+  console.log("isMobile", isMobile)
   const hiddenSidebarPaths = ["/login", "/", "/admin/login"];
   const hideSidebar = hiddenSidebarPaths.includes(location.pathname);
+
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
 
   useEffect(() => {
     const userToken = localStorage.getItem("userToken");
@@ -62,20 +75,25 @@ function App() {
   return (
 
     <div className="flex w-full h-screen">
-      {!hideSidebar && (
-        <AppSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      )}
+
+      {
+        // !isMobile &&
+        !hideSidebar && (
+          <AppSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+        )
+      }
+
+      {/* <AppSidebarDrawer /> */}
+
       <main
         className="flex-1 overflow-y-auto transition-all duration-300"
-        style={{
-          marginLeft: hideSidebar ? 0 : collapsed ? "5rem" : "15rem",
-        }}
-      >
+        style={{ marginLeft: hideSidebar ? 0 : collapsed ? "5rem" : "15rem" }}>
         <AppRoutes />
       </main>
     </div>
   )
 }
 
-export default App
+export default App;
 
+// isMobile ||

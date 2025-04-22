@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, HelpCircle, Brain, BarChartBig } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 
 export type ProcessingOptionType = "summarize" | "questions" | "insights" | "report" | null;
 

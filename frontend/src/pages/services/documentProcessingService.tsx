@@ -1,10 +1,10 @@
 import { ProcessingOptionType } from "@/components/DocumentReader/ProcessingOptions";
 
 export async function processDocument(
-    files: File[],
+    // files: File[],
     processingOption: ProcessingOptionType,
-    documentType: string,
-    goal: string,
+    // documentType: string,
+    // goal: string,
     onProgress: (progress: number) => void
 ): Promise<any> {
     return new Promise((resolve, reject) => {

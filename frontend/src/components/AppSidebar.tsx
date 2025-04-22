@@ -4,7 +4,7 @@ import {
     ChevronRight,
     FilePlus,
     Rocket,
-    FileText,
+    // FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -97,7 +97,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                         </Link>
 
 
-                        <Link to="/document-reader">
+                        {/* <Link to="/document-reader">
                             <Button
                                 variant="ghost"
                                 className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
@@ -106,7 +106,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                 <FileText size={18} />
                                 {!collapsed && "Document Reader"}
                             </Button>
-                        </Link>
+                        </Link> */}
 
 
                     </div>
@@ -136,6 +136,19 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                 {!collapsed && "Astro dashboard"}
                             </Button>
                         </Link>
+
+                        {/* 
+                        <Link to="/document-reader-settings">
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
+                                style={{ background: (location.pathname === "/document-reader-settings" || location.pathname === "/document-reader-settings") ? "rgb(229 9 20)" : "", color: (location.pathname === "/document-reader-settings" || location.pathname === "/document-reader-settings") ? "#fff" : "black" }}
+                            >
+                                <FileText size={18} />
+                                {!collapsed && "Document Reader"}
+                            </Button>
+                        </Link> */}
+
 
                     </div>
                 }
@@ -264,7 +277,9 @@ export default AppSidebar;
 
 //                 {/* Mobile logo when menu is closed */}
 //                 {!mobileMenuOpen && (
-//                     <div className="fixed top-0 left-0 p-4 z-40 flex items-center">
+//                     <div
+//                         className="fixed top-0 left-0 p-4 z-40 flex items-center"
+//                     >
 //                         <div className="w-10 h-10 rounded-full">
 //                             <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
 //                         </div>

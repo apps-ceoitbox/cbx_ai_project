@@ -55,6 +55,8 @@ import {
 } from "@/components/ui/dialog"
 
 import html2pdf from 'html2pdf.js'
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
@@ -122,6 +124,8 @@ export default function AdminDashboard() {
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -253,6 +257,8 @@ export default function AdminDashboard() {
 
   }
 
+
+
   useEffect(() => {
     // Check if admin is authenticated
     if (adminAuth.user) {
@@ -268,11 +274,8 @@ export default function AdminDashboard() {
   }, [adminAuth.user])
 
   const handleSendEmail = async (submission) => {
-    // Set loading state to true
     setIsEmailSending(true);
-
     try {
-      // Get the report content element
       const reportElement = document.getElementById('report-content')
 
       if (!reportElement) {
@@ -435,6 +438,15 @@ export default function AdminDashboard() {
 
     return true
   })
+
+
+  // Paginate results
+  const totalPages = Math.ceil(filteredSubmissions?.length / itemsPerPage);
+  const paginatedSubmissions = filteredSubmissions?.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -816,8 +828,8 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredSubmissions.length > 0 ? (
-                        filteredSubmissions.map((submission) => (
+                      {paginatedSubmissions.length > 0 ? (
+                        paginatedSubmissions.map((submission) => (
                           <TableRow key={submission.id} className="h-8 px-2" >
                             <TableCell className="font-medium py-2">{submission.name}</TableCell>
                             <TableCell className="py-2">{submission.email}</TableCell>
@@ -936,7 +948,7 @@ export default function AdminDashboard() {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} className="h-24 text-center">
+                          <TableCell colSpan={8} className="h-24 text-center">
                             No submissions found.
                           </TableCell>
                         </TableRow>
@@ -946,10 +958,46 @@ export default function AdminDashboard() {
 
                 </div>
                 <div className="text-sm text-muted-foreground mt-2 font-[600]">
-                  Showing {filteredSubmissions.length} of {submissions.length} submissions
+                  Showing {paginatedSubmissions.length} of {submissions.length} submissions
                 </div>
               </CardContent>
             </Card>
+            {filteredSubmissions?.length > itemsPerPage && (
+              <div className="mt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        style={{ cursor: "pointer" }}
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          style={{ cursor: "pointer" }}
+                          isActive={currentPage === i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        style={{ cursor: "pointer" }}
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+
           </TabsContent>
 
 
@@ -1273,7 +1321,7 @@ export default function AdminDashboard() {
                         {filteredTemplates?.map((prompt) => (
                           <TableRow key={prompt._id}>
                             <TableCell >
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-2 " >
                                 <p> {prompt.heading}</p>
                                 <div>
                                   {prompt.visibility ? (
@@ -1286,10 +1334,17 @@ export default function AdminDashboard() {
 
                             </TableCell>
                             <TableCell>
-                              {/* {prompt.objective} */}
-                              <div className="max-w-[200px] truncate" title={prompt.objective}>
-                                {prompt.objective}
-                              </div>
+
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="max-w-[200px] truncate cursor-pointer">
+                                    {prompt.objective || "--"}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-[300px]" side="top">
+                                  {prompt.objective || "--"}
+                                </TooltipContent>
+                              </Tooltip>
                             </TableCell>
                             <TableCell>
                               {prompt.defaultAiProvider.name} ({prompt.defaultAiProvider.model})

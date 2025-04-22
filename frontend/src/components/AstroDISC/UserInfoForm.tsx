@@ -44,7 +44,7 @@ export function UserInfoForm({ onSubmit, setCurrentStep }: UserInfoFormProps) {
     profession: "",
   });
 
-  console.log("userInfo", userInfo)
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

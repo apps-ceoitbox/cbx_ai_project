@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CustomizationForm } from "@/components/DocumentReader/CustomizationForm";
@@ -6,23 +6,22 @@ import { ResultsDisplay } from "@/components/DocumentReader/ResultsDisplay";
 import { FileUploadZone } from "@/components/DocumentReader/FileUploadZone";
 import { ProcessingStatus } from "@/components/DocumentReader/ProcessingStatus";
 import { ProcessingOptions, ProcessingOptionType } from "@/components/DocumentReader/ProcessingOptions";
-import { processDocument } from "../services/documentProcessingService";
+// import { processDocument } from "../services/documentProcessingService";
 import Header from "./Header";
-import axios from "axios";
 import { useAxios } from "@/context/AppContext";
 
 function fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = (reader.result as string).split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+        const reader = new FileReader();
+        reader.onload = () => {
+            const base64 = (reader.result as string).split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
     });
-  }
-  
+}
+
 
 const DocumentReader = () => {
     const axios = useAxios("user")
@@ -69,7 +68,7 @@ const DocumentReader = () => {
             setProgress(0);
             // setError(undefined);
 
-            let tempFiles:any[] = files.map((file) => fileToBase64(file));
+            let tempFiles: any[] = files.map((file) => fileToBase64(file));
             tempFiles = await Promise.all(tempFiles);
             tempFiles = files.map((file, index) => {
                 return {
@@ -128,7 +127,7 @@ const DocumentReader = () => {
     return (
         <div>
             <Header />
-            <div className="max-w-5xl mx-auto min-h-screen pt-5">
+            <div className="max-w-5xl mx-auto min-h-screen p-5">
 
 
                 <header className="mb-8">
@@ -155,7 +154,7 @@ const DocumentReader = () => {
                                     ".md",
                                     "application/pdf",
                                     "text/plain",
-                                  
+
                                     // Image extensions
                                     ".jpg",
                                     ".jpeg",
@@ -164,7 +163,7 @@ const DocumentReader = () => {
                                     ".bmp",
                                     ".webp",
                                     ".svg",
-                                  
+
                                     // Image MIME types
                                     "image/jpeg",
                                     "image/png",
@@ -172,8 +171,8 @@ const DocumentReader = () => {
                                     "image/bmp",
                                     "image/webp",
                                     "image/svg+xml"
-                                  ]
-                                  }
+                                ]
+                                }
                             />
                         </section>
 

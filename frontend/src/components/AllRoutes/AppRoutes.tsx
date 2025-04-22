@@ -43,7 +43,7 @@ const AppRoutes = () => {
                 {/* DocumentReader */}
                 <Route path="/document-reader" element={<DocumentReader />} />
                 <Route path="/documents-dashboard" element={<ReportsDashboard />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/document-reader-settings" element={<Settings />} />
 
                 <Route path="*" element={<NotFound />} />
 

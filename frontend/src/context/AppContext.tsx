@@ -4,10 +4,8 @@ const AppContext = createContext({});
 
 function getURL(link) {
   const parsedURL = new URL(link);
-
   // Get the protocol and hostname to create the base URL
   const baseURL = `${parsedURL.protocol}//${parsedURL.hostname}`;
-
   return baseURL;
 }
 
@@ -47,12 +45,22 @@ export const AppProvider = ({ children }) => {
 
   const [generateResponse, setGenerateResponse] = useState("");
   const [astroResult, setAstroResult] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
 
   return (
     <AppContext.Provider
       value={{
-        adminAuth, setAdminAuth, userAuth, setUserAuth, generateResponse, setGenerateResponse, astroResult, setAstroResult
+        adminAuth,
+        setAdminAuth,
+        userAuth,
+        setUserAuth,
+        generateResponse,
+        setGenerateResponse,
+        astroResult,
+        setAstroResult,
+        mobileMenuOpen,
+        setMobileMenuOpen
       }}
     >
       {children}
@@ -60,4 +68,4 @@ export const AppProvider = ({ children }) => {
   );
 };
 
-export const useAppContext = () => useContext(AppContext);
+export const useAppContext = () => useContext(AppContext); 

@@ -9,7 +9,7 @@ const AfterLoginHomePage = () => {
     return (
         <div className="flex flex-col min-h-screen bg-zinc-50">
             {/* Main Content */}
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 sm:flex-2 overflow-hidden">
                 {/* Left Section - Welcome Content */}
                 <div className="w-1/2 p-8 flex flex-col justify-center">
                     <div className="max-w-lg">
@@ -27,14 +27,12 @@ const AfterLoginHomePage = () => {
 
                 {/* Right Section - Human Image */}
                 <div className="w-1/2 bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center ">
-                    {/* <div className="relative w-full max-w-md aspect-square rounded-full bg-white overflow-hidden border-4 border-white shadow-xl"> */}
                     <img
                         draggable="false"
                         src='/Banner.jpg'
                         alt="Image"
                         className="object-contain w-full h-full"
                     />
-                    {/* </div> */}
                 </div>
             </div>
         </div>

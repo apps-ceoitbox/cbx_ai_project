@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Copy, Mail, Check } from "lucide-react";
 import { toast } from "sonner";
 import { ProcessingOptionType } from "./ProcessingOptions";
+import html2pdf from 'html2pdf.js'
 
 interface ResultsDisplayProps {
     results: {
@@ -18,66 +19,63 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     onReset,
 }) => {
     const [copied, setCopied] = React.useState(false);
+    const contentRef = React.useRef<HTMLDivElement>(null);
+
+
 
     const handleCopyToClipboard = () => {
-        let content = "";
+        if (!contentRef.current) return;
 
-        // if (results.summary) {
-        //     content += `SUMMARY:\n${results.summary}\n\n`;
-        // }
+        const content = contentRef.current.innerText || contentRef.current.textContent || "";
 
-        // if (results.questions && results.questions.length > 0) {
-        //     content += "QUESTIONS & ANSWERS:\n";
-        //     results.questions.forEach(({ question, answer }) => {
-        //         content += `Q: ${question}\nA: ${answer}\n\n`;
-        //     });
-        // }
+        navigator.clipboard.writeText(content).then(() => {
+            setCopied(true);
+            toast.success("Content copied to clipboard");
 
-        // if (results.insights) {
-        //     content += "INSIGHTS:\n";
-
-        //     content += "Key Takeaways:\n";
-        //     results.insights.keyTakeaways.forEach((item) => {
-        //         content += `- ${item}\n`;
-        //     });
-        //     content += "\n";
-
-        //     content += "Strengths:\n";
-        //     results.insights.strengths.forEach((item) => {
-        //         content += `- ${item}\n`;
-        //     });
-        //     content += "\n";
-
-        //     content += "Gaps:\n";
-        //     results.insights.gaps.forEach((item) => {
-        //         content += `- ${item}\n`;
-        //     });
-        //     content += "\n";
-
-        //     content += "Action Points:\n";
-        //     results.insights.actionPoints.forEach((item) => {
-        //         content += `- ${item}\n`;
-        //     });
-        // }
-
-        navigator.clipboard.writeText(content);
-        setCopied(true);
-        toast.success("Content copied to clipboard");
-
-        setTimeout(() => {
-            setCopied(false);
-        }, 3000);
+            setTimeout(() => {
+                setCopied(false);
+            }, 3000);
+        }).catch(err => {
+            toast.error("Failed to copy content");
+            console.error("Failed to copy content: ", err);
+        });
     };
+
+
 
     const handleDownload = () => {
-        // This is a placeholder - in a real implementation you would generate a PDF
-        toast.success("Report download started");
+        if (!contentRef.current) return;
+
+        const filename = `${getTitleByOption().replace(/\s+/g, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+        const options = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Create PDF from the content div
+        html2pdf()
+            .from(contentRef.current)
+            .set(options)
+            .save()
+            .then(() => {
+                toast.success("Report downloaded successfully");
+            })
+            .catch(err => {
+                toast.error("Failed to generate PDF");
+                console.error("PDF generation failed: ", err);
+            });
     };
 
+
     const handleSendEmail = () => {
-        // This is a placeholder - in a real implementation you would show an email form
         toast.success("Email sharing option will open in a modal");
     };
+
+
 
     if (!results.processingOption) return null;
 
@@ -96,32 +94,34 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         }
     };
 
+
     const renderContent = () => {
         switch (results.processingOption) {
             case "summarize":
                 return (
-                    <div dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
+                    <div ref={contentRef} dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
                 );
 
             case "questions":
                 return (
-                    <div dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
+                    <div ref={contentRef} dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
                 );
 
             case "insights":
                 return (
-                    <div dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
+                    <div ref={contentRef} dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
                 );
 
             case "report":
                 return (
-                    <div dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
+                    <div ref={contentRef} dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
                 );
 
             default:
-                return <p>No results to display.</p>;
+                return <p ref={contentRef}>No results to display.</p>;
         }
     };
+
 
     return (
         <Card className="border border-appGray-300 animate-fade-in">

@@ -24,7 +24,7 @@ export function AnalysisLoading({ onComplete }: AnalysisLoadingProps) {
     const timer = setTimeout(() => {
       if (progress < 100) {
         setProgress(progress + 1);
-        
+
         // Change messages at specific points
         if (progress === 15) setCurrentMessage(messages[1]);
         if (progress === 35) setCurrentMessage(messages[2]);
@@ -57,22 +57,22 @@ export function AnalysisLoading({ onComplete }: AnalysisLoadingProps) {
       className="min-h-[500px] flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden"
     >
       <div className="star-field absolute inset-0 z-0"></div>
-      
-      <motion.div 
+
+      <motion.div
         className="relative mb-12 z-10"
         animate={{ rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
       >
         <div className="relative h-48 w-48">
           <div className="absolute inset-0 rounded-full border-2 border-brand-red border-opacity-20"></div>
-          
-          {planets.map((planet, index) => (
+
+          {planets?.map((planet, index) => (
             <motion.div
               key={planet.name}
               className="absolute rounded-full z-10"
-              style={{ 
-                width: planet.size, 
-                height: planet.size, 
+              style={{
+                width: planet.size,
+                height: planet.size,
                 backgroundColor: planet.color,
                 boxShadow: `0 0 10px ${planet.color}`
               }}
@@ -87,15 +87,15 @@ export function AnalysisLoading({ onComplete }: AnalysisLoadingProps) {
               }}
             />
           ))}
-          
+
           <motion.div
             className="absolute rounded-full bg-brand-red"
-            style={{ 
-              width: 32, 
-              height: 32, 
-              top: "50%", 
-              left: "50%", 
-              marginLeft: -16, 
+            style={{
+              width: 32,
+              height: 32,
+              top: "50%",
+              left: "50%",
+              marginLeft: -16,
               marginTop: -16,
               boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)"
             }}
@@ -104,15 +104,15 @@ export function AnalysisLoading({ onComplete }: AnalysisLoadingProps) {
           />
         </div>
       </motion.div>
-      
+
       <h2 className="text-2xl font-bold mb-2 text-center z-10">
         Analyzing Your Cosmic and Behavioral Blueprint
       </h2>
-      
+
       <p className="text-muted-foreground mb-8 text-center max-w-md z-10">
         {currentMessage}
       </p>
-      
+
       <div className="w-full max-w-md h-2 bg-muted rounded-full overflow-hidden z-10">
         <motion.div
           className="h-full bg-brand-red"
@@ -121,7 +121,7 @@ export function AnalysisLoading({ onComplete }: AnalysisLoadingProps) {
           transition={{ duration: 0.5 }}
         />
       </div>
-      
+
       <p className="text-sm text-muted-foreground mt-2 z-10">
         {progress}% Complete
       </p>
