@@ -52,7 +52,7 @@ exports.AI = void 0;
 // }   
 const aiInstructions = {
     summarize: "Read the content carefully and summarize it in 3–5 concise bullet points, highlighting the most important ideas.",
-    questions: "Based on the content, generate 3–5 engaging and relevant questions that prompt deeper thinking or discussion.",
+    questions: "Give answers to the questions asked by the user listed below in the goal section",
     insights: "Identify and explain 2–3 key insights or implications that can be drawn from the content. Focus on value and meaning.",
     report: "Write a structured report that includes a title, summary, list of key insights, and thought-provoking questions. Maintain a formal tone and organize it into clear sections."
 };
@@ -200,8 +200,39 @@ class AI {
     //         }
     //     }
     // }
-    processDocument(files, processingOption, documentType, goal) {
+    processDocument(files, processingOption, documentType, goal, promptContent) {
         return __awaiter(this, void 0, void 0, function* () {
+            const newPrompt = `
+                    ${promptContent}
+                                
+                    Your task is to analyze the provided documents and perform the following action:
+                    There can be multiple documents, so you need to process all of them.
+                                
+                    **Processing Option:** ${aiInstructions[processingOption]}
+                    **Document Type:** ${documentType}
+                    **User's Goal:** ${goal}
+                                
+                    Please extract or generate relevant content based on the user's intent. The final output must be structured and returned in valid **HTML** format. Avoid adding explanations or commentary outside the HTML.
+                                
+                    Use appropriate HTML elements like <h1>, <h2>, <p>, <ul>, <li>, etc., based on the content type. Preserve headings, lists, tables, and any structured data wherever applicable.
+                    
+                    STYLE RULES:
+                    - If using any tag like h1, or ul, ol, etc. give its style of h1 explicitly, as the global styles can interfere with the output
+                    - All text should use #2c3e50
+                    - Accent color is #c0392b (red)
+                    - Font: 'Segoe UI', sans-serif
+                    - Add spacing (20px+), clean font sizes, and soft box shadows
+                    - Table rows should alternate background colors (#f9f9f9, #fff)
+                    DO NOT include:
+                    - Markdown
+                    - JavaScript
+                    - External styles
+                    - Comments
+                    GOAL:
+                    - Final HTML should look clean, readable, modern, and styled with inline CSS only.
+                    - Content must begin with the <div>, and it should not have any margin or padding as mentioned.
+                
+                    `;
             switch (this.apiProvider.name) {
                 case "Gemini (Google)": {
                     const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
@@ -212,40 +243,59 @@ class AI {
                                 data: file.base64,
                             },
                         })),
-                        `
-                        You are an intelligent document processor. 
-                                    
-                        Your task is to analyze the provided document(s) and perform the following action:
-                                    
-                        **Processing Option:** ${aiInstructions[processingOption]}
-                        **Document Type:** ${documentType}
-                        **User's Goal:** ${goal}
-                                    
-                        Please extract or generate relevant content based on the user's intent. The final output must be structured and returned in valid **HTML** format. Avoid adding explanations or commentary outside the HTML.
-                                    
-                        Use appropriate HTML elements like <h1>, <h2>, <p>, <ul>, <li>, etc., based on the content type. Preserve headings, lists, tables, and any structured data wherever applicable.
-                      
-                        STYLE RULES:
-                        - If using any tag like h1, or ul, ol, etc. give its style of h1 explicitly, as the global styles can interfere with the output
-                        - All text should use #2c3e50
-                        - Accent color is #c0392b (red)
-                        - Font: 'Segoe UI', sans-serif
-                        - Add spacing (20px+), clean font sizes, and soft box shadows
-                        - Table rows should alternate background colors (#f9f9f9, #fff)
-
-                        DO NOT include:
-                        - Markdown
-                        - JavaScript
-                        - External styles
-                        - Comments
-
-                        GOAL:
-                        - Final HTML should look clean, readable, modern, and styled with inline CSS only.
-                        - Content must begin with the <div>, and it should not have any margin or padding as mentioned.
-                    
-                        `
+                        newPrompt
                     ]);
                     return this.parseResponse(response.response.text());
+                }
+                case "ChatGPT (OpenAI)": {
+                    const fileIds = yield Promise.all((files || []).map((file) => __awaiter(this, void 0, void 0, function* () {
+                        const buffer = Buffer.from(file.base64, 'base64');
+                        const upload = yield this.ai.files.create({
+                            file: buffer,
+                            purpose: 'assistants',
+                        });
+                        return upload.id;
+                    })));
+                    const assistant = yield this.ai.assistants.retrieve(this.apiProvider.model); // or create one
+                    const thread = yield this.ai.threads.create();
+                    yield this.ai.threads.messages.create(thread.id, {
+                        role: 'user',
+                        content: newPrompt,
+                        file_ids: fileIds,
+                    });
+                    const run = yield this.ai.threads.runs.create(thread.id, {
+                        assistant_id: assistant.id,
+                    });
+                    let status;
+                    do {
+                        const updatedRun = yield this.ai.threads.runs.retrieve(thread.id, run.id);
+                        status = updatedRun.status;
+                        yield new Promise((r) => setTimeout(r, 2000));
+                    } while (status !== 'completed');
+                    const messages = yield this.ai.threads.messages.list(thread.id);
+                    return this.parseResponse(messages.data[0].content[0].text.value);
+                }
+                case "Claude (Anthropic)": {
+                    const contentParts = [
+                        ...(files || []).map((file) => ({
+                            type: file.type.includes("image") ? "image" : "document",
+                            source: {
+                                media_type: file.type,
+                                data: file.base64,
+                                type: "base64"
+                            }
+                        })),
+                        {
+                            type: "text",
+                            text: newPrompt
+                        }
+                    ];
+                    const response = yield this.ai.messages.create({
+                        model: this.apiProvider.model,
+                        max_tokens: this.apiProvider.maxTokens,
+                        messages: [{ role: "user", content: contentParts }]
+                    });
+                    return this.parseResponse(response.content[0].text);
                 }
             }
         });

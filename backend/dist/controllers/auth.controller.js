@@ -95,16 +95,12 @@ AuthController.userLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awai
     const user = yield user_model_1.default.findOne({ email }).lean();
     if (!user) {
         let newUser = yield user_model_1.default.create({ userName, email, companyName, mobile });
-        const token = jsonwebtoken_1.default.sign({ userId: newUser._id }, JWT_SECRET, {
-            expiresIn: '1h',
-        });
+        const token = jsonwebtoken_1.default.sign({ userId: newUser._id }, JWT_SECRET);
         res.status(errorCodes_1.HttpStatusCodes.CREATED).json({ message: 'User registered successfully', data: newUser, token });
         return;
     }
     // Generate JWT
-    const token = jsonwebtoken_1.default.sign({ userId: user._id }, JWT_SECRET, {
-        expiresIn: '1h',
-    });
+    const token = jsonwebtoken_1.default.sign({ userId: user._id }, JWT_SECRET);
     res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user });
 }));
 exports.default = AuthController;
