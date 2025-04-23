@@ -9,6 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -87,6 +94,7 @@ class AI {
     }
     generateResponse(prompt_1) {
         return __awaiter(this, arguments, void 0, function* (prompt, JSON = false) {
+            var _a, e_1, _b, _c;
             switch (this.apiProvider.name) {
                 case "ChatGPT (OpenAI)": { // Done
                     const response = yield this.ai.chat.completions.create({
@@ -106,11 +114,31 @@ class AI {
                         max_tokens: this.apiProvider.maxTokens,
                         temperature: this.apiProvider.temperature,
                         messages: [{ role: "user", content: prompt }],
+                        stream: true,
                     });
-                    if (JSON) {
-                        return this.parseResponseToJSON(response.content[0].text);
+                    console.log(response);
+                    let finalText = "";
+                    try {
+                        for (var _d = true, response_1 = __asyncValues(response), response_1_1; response_1_1 = yield response_1.next(), _a = response_1_1.done, !_a; _d = true) {
+                            _c = response_1_1.value;
+                            _d = false;
+                            const message = _c;
+                            if (message.type === "content_block_delta") {
+                                finalText += message.delta.text;
+                            }
+                        }
                     }
-                    return this.parseResponse(response.content[0].text);
+                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    finally {
+                        try {
+                            if (!_d && !_a && (_b = response_1.return)) yield _b.call(response_1);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                    }
+                    if (JSON) {
+                        return this.parseResponseToJSON(finalText);
+                    }
+                    return this.parseResponse(finalText);
                 }
                 case "Gemini (Google)": { // Done
                     const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });

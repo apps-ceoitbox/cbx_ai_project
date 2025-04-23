@@ -224,6 +224,7 @@ function generatePrompt(userAnswers, promptData) {
   
   🎯 GOAL:
   - Final HTML should look clean, readable, modern, and styled with inline CSS only.
+  - Make sure that the html you generate is long and detailed.
   - Content must begin with the <div> container as mentioned.
   `;
     return prompt;

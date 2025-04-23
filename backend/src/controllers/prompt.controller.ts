@@ -161,17 +161,17 @@ export default class PromptController {
 // }
 
 function generatePrompt(userAnswers, promptData) {
-    const formattedAnswers = Object.entries(userAnswers)
-      .map(
-        ([question, answer]) =>
-          `<div style="margin-bottom: 10px;">
+  const formattedAnswers = Object.entries(userAnswers)
+    .map(
+      ([question, answer]) =>
+        `<div style="margin-bottom: 10px;">
             <strong style="color: #c0392b; font-weight: bold;">${question}:</strong>
             <span style="color: #2c3e50;"> ${answer}</span>
           </div>`
-      )
-      .join("\n");
-  
-    const prompt = `
+    )
+    .join("\n");
+
+  const prompt = `
   ${promptData.initialGreetingsMessage}
   
   Objective: ${promptData.objective}
@@ -241,9 +241,9 @@ function generatePrompt(userAnswers, promptData) {
   
   🎯 GOAL:
   - Final HTML should look clean, readable, modern, and styled with inline CSS only.
+  - Make sure that the html you generate is long and detailed.
   - Content must begin with the <div> container as mentioned.
   `;
-  
-    return prompt;
-  }
-  
+
+  return prompt;
+}

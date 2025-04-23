@@ -116,11 +116,19 @@ export class AI {
                     max_tokens: this.apiProvider.maxTokens,
                     temperature: this.apiProvider.temperature,
                     messages: [{ role: "user", content: prompt }],
+                    stream: true,
                 });
-                if (JSON) {
-                    return this.parseResponseToJSON(response.content[0].text);
+                console.log(response)
+                let finalText = "";
+                for await (const message of response) {
+                    if (message.type === "content_block_delta") {
+                        finalText += message.delta.text;
+                    }
                 }
-                return this.parseResponse(response.content[0].text);
+                if (JSON) {
+                    return this.parseResponseToJSON(finalText);
+                }
+                return this.parseResponse(finalText);
             }
 
             case "Gemini (Google)": { // Done

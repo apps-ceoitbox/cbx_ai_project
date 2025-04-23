@@ -1136,7 +1136,7 @@ export default function AdminDashboard() {
                                   id={`${provider.name}-max-tokens`}
                                   type="number"
                                   min="100"
-                                  max="8000"
+                                  max="8000000000"
                                   step="100"
                                   value={provider?.maxTokens || 1000}
                                   onChange={(e) => handleInputChange(index, 'maxTokens', parseInt(e.target.value))}

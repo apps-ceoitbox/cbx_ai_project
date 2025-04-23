@@ -162,6 +162,11 @@ export default function ToolQuestionsPage() {
                   value={answers[currentQuestion] || ""}
                   onChange={(e) => handleChange(currentQuestion, e.target.value)}
                   className={errors[currentQuestion] ? "border-red-500" : ""}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleNext()
+                    }
+                  }}
                 />
                 {errors[currentQuestion] && <p className="text-red-500 text-sm">{errors[currentQuestion]}</p>}
               </div>
