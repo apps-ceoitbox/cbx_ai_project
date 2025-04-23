@@ -194,6 +194,7 @@ export default function LoginPage() {
                 </div>
 
                 <Button
+                  type="submit"
                   disabled={!formData.userName || !formData.email}
                   onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700 mt-5">
                   {userAuth.isLoading ? (

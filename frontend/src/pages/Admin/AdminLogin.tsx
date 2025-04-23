@@ -140,6 +140,7 @@ export default function AdminLoginPage() {
                 </div>
                 {/* <CardFooter className="w-full"> */}
                 <Button
+                  type="submit"
                   disabled={!credentials.password || !credentials.email}
                   onClick={handleSubmit} className="w-full bg-primary-red hover:bg-red-700 mt-5">
                   {isLoading ? (

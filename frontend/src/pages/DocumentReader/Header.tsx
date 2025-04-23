@@ -60,7 +60,7 @@ const Header = () => {
                             }}
                         >
                             <LayoutDashboard className="w-5 h-5" />
-                            Dashboard
+                            {isMobile ? "" : "Dashboard"}
                         </Button>
                     }
 
