@@ -5,7 +5,7 @@ dotenv.config();
 const PORT = process.env.PORT;
 const MONGO_URI = `${process.env.MONGO_URI}` || "";
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
     try {
         await mongoose.connect(MONGO_URI);
         console.log("Connected to MongoDB");
@@ -14,3 +14,5 @@ app.listen(PORT, async () => {
         console.error("MongoDB connection failed:", error);
     }
 });
+
+server.setTimeout(500000);
