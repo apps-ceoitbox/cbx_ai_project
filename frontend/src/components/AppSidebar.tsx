@@ -547,7 +547,8 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             className="w-full justify-start gap-2 text-red-600 hover:bg-red-100"
                         >
                             <LogOut size={18} />
-                            Logout
+
+                            {!collapsed ? "Logout" : ""}
                             {/* {!collapsed && "User Logout"} */}
                         </Button>
                         {/* <Button
