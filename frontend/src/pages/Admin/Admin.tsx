@@ -55,7 +55,7 @@ import {
 } from "@/components/ui/dialog"
 
 import html2pdf from 'html2pdf.js'
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import AdminHeader from "@/components/Custom/AdminHeader"
 
@@ -974,6 +974,7 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
+
             {filteredSubmissions?.length > itemsPerPage && (
               <div className="mt-6">
                 <Pagination>
@@ -986,17 +987,89 @@ export default function AdminDashboard() {
                       />
                     </PaginationItem>
 
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink
-                          style={{ cursor: "pointer" }}
-                          isActive={currentPage === i + 1}
-                          onClick={() => setCurrentPage(i + 1)}
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
+                    {(() => {
+                      const pages = [];
+                      const maxVisiblePages = 5; // Adjust this number as needed
+
+                      // Always show first page
+                      pages.push(
+                        <PaginationItem key={1}>
+                          <PaginationLink
+                            style={{ cursor: "pointer" }}
+                            isActive={currentPage === 1}
+                            onClick={() => setCurrentPage(1)}
+                          >
+                            1
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+
+                      // Calculate range of visible pages
+                      let startPage = Math.max(2, currentPage - Math.floor(maxVisiblePages / 2));
+                      let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 3);
+
+                      // Adjust if we're near the beginning
+                      if (startPage <= 2) {
+                        startPage = 2;
+                        endPage = Math.min(totalPages - 1, maxVisiblePages);
+                      }
+
+                      // Adjust if we're near the end
+                      if (endPage >= totalPages - 2) {
+                        endPage = totalPages - 1;
+                        startPage = Math.max(2, totalPages - maxVisiblePages + 2);
+                      }
+
+                      // Add ellipsis after first page if needed
+                      if (startPage > 2) {
+                        pages.push(
+                          <PaginationItem key="start-ellipsis">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+
+                      // Add visible page numbers
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <PaginationItem key={i}>
+                            <PaginationLink
+                              style={{ cursor: "pointer" }}
+                              isActive={currentPage === i}
+                              onClick={() => setCurrentPage(i)}
+                            >
+                              {i}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+
+                      // Add ellipsis before last page if needed
+                      if (endPage < totalPages - 1) {
+                        pages.push(
+                          <PaginationItem key="end-ellipsis">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+
+                      // Always show last page if there's more than one page
+                      if (totalPages > 1) {
+                        pages.push(
+                          <PaginationItem key={totalPages}>
+                            <PaginationLink
+                              style={{ cursor: "pointer" }}
+                              isActive={currentPage === totalPages}
+                              onClick={() => setCurrentPage(totalPages)}
+                            >
+                              {totalPages}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+
+                      return pages;
+                    })()}
 
                     <PaginationItem>
                       <PaginationNext
@@ -1009,7 +1082,6 @@ export default function AdminDashboard() {
                 </Pagination>
               </div>
             )}
-
           </TabsContent>
 
 
