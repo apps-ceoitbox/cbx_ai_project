@@ -90,12 +90,12 @@ export default function GoogleLoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black ">
-            <div style={{ position: "relative" }} className="py-6 pl-8 bg-black">
+        <div style={{ position: "relative" }} className="min-h-screen flex flex-col items-center justify-center  bg-black ">
+            <div style={{ position: "absolute", top: 0, left: 0 }} className="py-6 pl-8 bg-black">
                 <Logo size="lg" />
             </div>
 
-            <div className=" flex flex-col items-center justify-center bg-black p-4">
+            <div className=" bg-black p-4">
                 <div className="w-full max-w-[480px]">
                     <Card className="border-primary-red">
                         <CardHeader className="bg-primary-red text-white rounded-t-lg">
