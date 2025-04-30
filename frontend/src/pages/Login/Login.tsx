@@ -21,11 +21,7 @@ export default function LoginPage() {
     email: "",
     companyName: "",
     mobile: "",
-    otp: ""
   });
-
-  const [otpSent, setOtpSent] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
 
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -67,36 +63,12 @@ export default function LoginPage() {
     // } else if (!/^\d{10}$/.test(formData.mobile.replace(/\D/g, ""))) {
     //   newErrors.mobile = "Mobile number should be 10 digits"
     // }
-    if (otpSent && !formData.otp.trim()) {
-      newErrors.otp = "OTP is required"
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0
   }
 
-  const sendOtp = async () => {
 
-    if (!formData.email.trim()) {
-      setErrors(prev => ({ ...prev, email: "Email is required" }))
-      return
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setErrors(prev => ({ ...prev, email: "Email is invalid" }))
-      return
-    }
-
-    try {
-      setSendingOtp(true)
-      const res = await axios.post("/auth/user/send-otp", { email: formData.email })
-      setOtpSent(true)
-      toast.success("OTP sent to your email")
-    } catch (error) {
-      console.error("OTP error:", error)
-      toast.error("Failed to send OTP")
-    } finally {
-      setSendingOtp(false)
-    }
-  }
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -105,11 +77,7 @@ export default function LoginPage() {
       if (validateForm()) {
         setUserAuth(p => ({ ...p, isLoading: true }))
 
-        const loginData = otpSent ?
-          { ...formData } :
-          { userName: formData.userName, email: formData.email, companyName: formData.companyName, mobile: formData.mobile }
-
-        let res = await axios.post("/auth/user/login", loginData)
+        let res = await axios.post("/auth/user/login", formData)
 
         if (res?.data?.error === "Invalid license") {
           setShowUnauthorizedModal(true)
@@ -133,17 +101,8 @@ export default function LoginPage() {
     } catch (error) {
       console.error("Login error:", error);
 
-      // if (error?.response?.data?.error === "Invalid license") {
-      //   setShowUnauthorizedModal(true)
-      // } else {
-      //   toast.error("Something went wrong");
-      // }
-
       if (error?.response?.data?.error === "Invalid license") {
-        setShowUnauthorizedModal(true);
-      } else if (error?.response?.data?.error === "Invalid OTP") {
-        setErrors(prev => ({ ...prev, otp: "Invalid OTP" }))
-        toast.error("Invalid OTP");
+        setShowUnauthorizedModal(true)
       } else {
         toast.error("Something went wrong");
       }
@@ -235,37 +194,7 @@ export default function LoginPage() {
                   />
                   {errors.mobile && <p className="text-red-500 text-sm">{errors.mobile}</p>}
                 </div> */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="otp">OTP</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="text-primary-red border-primary-red hover:bg-red-50"
-                      onClick={sendOtp}
-                      disabled={!formData.email || sendingOtp}
-                    >
-                      {sendingOtp ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending...
-                        </>
-                      ) : otpSent ? "Resend OTP" : "Get OTP"}
-                    </Button>
-                  </div>
-                  <Input
-                    id="otp"
-                    name="otp"
-                    value={formData.otp}
-                    onChange={handleChange}
-                    className={errors.otp ? "border-red-500" : ""}
-                    placeholder="Enter OTP sent to your email"
-                  />
-                  {errors.otp && <p className="text-red-500 text-sm">{errors.otp}</p>}
-                  {otpSent && (
-                    <p className="text-sm text-gray-500">Enter the OTP sent to your email address</p>
-                  )}
-                </div>
+
 
                 <Button
                   type="submit"
@@ -299,5 +228,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
-
