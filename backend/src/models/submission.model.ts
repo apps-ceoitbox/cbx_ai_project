@@ -19,7 +19,7 @@ const submissionSchema: Schema = new Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
-    company: { type: String, required: true },
+    company: { type: String },
     category: { type: String, required: true },
     tool: { type: String, required: true },
     date: { type: Date, required: true },

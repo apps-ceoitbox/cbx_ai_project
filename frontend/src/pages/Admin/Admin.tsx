@@ -845,7 +845,7 @@ export default function AdminDashboard() {
                           <TableRow key={submission.id} className="h-8 px-2" >
                             <TableCell className="font-medium py-2">{submission.name}</TableCell>
                             <TableCell className="py-2">{submission.email}</TableCell>
-                            <TableCell className="py-2">{submission.company}</TableCell>
+                            <TableCell className="py-2">{submission.company || "--"}</TableCell>
                             <TableCell className="py-2">{submission.tool}</TableCell>
                             <TableCell className="py-2">{submission?.category || "--"}</TableCell>
                             <TableCell className="py-2">{submission.apiUsed}</TableCell>
