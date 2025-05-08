@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -78,11 +76,10 @@ export default function ToolQuestionsPage() {
       questions: answers,
       toolId: toolId
     }).then((res) => {
-      setGenerateResponse(res.data.data)
-      setIsSubmitting(false)
-      setShowConfirmation(true)
-      nav(`/reports/${toolId}`)
-      console.log(res.data.data)
+      setGenerateResponse(res.data.data);
+      setIsSubmitting(false);
+      setShowConfirmation(true);
+      nav(`/reports/${toolId}`);
     })
   }
 
@@ -219,3 +216,4 @@ export default function ToolQuestionsPage() {
     </div>
   )
 }
+

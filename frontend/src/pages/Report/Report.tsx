@@ -57,13 +57,12 @@ export default function ReportPage() {
 
   useEffect(() => {
     const fetchTool = async () => {
-      const response = await axios.get(`/prompt/${toolId}`)
-      console.log(response.data.data)
-      setTool(response.data.data)
+      const response = await axios.get(`/prompt/${toolId}`);
+      setTool(response.data.data);
     }
     fetchTool()
   }, [toolId])
-  console.log({ tool })
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setReport(generateResponse)

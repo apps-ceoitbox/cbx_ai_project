@@ -68,7 +68,6 @@ const UserGeneratedPlans: React.FC = () => {
     const getAllUserSubmissionsData = async () => {
         try {
             const res = await axios.get("/submission/user");
-            console.log("res", res)
             setSubmissions(res?.data?.data)
         } catch (error) {
             console.log(error)
