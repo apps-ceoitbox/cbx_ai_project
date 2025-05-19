@@ -15,7 +15,7 @@ export default function ToolQuestionsPage() {
   const axios = useAxios("user");
   const nav = useNavigate();
   const params = useParams();
-  const { userAuth, setGenerateResponse } = useData();
+  const { userAuth, setGenerateResponse, apiLink } = useData();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -71,19 +71,46 @@ export default function ToolQuestionsPage() {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true)
+    const res = await fetch(`${apiLink}prompt/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `Bearer ${userAuth?.token}` // Add the token here
+      },
+      body: JSON.stringify({
+        questions: answers,
+        toolId: toolId
+      }),
+    });
+    setGenerateResponse("")
+    setIsSubmitting(false)
+    setShowConfirmation(true)
+    nav(`/reports/${toolId}`)
 
-    axios.post(`/prompt/generate`, {
-      questions: answers,
-      toolId: toolId
-    }).then((res) => {
-      setGenerateResponse(res.data.data)
-      setIsSubmitting(false)
-      setShowConfirmation(true)
-      nav(`/reports/${toolId}`)
-      console.log(res.data.data)
-    })
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunk = decoder.decode(value, { stream: true });
+      setGenerateResponse(p => p + chunk)
+      console.log(chunk)
+    }
+
+    // axios.post(`/prompt/generate`, {
+    //   questions: answers,
+    //   toolId: toolId
+    // }).then((res) => {
+    //   setGenerateResponse(res.data.data)
+    //   setIsSubmitting(false)
+    //   setShowConfirmation(true)
+    //   nav(`/reports/${toolId}`)
+    //   console.log(res.data.data)
+    // })
   }
 
   if (!userAuth.user) {

@@ -60,7 +60,8 @@ export const AppProvider = ({ children }) => {
         astroResult,
         setAstroResult,
         mobileMenuOpen,
-        setMobileMenuOpen
+        setMobileMenuOpen,
+        apiLink
       }}
     >
       {children}

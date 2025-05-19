@@ -6,8 +6,16 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { HttpStatusCodes } from "../utils/errorCodes";
 import Admin from "../models/admin.model";
+import { OAuth2Client } from "google-auth-library";
 import AiSettingsController from "./aiSettings.controller";
 dotenv.config();
+
+const jwtSecret = process.env.JWT_SECRET;
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.HOST_URL || `http://localhost:5173`;
+
+const client = new OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -68,7 +76,7 @@ export default class AuthController {
         }
 
         // Generate JWT
-        const token = jwt.sign({ userId: user._id }, JWT_SECRET );
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET);
         delete user.password;
 
         await AiSettingsController.createAiEntries();
@@ -78,7 +86,7 @@ export default class AuthController {
 
     // Method to login a new user
     static userLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-        const { userName, email, companyName="", mobile=0 } = req.body as UserInterface;
+        const { userName, email, companyName = "", mobile = 0 } = req.body as UserInterface;
 
         if (!userName || !email) {
             res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'All fields are required' });
@@ -114,6 +122,73 @@ export default class AuthController {
         res.status(HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user });
     })
 
+    // Method to get all users
+    static initiateGoogleLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+        const authUrl = client.generateAuthUrl({
+            access_type: "offline",
+            prompt: "consent", // This ensures that a new refresh token is issued
+            scope: ["email", "profile"], // Add any additional scopes you need
+        });
+        res.redirect(authUrl);
+    })
+
+    // Method to create a new user
+    static processGoogleLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+        const code: string = req.query.code as string;
+        const { tokens } = await client.getToken(code);
+
+        // Use tokens.access_token for accessing Google APIs on behalf of the user
+        const { email } = await client.getTokenInfo(tokens.access_token);
+
+        const ticket = await client.verifyIdToken({
+            idToken: tokens.id_token,
+            audience: CLIENT_ID, // Specify your app's client ID
+        });
+        const payload = ticket.getPayload();
+
+        const userEmail = payload.email;
+        const userName = payload.name;
+        const photo = payload.picture;
+        const existingUser = await User.findOne({ email }).lean();
+        if (existingUser) {
+            let updatedUser = await User.findOneAndUpdate(
+                { email },
+                {
+                    googleRefreshToken: tokens.refresh_token,
+                    photo,
+                }, { new: true }
+            );
+
+            const token = jwt.sign({ userId: existingUser._id }, jwtSecret);
+            delete existingUser.googleRefreshToken;
+            res.send({
+                data: updatedUser,
+                token,
+            });
+            return
+        } else {
+
+            let newUser = await User.create({
+                email: userEmail,
+                userName,
+                password: userEmail,
+                googleRefreshToken: tokens.refresh_token,
+                photo,
+            });
+
+            newUser = JSON.parse(JSON.stringify(newUser));
+
+            const token = jwt.sign({ userId: newUser._id }, jwtSecret);
+            delete newUser.googleRefreshToken;
+
+            res.send({
+                data: newUser,
+                token,
+            });
+            return
+        }
+    })
+
 }
 
 import axios from "axios";
@@ -125,10 +200,10 @@ export const checkLicense = async (appName: string, email: string) => {
         const response = await axios.get(url);
         const data = response.data;
 
-    return data.valid === "Active";
-  } catch (error) {
-    console.error("Error verifying license:", error.message);
-    return false;
-  }
+        return data.valid === "Active";
+    } catch (error) {
+        console.error("Error verifying license:", error.message);
+        return false;
+    }
 };
 

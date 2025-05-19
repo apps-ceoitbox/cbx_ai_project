@@ -70,7 +70,14 @@ export default class PromptController {
       maxTokens: apiProvider.maxTokens,
     });
 
-    const response = await ai.generateResponse(genPrompt);
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Transfer-Encoding", "chunked");
+    let finalText = "";
+    const response = await ai.generateResponse(genPrompt, false, true, (text) => {
+      finalText += text;
+      res.write(text);
+    });
 
     Submission.create({
       name: req.user.userName,
@@ -81,12 +88,12 @@ export default class PromptController {
       date: new Date(),
       apiUsed: apiProvider.name,
       questionsAndAnswers: questions,
-      generatedContent: response,
+      generatedContent: finalText,
     });
-
-    res
-      .status(HttpStatusCodes.OK)
-      .json({ message: "Response generated successfully", data: response });
+    res.end();
+    // res
+    //   .status(HttpStatusCodes.OK)
+    //   .json({ message: "Response generated successfully", data: response });
   });
 }
 

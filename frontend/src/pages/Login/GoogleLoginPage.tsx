@@ -3,15 +3,14 @@ import { Navigate, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Logo } from "@/components/logo"
-import { useAxios, useData } from "@/context/AppContext"
+import { useData } from "@/context/AppContext"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import UnauthorizedModal from "./UnauthorizedModal"
 
 export default function GoogleLoginPage() {
     const nav = useNavigate();
-    const { userAuth, setUserAuth } = useData();
-    const axios = useAxios("user");
+    const { apiLink, userAuth, setUserAuth } = useData();
     const [loading, setLoading] = useState(false);
     const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
 
@@ -19,31 +18,8 @@ export default function GoogleLoginPage() {
         try {
             setLoading(true);
 
-            // This is a placeholder for Google OAuth integration
-            // You'll need to implement Google OAuth based on your backend requirements
+            window.location.href = `${apiLink}auth/user/google`;
 
-            // Option 1: If you're handling Google OAuth via a popup window
-            // window.open('/api/auth/google', '_blank', 'width=500,height=600');
-
-            // Option 2: If your backend provides a URL to redirect to
-            // window.location.href = '/api/auth/google';
-
-            // For this example, we'll simulate a backend API call that would handle the OAuth flow
-            const res = await axios.get("/auth/user/google-login");
-
-            // Assuming your backend returns user data and token after successful Google auth
-            setUserAuth(p => {
-                return {
-                    ...p,
-                    token: res?.data?.token,
-                    user: res?.data?.data,
-                    isLoading: false
-                }
-            });
-
-            localStorage.setItem("userToken", res?.data?.token);
-            toast.success("Login successful");
-            nav("/home");
 
         } catch (error) {
             console.error("Google login error:", error);

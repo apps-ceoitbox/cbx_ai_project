@@ -2,17 +2,20 @@ import { useEffect, useState } from "react"
 import { useAxios, useData } from "./context/AppContext"
 import AppRoutes from "./components/AllRoutes/AppRoutes"
 import AppSidebar from "./components/AppSidebar";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import AppSidebarDrawer from "./components/SidebarDrawer/AppSidebarDrawer";
+import { toast } from "sonner";
+import axios from "axios";
 
 function App() {
-  const { setUserAuth, setAdminAuth } = useData();
+  const navigate = useNavigate();
+  const { userAuth, setUserAuth, setAdminAuth } = useData();
   const userAxios = useAxios("user");
   const adminAxios = useAxios("admin");
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
+  const { apiLink } = useData();
 
   const hiddenSidebarPaths = ["/login", "/", "/admin/login"];
   const hideSidebar = hiddenSidebarPaths.includes(location.pathname);
@@ -69,6 +72,47 @@ function App() {
           isLoading: false
         })
       })
+    }
+  }, [])
+
+
+  useEffect(() => {
+    if (userAuth.token) return;
+    try {
+        const searchParams = new URLSearchParams(location.search);
+        const code = searchParams.get("code");
+        if (code == null) {
+            return
+        }
+        setUserAuth(p => ({
+            ...p,
+            isLoading: true
+        }))
+        axios.get(`${apiLink}/auth/user/google/callback?code=` + code)
+            .then(({ data: res }) => {
+                if (res.error) {
+                    toast.error(res.error);
+                    setUserAuth(p => ({
+                        ...p,
+                        isLoading: false
+                    }))
+                    return;
+                }
+                setUserAuth(p => ({
+                    ...p,
+                    token: res.token,
+                    user: res.data,
+                    isLoading: false
+                }))
+                localStorage.setItem("userToken", res.token);
+                navigate("/dashboard")
+            });
+    } catch (err) {
+        setUserAuth(p => ({
+            ...p,
+            isLoading: false
+        }))
+        console.log(err.message);
     }
   }, [])
 

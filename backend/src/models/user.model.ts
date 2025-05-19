@@ -5,6 +5,8 @@ export interface UserInterface {
   email: string;
   companyName: string;
   mobile: string;
+  googleRefreshToken: string;
+  photo: string;
 }
 
 const userSchema: Schema = new Schema({
@@ -12,6 +14,8 @@ const userSchema: Schema = new Schema({
   email: { type: String, required: true, unique: true },
   companyName: { type: String, default: "" },
   mobile: { type: Number, default: 0 },
+  photo: { type: String, default: "" },
+  googleRefreshToken: { type: String, default: "" },
 }, { timestamps: true });
 
 const User = mongoose.model<UserInterface & Document>("user", userSchema);

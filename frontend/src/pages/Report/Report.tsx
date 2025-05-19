@@ -55,6 +55,8 @@ export default function ReportPage() {
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
 
+  console.log(generateResponse)
+
   useEffect(() => {
     const fetchTool = async () => {
       const response = await axios.get(`/prompt/${toolId}`)
@@ -63,7 +65,6 @@ export default function ReportPage() {
     }
     fetchTool()
   }, [toolId])
-  console.log({ tool })
   useEffect(() => {
     const timer = setTimeout(() => {
       setReport(generateResponse)
@@ -296,7 +297,7 @@ export default function ReportPage() {
 
               </CardHeader>
 
-              <CardContent dangerouslySetInnerHTML={{ __html: report }} id="report-content" className="pt-6">
+              <CardContent dangerouslySetInnerHTML={{ __html: generateResponse }} id="report-content" className="pt-6">
 
               </CardContent>
 

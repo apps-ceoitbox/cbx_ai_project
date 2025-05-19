@@ -1,48 +1,3 @@
-// import OpenAI from "openai";
-
-// export interface ApiProvider {
-//     name: "ChatGPT (OpenAI)" | "Claude (Anthropic)" | "Gemini (Google)" | "Groq (Groq)" | "Llama (Meta)" | "Deepseek" | "Ollama (Self-hosted)" | "Perplexity" | "Mistral";
-//     model: string;
-//     apiKey: string;
-//     temperature: number;
-//     maxTokens: number;
-// }
-
-
-// export class AI {
-//     apiProvider: ApiProvider;
-//     ai: OpenAI;
-//     constructor(apiProvider: ApiProvider) {
-//         this.apiProvider = apiProvider;
-//         this.ai = new OpenAI({
-//             apiKey: apiProvider.apiKey,
-//         });
-//     }
-
-//     async generateResponse(prompt: string) {
-//         switch (this.apiProvider.name) {
-//             case "ChatGPT (OpenAI)": {
-//                 const response = await this.ai.chat.completions.create({
-//                     model: this.apiProvider.model,
-//                     messages: [{ role: "user", content: prompt }],
-//                     temperature: this.apiProvider.temperature,
-//                     max_tokens: this.apiProvider.maxTokens,
-//                 });
-
-//                 console.log(response.choices[0].message.content);
-
-//                 let content = response.choices[0].message.content.trim(); // Remove leading/trailing spaces
-
-//                 // If response contains backticks, extract only JSON part
-//                 if (content.startsWith("```")) {
-//                     content = content.replace(/```json|```/g, "").trim();
-//                 }
-
-//                 return JSON.parse(content)
-//             }
-//         }
-//     }
-// }   
 
 const aiInstructions = {
     summarize: "Read the content carefully and summarize it in 3–5 concise bullet points, highlighting the most important ideas.",
@@ -95,9 +50,28 @@ export class AI {
         }
     }
 
-    async generateResponse(prompt: string, JSON = false) {
+    async generateResponse(prompt: string, JSON = false, stream = false, streamCallback: (data: string) => void = () => { }) {
         switch (this.apiProvider.name) {
             case "ChatGPT (OpenAI)": { // Done
+                if (stream) {
+                    const response = await this.ai.chat.completions.create({
+                        model: this.apiProvider.model,
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: this.apiProvider.temperature,
+                        max_tokens: this.apiProvider.maxTokens,
+                        stream: true,
+                    });
+
+                    let finalText = "";
+                    for await (const chunk of response) {
+                        const content = chunk.choices?.[0]?.delta?.content;
+                        if (content) {
+                            streamCallback(content);
+                        }
+                    }
+                    return this.parseResponse(finalText);
+                }
+
                 const response = await this.ai.chat.completions.create({
                     model: this.apiProvider.model,
                     messages: [{ role: "user", content: prompt }],
@@ -111,6 +85,26 @@ export class AI {
             }
 
             case "Claude (Anthropic)": { // Done
+                if (stream) {
+                    const response = await this.ai.messages.create({
+                        model: this.apiProvider.model,
+                        max_tokens: this.apiProvider.maxTokens,
+                        temperature: this.apiProvider.temperature,
+                        messages: [{ role: "user", content: prompt }],
+                        stream: true,
+                    });
+                    let finalText = "";
+                    for await (const message of response) {
+                        if (message.type === "content_block_delta") {
+                            finalText += message.delta.text;
+                            streamCallback(message.delta.text);
+                        }
+                    }
+                    if (JSON) {
+                        return this.parseResponseToJSON(finalText);
+                    }
+                    return this.parseResponse(finalText);
+                }
                 const response = await this.ai.messages.create({
                     model: this.apiProvider.model,
                     max_tokens: this.apiProvider.maxTokens,
@@ -118,7 +112,6 @@ export class AI {
                     messages: [{ role: "user", content: prompt }],
                     stream: true,
                 });
-                console.log(response)
                 let finalText = "";
                 for await (const message of response) {
                     if (message.type === "content_block_delta") {
@@ -132,6 +125,20 @@ export class AI {
             }
 
             case "Gemini (Google)": { // Done
+                if (stream) {
+                    const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
+                    const response = await model.generateContentStream(prompt);
+                    let finalText = "";
+
+                    for await (const chunk of response.stream) {
+                        const text = chunk.text();
+                        if (text) {
+                            streamCallback(text);
+                        }
+                    }
+                    return this.parseResponse(finalText);
+                }
+
                 const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
                 const response = await model.generateContent(prompt);
                 if (JSON) {
@@ -141,6 +148,26 @@ export class AI {
             }
 
             case "Perplexity": { // Done
+
+                if (stream) {
+                    const response = await this.ai.chat.completions.create({
+                        model: this.apiProvider.model,
+                        messages: [{ role: "user", content: prompt }],
+                        temperature: this.apiProvider.temperature,
+                        max_tokens: this.apiProvider.maxTokens,
+                        stream: true,
+                    });
+
+                    let finalText = "";
+                    for await (const chunk of response) {
+                        const content = chunk.choices?.[0]?.delta?.content;
+                        if (content) {
+                            streamCallback(content);
+                        }
+                    }
+                    return this.parseResponse(finalText);
+                }
+
                 const response = await this.ai.chat.completions.create({
                     model: "sonar-pro",
                     messages: [{ role: "user", content: prompt }],
@@ -154,6 +181,21 @@ export class AI {
             }
 
             case "Mistral": { // Done
+
+                if (stream) {
+                    const client = new Mistral({ apiKey: this.apiProvider.apiKey });
+                    const chatResponse = await client.chat.complete({
+                        model: this.apiProvider.model || "mistral-large-latest",
+                        messages: [{ role: 'user', content: prompt }],
+                    });
+                    if (JSON) {
+                        streamCallback(this.parseResponseToJSON(chatResponse.choices[0].message.content as string))
+                        return this.parseResponseToJSON(chatResponse.choices[0].message.content as string);
+                    }
+                    streamCallback(this.parseResponse(chatResponse.choices[0].message.content as string))
+                    return this.parseResponse(chatResponse.choices[0].message.content as string);
+                }
+
                 const client = new Mistral({ apiKey: this.apiProvider.apiKey });
                 const chatResponse = await client.chat.complete({
                     model: this.apiProvider.model || "mistral-large-latest",
@@ -184,6 +226,16 @@ export class AI {
                         Authorization: `Bearer ${this.apiProvider.apiKey}`
                     },
                 });
+
+                if (stream) {
+                    if (JSON) {
+                        streamCallback(this.parseResponseToJSON(response.data.choices[0].message.content as string));
+                        return this.parseResponseToJSON(response.data.choices[0].message.content as string);
+                    }
+                    streamCallback(this.parseResponse(response.data.choices[0].message.content));
+                    return this.parseResponse(response.data.choices[0].message.content);
+                }
+
                 if (JSON) {
                     return this.parseResponseToJSON(response.data.choices[0].message.content as string);
                 }

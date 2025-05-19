@@ -148,4 +148,5 @@ export default class AiSettingsController {
       .status(HttpStatusCodes.OK)
       .json({ message: "AI settings updated successfully", data: aiSettings });
   }
+  
 }
