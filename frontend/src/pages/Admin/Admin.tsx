@@ -34,6 +34,7 @@ import {
   Copy,
   RefreshCcw,
   GripVertical,
+  HelpCircle,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -548,7 +549,7 @@ export default function AdminDashboard() {
   //   })
   // }
 
-  console.log("questions", currentPrompt?.questions)
+
 
   // Drag and drop functionality
   function SortableQuestion({
@@ -725,6 +726,7 @@ export default function AdminDashboard() {
     getPrompts()
   }
 
+
   // @ts-ignore
   const isAiProvidersChanged = !(JSON.stringify(apiProviders) == prevApiProviderString.current)
   const isCurrentPromptChanged = !(JSON.stringify(currentPrompt) == prevcurrentPrompt.current)
@@ -738,24 +740,7 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold mb-8 text-center text-red-500">Admin Dashboard</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          {/* <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="dashboard"
-              className="flex items-center text-[#e50914] data-[state=active]:text-black"
-            >
-              <Users className="mr-2 h-4 w-4" />
-              Submissions
-            </TabsTrigger>
-            <TabsTrigger value="ai-settings"
-              className="flex items-center text-[#e50914] data-[state=active]:text-black"
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              AI Platform Settings
-            </TabsTrigger>
-            <TabsTrigger value="manage-prompts" className="flex items-center text-[#e50914] data-[state=active]:text-black">
-              <FileText className="mr-2 h-4 w-4" />
-              Manage Templates
-            </TabsTrigger>
-          </TabsList> */}
+
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger
               value="dashboard"
@@ -954,71 +939,106 @@ export default function AdminDashboard() {
                                 <Button variant="outline" size="sm" title="Regenerate" onClick={() => handleRegenerate(submission)}>
                                   <RefreshCcw className={`h-4 w-4 ${isSubmitting == submission._id ? "animate-spin" : ""}`} />
                                 </Button>
+
+
                                 <Dialog>
                                   <DialogTrigger asChild>
-                                    <Button className=" text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                                    <Button className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
                                       <Eye className="h-4 w-4" />
                                     </Button>
-
                                   </DialogTrigger>
+
                                   <DialogContent className="max-w-[70vw] max-h-[90vh] overflow-auto">
+                                    <Tabs defaultValue="result" className="w-full" >
 
-                                    <div className="w-full  mx-auto mt-4" >
-                                      <Card className="mb-6 border-2">
-                                        <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                                          <CardTitle className="text-2xl">{submission?.tool || "Report"}</CardTitle>
-                                          <CardDescription className="text-gray-100">
-                                            Generated on {formatDateTime(submission.createdAt)}
-                                          </CardDescription>
-                                        </CardHeader>
 
-                                        <CardContent dangerouslySetInnerHTML={{ __html: submission?.generatedContent }} id="report-content" className="pt-6">
-                                          {/* {submission?.generatedContent?.sections?.map((section: any, index: number) => (
-                                            <div key={index} className="mb-6">
-                                              <h3 className="text-xl font-semibold mb-2">{formatBoldText(section.title)}</h3>
-                                              <p className="whitespace-pre-line">{formatBoldText(section.content)}</p>
+                                      <TabsList className="mb-4 mt-3 w-full">
+
+
+                                        <TabsTrigger
+                                          value="question"
+                                          className="flex items-center justify-center gap-2 text-black bg-white border border-gray-200 
+      data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
+                                          style={{ width: "50%" }}
+                                        >
+                                          <HelpCircle className="w-4 h-4" /> Q & A
+                                        </TabsTrigger>
+
+                                        <TabsTrigger
+                                          value="result"
+                                          className="flex items-center justify-center gap-2 text-black bg-white border border-gray-200 
+      data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
+                                          style={{ width: "50%" }}
+                                        >
+                                          <FileText className="w-4 h-4" /> Result
+                                        </TabsTrigger>
+                                      </TabsList>
+
+
+                                      {/* Result Tab */}
+                                      <TabsContent value="result">
+                                        <div className="w-full mx-auto mt-4">
+                                          <Card className="mb-6 border-2">
+                                            <CardHeader className="bg-primary-red text-white rounded-t-lg">
+                                              <CardTitle className="text-2xl">{submission?.tool || "Report"}</CardTitle>
+                                              <CardDescription className="text-gray-100">
+                                                Generated on {formatDateTime(submission.createdAt)}
+                                              </CardDescription>
+                                            </CardHeader>
+
+                                            <CardContent
+                                              dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
+                                              id="report-content"
+                                              className="pt-6"
+                                            />
+
+                                            <CardFooter className="flex flex-wrap gap-4 justify-center">
+                                              <Button
+                                                variant="outline"
+                                                className="flex items-center"
+                                                onClick={() => handleDownloadPDF(submission)}
+                                              >
+                                                <Download className="mr-2 h-4 w-4" />
+                                                Download PDF
+                                              </Button>
+
+                                              <Button
+                                                className="bg-primary-red hover:bg-red-700 flex items-center"
+                                                onClick={() => handleSendEmail(submission)}
+                                                disabled={isEmailSending}
+                                              >
+                                                {isEmailSending ? (
+                                                  <>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    Sending...
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Mail className="mr-2 h-4 w-4" />
+                                                    Send to Email
+                                                  </>
+                                                )}
+                                              </Button>
+                                            </CardFooter>
+                                          </Card>
+                                        </div>
+                                      </TabsContent>
+
+                                      {/* Question Tab */}
+                                      <TabsContent value="question">
+                                        <div className="space-y-6 px-4 py-6">
+                                          {Object.entries(submission?.questionsAndAnswers).map(([question, answer], index) => (
+                                            <div key={index} className="bg-gray-50 p-4 rounded shadow">
+                                              <p className="font-semibold text-gray-800 mb-2">Q {index + 1}. {question}</p>
+                                              <p className="text-gray-600"><b>Ans.</b> {answer}</p>
                                             </div>
-                                          ))} */}
-                                        </CardContent>
-                                        <CardFooter className="flex flex-wrap gap-4 justify-center">
-                                          <Button
-                                            variant="outline"
-                                            className="flex items-center"
-                                            onClick={() => handleDownloadPDF(submission)}
-                                          >
-                                            <Download className="mr-2 h-4 w-4" />
-                                            Download PDF
-                                          </Button>
-                                          {/* <Button
-                                            variant="outline"
-                                            className="flex items-center"
-                                            onClick={() => handleDownloadDOCX(submission)}
-                                          >
-                                            <FileText className="mr-2 h-4 w-4" />
-                                            Export DOCX
-                                          </Button> */}
-                                          <Button
-                                            className="bg-primary-red hover:bg-red-700 flex items-center"
-                                            onClick={() => handleSendEmail(submission)}
-                                            disabled={isEmailSending}
-                                          >
-                                            {isEmailSending ? (
-                                              <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Sending...
-                                              </>
-                                            ) : (
-                                              <>
-                                                <Mail className="mr-2 h-4 w-4" />
-                                                Send to Email
-                                              </>
-                                            )}
-                                          </Button>
-                                        </CardFooter>
-                                      </Card>
-                                    </div>
+                                          ))}
+                                        </div>
+                                      </TabsContent>
+                                    </Tabs>
                                   </DialogContent>
                                 </Dialog>
+
 
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
@@ -1539,14 +1559,38 @@ export default function AdminDashboard() {
                             <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.updatedAt)}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  title="Duplicate"
-                                  onClick={() => handleDuplicatePrompt(prompt._id)}
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
+
+
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      title="Duplicate"
+
+                                    >
+                                      <Copy className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Duplicate Submission</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to Duplicate this Submission? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDuplicatePrompt(prompt._id)}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        Copy
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -2058,11 +2102,11 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* {isLoading &&
+        {isLoading &&
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
           </div>
-        } */}
+        }
       </main>
 
       {/* Success Email Dialog */}
