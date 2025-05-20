@@ -49,7 +49,7 @@ export default function ReportPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [report, setReport] = useState<any>(null);
   const axios = useAxios("user");
-  const toolId = params.toolId as string
+  const toolId = params.toolId as string;
   const [tool, setTool] = useState<PromptInterface | null>(null)
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
@@ -59,9 +59,8 @@ export default function ReportPage() {
 
   useEffect(() => {
     const fetchTool = async () => {
-      const response = await axios.get(`/prompt/${toolId}`)
-      console.log(response.data.data)
-      setTool(response.data.data)
+      const response = await axios.get(`/prompt/${toolId}`);
+      setTool(response.data.data);
     }
     fetchTool()
   }, [toolId])
@@ -106,81 +105,6 @@ export default function ReportPage() {
         toast.error("Failed to download PDF. Please try again.")
       })
   }
-
-  // const handleDownloadDOCX = () => {
-  //   if (!report) {
-  //     toast.error("No report data available.")
-  //     return
-  //   }
-
-  //   try {
-  //     // Create a new Document
-  //     const doc = new Document({
-  //       sections: [{
-  //         properties: {},
-  //         children: [
-  //           new Paragraph({
-  //             text: report.title,
-  //             heading: HeadingLevel.TITLE,
-  //             thematicBreak: true,
-  //           }),
-  //           new Paragraph({
-  //             text: `Generated on ${new Date().toLocaleDateString()}`,
-  //             style: "Normal",
-  //           }),
-  //         ]
-  //       }]
-  //     })
-
-  //     // Create an array to hold all section paragraphs
-  //     const sectionParagraphs = []
-
-  //     // Add each section as paragraphs
-  //     report.sections.forEach(section => {
-  //       // Strip markdown bold syntax from strings for DOCX
-  //       const title = section.title.replace(/\*\*/g, '')
-  //       const content = section.content.replace(/\*\*/g, '')
-
-  //       sectionParagraphs.push(
-  //         new Paragraph({
-  //           text: title,
-  //           heading: HeadingLevel.HEADING_2,
-  //           spacing: {
-  //             before: 400,
-  //             after: 200,
-  //           },
-  //         })
-  //       )
-
-  //       sectionParagraphs.push(
-  //         new Paragraph({
-  //           text: content,
-  //           style: "Normal",
-  //         })
-  //       )
-  //     })
-
-  //     // @ts-ignore
-  //     doc.addSection({
-  //       children: sectionParagraphs
-  //     })
-
-  //     // Generate and download DOCX
-  //     Packer.toBlob(doc).then(blob => {
-  //       saveAs(blob, `${tool?.heading || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
-  //       toast.success("DOCX Downloaded")
-  //     }).catch(error => {
-  //       console.error("DOCX generation error:", error)
-  //       toast.error("Failed to export DOCX. Please try again.")
-
-  //     })
-  //   } catch (error) {
-  //     console.error("DOCX generation error:", error)
-  //     toast.error("Failed to create DOCX. Please try again.")
-
-  //   }
-  // }
-
 
   const handleSendEmail = async () => {
     setIsEmailSending(true);

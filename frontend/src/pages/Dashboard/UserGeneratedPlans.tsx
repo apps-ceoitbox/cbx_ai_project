@@ -68,7 +68,6 @@ const UserGeneratedPlans: React.FC = () => {
     const getAllUserSubmissionsData = async () => {
         try {
             const res = await axios.get("/submission/user");
-            console.log("res", res)
             setSubmissions(res?.data?.data)
         } catch (error) {
             console.log(error)
@@ -321,9 +320,8 @@ const UserGeneratedPlans: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen ">
             <Header />
-
 
             <Card
                 // className=" mt-10 py-8 mx-10 "> 
@@ -556,17 +554,20 @@ const UserGeneratedPlans: React.FC = () => {
                             </TableBody>
                         </Table>
                     </div>
+
                     <div className="text-sm text-muted-foreground mt-2">
                         Showing {filteredSubmissions?.length} of {submissions?.length} submissions
                     </div>
                 </CardContent>
+
+
+
             </Card>
-
-
 
             {/* Success Email Dialog */}
             <Dialog open={emailSuccessOpen} onOpenChange={setEmailSuccessOpen}>
-                <DialogContent className="sm:max-w-md border-2 border-primary-red">
+                <DialogContent className="sm:max-w-md border-2 border-primary-red"
+                    style={{ zIndex: 999 }}>
                     <DialogHeader className="bg-primary-red text-white rounded-t-lg p-4 mt-3">
                         <DialogTitle className="flex items-center">
                             <CheckCircle className="h-6 w-6 text-white mr-2" />
@@ -589,6 +590,7 @@ const UserGeneratedPlans: React.FC = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
 
         </div>
     )

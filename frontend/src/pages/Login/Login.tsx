@@ -183,7 +183,7 @@ export default function LoginPage() {
                   {errors.companyName && <p className="text-red-500 text-sm">{errors.companyName}</p>}
                 </div>
 
-                {/* <div className="space-y-2">
+                <div className="space-y-2">
                   <Label htmlFor="mobile">Mobile Number</Label>
                   <Input
                     id="mobile"
@@ -193,7 +193,7 @@ export default function LoginPage() {
                     className={errors.mobile ? "border-red-500" : ""}
                   />
                   {errors.mobile && <p className="text-red-500 text-sm">{errors.mobile}</p>}
-                </div> */}
+                </div>
 
 
                 <Button

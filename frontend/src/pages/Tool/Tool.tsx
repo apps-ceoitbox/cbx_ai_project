@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -246,3 +244,4 @@ export default function ToolQuestionsPage() {
     </div>
   )
 }
+

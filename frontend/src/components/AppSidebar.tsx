@@ -527,16 +527,20 @@ function AppSidebar({ collapsed, setCollapsed }) {
                 <div className="flex items-center gap-3">
                     <Avatar>
                         <AvatarFallback className="bg-red-600 text-white">
-                            {userAuth?.user?.userName?.charAt(0) || adminAuth?.user?.userName?.charAt(0) || 'U'}
+                            {adminAuth?.user?.userName?.charAt(0) || userAuth?.user?.userName?.charAt(0) ||
+
+                                'U'
+                            }
                         </AvatarFallback>
                     </Avatar>
 
                     {!collapsed && (
                         <div className="text-sm">
-                            <div className="font-medium">{userAuth?.user?.userName || adminAuth?.user?.userName}</div>
-                            <div className="text-xs text-gray-500">{userAuth?.user?.email || adminAuth?.user?.email}</div>
+                            <div className="font-medium">{adminAuth?.user?.userName || userAuth?.user?.userName}</div>
+                            <div className="text-xs text-gray-500">{adminAuth?.user?.email || userAuth?.user?.email}</div>
                         </div>
                     )}
+
                 </div>
 
                 {hasBothAuth ? (
