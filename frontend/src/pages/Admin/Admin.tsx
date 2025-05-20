@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -572,6 +572,14 @@ export default function AdminDashboard() {
       transition,
     };
 
+    const memoisedInput = useMemo(() => {
+      return <Input
+        placeholder={`Question ${index + 1}`}
+        defaultValue={question}
+        onChange={(e) => onChange(index, e.target.value)}
+      />
+    }, [])
+
     return (
       <div
         ref={setNodeRef}
@@ -586,13 +594,7 @@ export default function AdminDashboard() {
         >
           <GripVertical className="w-4 h-4" />
         </span>
-        <Input
-          placeholder={`Question ${index + 1}`}
-          // defaultValue={question}
-          value={question}
-          onChange={(e) => onChange(index, e.target.value)}
-
-        />
+        {memoisedInput}
         <Button
           variant="ghost"
           size="icon"
@@ -716,12 +718,11 @@ export default function AdminDashboard() {
       done = doneReading;
       const chunk = decoder.decode(value, { stream: true });
       setGenerateResponse(p => p + chunk)
-      console.log(chunk)
     }
   }
 
-  const handleToggleVisibility = (promptId: string) => {
-    axios.post(`/prompt/toggle-visibility/${promptId}`)
+  const handleToggleVisibility = async (promptId: string) => {
+    await axios.post(`/prompt/toggle-visibility/${promptId}`)
     toast.success("Prompt Visibility Toggled Successfully!")
     getPrompts()
   }
@@ -1030,7 +1031,7 @@ export default function AdminDashboard() {
                                           {Object.entries(submission?.questionsAndAnswers).map(([question, answer], index) => (
                                             <div key={index} className="bg-gray-50 p-4 rounded shadow">
                                               <p className="font-semibold text-gray-800 mb-2">Q {index + 1}. {question}</p>
-                                              <p className="text-gray-600"><b>Ans.</b> {answer}</p>
+                                              <p className="text-gray-600"><b>Ans.</b> {answer as string}</p>
                                             </div>
                                           ))}
                                         </div>
@@ -1736,39 +1737,54 @@ export default function AdminDashboard() {
 
                   <div className="space-y-2">
                     <Label>Questions to Collect Information</Label>
-                    {/* <div className="border rounded-md p-4 space-y-4"> */}
-                    {/* Questions will be dynamically added here */}
-                    {/* <div id="questions-container">
-                        {
-                          (currentPrompt?.questions || []).map((question, index) => (
-                            <div key={index} className="flex items-center space-x-2 mb-2">
-                              <Input placeholder={`Question ${index + 1}`} defaultValue={question} onChange={(e) => handleChangePromptQuestion(index, e.target.value)} />
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  handleUpdateQuestions(currentPrompt.questions.filter((_, i) => i !== index))
-                                }}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))
-                        }
-                      </div> */}
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
                       onDragEnd={handleDragEnd}
                     >
                       <SortableContext
-                        items={currentPrompt?.questions.map((_, i) => `q-${i}`)}
+                        items={currentPrompt?.questions.map((_, i) => `q-${_}`)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div id="questions-container">
+                          {currentPrompt?.questions?.map((question, index) => (
+                            <Input
+                              id={`q-${index}`}
+                              // index={index}
+                              // question={question}
+                              onChange={(e) => handleChangePromptQuestion(index, e.target.value)}
+                              // onRemove={() => handleUpdateQuestions(currentPrompt.questions.filter((_, i) => i !== index))}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                    <Button
+                      // disabled={currentPrompt?.questions?.length == 15}
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => {
+                        handleUpdateQuestions([...currentPrompt.questions, ""])
+                      }}
+                    >
+                      Add Question
+                    </Button>
+                  </div>
+                  {/* <div className="space-y-2">
+                    <Label>Questions to Collect Information</Label>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={currentPrompt?.questions.map((_, i) => `q-${_}`)}
                         strategy={verticalListSortingStrategy}
                       >
                         <div id="questions-container">
                           {currentPrompt?.questions?.map((question, index) => (
                             <SortableQuestion
-                              key={index}
+                              
                               id={`q-${index}`}
                               index={index}
                               question={question}
@@ -1790,8 +1806,7 @@ export default function AdminDashboard() {
                     >
                       Add Question
                     </Button>
-                    {/* </div> */}
-                  </div>
+                  </div> */}
 
                   <div className="space-y-2">
                     <Label htmlFor="knowledge-base">Knowledge Base</Label>
@@ -2102,11 +2117,11 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
 
-        {isLoading &&
+        {/* {isLoading &&
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
           </div>
-        }
+        } */}
       </main>
 
       {/* Success Email Dialog */}
