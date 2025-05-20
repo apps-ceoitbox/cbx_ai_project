@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 import { useAxios, useData } from "@/context/AppContext"
 import { PromptInterface } from "../Admin/Admin"
 import Header from "../Dashboard/Header"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function ToolQuestionsPage() {
   const axios = useAxios("user");
@@ -182,7 +183,7 @@ export default function ToolQuestionsPage() {
             <CardContent>
               <div className="space-y-2">
                 <Label htmlFor={currentQuestion}>{currentQuestion}</Label>
-                <Input
+                <Textarea
                   id={currentQuestion}
                   value={answers[currentQuestion] || ""}
                   onChange={(e) => handleChange(currentQuestion, e.target.value)}
