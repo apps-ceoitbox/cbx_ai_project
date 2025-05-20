@@ -39,6 +39,8 @@ const userSchema = new mongoose_1.Schema({
     email: { type: String, required: true, unique: true },
     companyName: { type: String, default: "" },
     mobile: { type: Number, default: 0 },
+    photo: { type: String, default: "" },
+    googleRefreshToken: { type: String, default: "" },
 }, { timestamps: true });
 const User = mongoose_1.default.model("user", userSchema);
 exports.default = User;

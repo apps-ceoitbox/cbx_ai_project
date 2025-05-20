@@ -21,8 +21,14 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const errorCodes_1 = require("../utils/errorCodes");
 const admin_model_1 = __importDefault(require("../models/admin.model"));
+const google_auth_library_1 = require("google-auth-library");
 const aiSettings_controller_1 = __importDefault(require("./aiSettings.controller"));
 dotenv_1.default.config();
+const jwtSecret = process.env.JWT_SECRET;
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.HOST_URL || `http://localhost:5173`;
+const client = new google_auth_library_1.OAuth2Client(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 const JWT_SECRET = process.env.JWT_SECRET;
 const checkEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -102,6 +108,61 @@ AuthController.userLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awai
     // Generate JWT
     const token = jsonwebtoken_1.default.sign({ userId: user._id }, JWT_SECRET);
     res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user });
+}));
+// Method to get all users
+AuthController.initiateGoogleLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const authUrl = client.generateAuthUrl({
+        access_type: "offline",
+        prompt: "consent", // This ensures that a new refresh token is issued
+        scope: ["email", "profile"], // Add any additional scopes you need
+    });
+    res.redirect(authUrl);
+}));
+// Method to create a new user
+AuthController.processGoogleLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const code = req.query.code;
+    const { tokens } = yield client.getToken(code);
+    // Use tokens.access_token for accessing Google APIs on behalf of the user
+    const { email } = yield client.getTokenInfo(tokens.access_token);
+    const ticket = yield client.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: CLIENT_ID, // Specify your app's client ID
+    });
+    const payload = ticket.getPayload();
+    const userEmail = payload.email;
+    const userName = payload.name;
+    const photo = payload.picture;
+    const existingUser = yield user_model_1.default.findOne({ email }).lean();
+    if (existingUser) {
+        let updatedUser = yield user_model_1.default.findOneAndUpdate({ email }, {
+            googleRefreshToken: tokens.refresh_token,
+            photo,
+        }, { new: true });
+        const token = jsonwebtoken_1.default.sign({ userId: existingUser._id }, jwtSecret);
+        delete existingUser.googleRefreshToken;
+        res.send({
+            data: updatedUser,
+            token,
+        });
+        return;
+    }
+    else {
+        let newUser = yield user_model_1.default.create({
+            email: userEmail,
+            userName,
+            password: userEmail,
+            googleRefreshToken: tokens.refresh_token,
+            photo,
+        });
+        newUser = JSON.parse(JSON.stringify(newUser));
+        const token = jsonwebtoken_1.default.sign({ userId: newUser._id }, jwtSecret);
+        delete newUser.googleRefreshToken;
+        res.send({
+            data: newUser,
+            token,
+        });
+        return;
+    }
 }));
 exports.default = AuthController;
 const axios_1 = __importDefault(require("axios"));
