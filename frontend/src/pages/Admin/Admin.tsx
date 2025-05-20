@@ -33,6 +33,7 @@ import {
   Play,
   Copy,
   RefreshCcw,
+  GripVertical,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -61,9 +62,34 @@ import html2pdf from 'html2pdf.js'
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import AdminHeader from "@/components/Custom/AdminHeader"
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
+
+type SortableQuestionProps = {
+  id: string;
+  index: number;
+  question: string;
+  onChange: (index: number, value: string) => void;
+  onRemove: (index: number) => void;
+};
+
 
 export const templateCategories = [
   // "Compliances",
@@ -114,6 +140,7 @@ export default function AdminDashboard() {
   const nav = useNavigate()
   const axios = useAxios("admin");
 
+  const sensors = useSensors(useSensor(PointerSensor));
   const { adminAuth, userAuth, apiLink, setGenerateResponse } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -271,8 +298,6 @@ export default function AdminDashboard() {
     }
 
   }
-
-
 
   useEffect(() => {
     // Check if admin is authenticated
@@ -507,21 +532,106 @@ export default function AdminDashboard() {
     })
   }
 
-  const handleUpdateQuestions = (questions: string[]) => {
-    setCurrentPrompt((prev) => {
-      const temp = { ...prev }
-      temp.questions = questions
-      return temp
-    })
+  // const handleUpdateQuestions = (questions: string[]) => {
+  //   setCurrentPrompt((prev) => {
+  //     const temp = { ...prev }
+  //     temp.questions = questions
+  //     return temp
+  //   })
+  // }
+
+  // const handleChangePromptQuestion = (index: number, value: string) => {
+  //   setCurrentPrompt((prev) => {
+  //     const temp = { ...prev, questions: [...prev.questions] }
+  //     temp.questions[index] = value
+  //     return temp
+  //   })
+  // }
+
+  console.log("questions", currentPrompt?.questions)
+
+  // Drag and drop functionality
+  function SortableQuestion({
+    id,
+    index,
+    question,
+    onChange,
+    onRemove,
+  }: SortableQuestionProps) {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+    } = useSortable({ id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="flex items-center space-x-2 mb-2 cursor-grab"
+      >
+        <span
+          {...attributes}
+          {...listeners}
+          className="cursor-grab text-gray-500"
+          title="Drag"
+        >
+          <GripVertical className="w-4 h-4" />
+        </span>
+        <Input
+          placeholder={`Question ${index + 1}`}
+          // defaultValue={question}
+          value={question}
+          onChange={(e) => onChange(index, e.target.value)}
+
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onRemove(index)}
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+    );
   }
 
+
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      const oldIndex = parseInt((active.id as string).split('-')[1]);
+      const newIndex = parseInt((over.id as string).split('-')[1]);
+
+      const reordered = arrayMove(currentPrompt.questions, oldIndex, newIndex);
+      handleUpdateQuestions(reordered);
+    }
+  };
+
   const handleChangePromptQuestion = (index: number, value: string) => {
-    setCurrentPrompt((prev) => {
-      const temp = { ...prev, questions: [...prev.questions] }
-      temp.questions[index] = value
-      return temp
-    })
-  }
+    setCurrentPrompt((prev: any) => {
+      const temp = { ...prev };
+      temp.questions = [...temp.questions];
+      temp.questions[index] = value;
+      return temp;
+    });
+
+  };
+
+  const handleUpdateQuestions = (questions: string[]) => {
+    setCurrentPrompt((prev: any) => ({
+      ...prev,
+      questions,
+    }));
+  };
 
 
   // Fixed PDF download function
@@ -1582,9 +1692,9 @@ export default function AdminDashboard() {
 
                   <div className="space-y-2">
                     <Label>Questions to Collect Information</Label>
-                    <div className="border rounded-md p-4 space-y-4">
-                      {/* Questions will be dynamically added here */}
-                      <div id="questions-container">
+                    {/* <div className="border rounded-md p-4 space-y-4"> */}
+                    {/* Questions will be dynamically added here */}
+                    {/* <div id="questions-container">
                         {
                           (currentPrompt?.questions || []).map((question, index) => (
                             <div key={index} className="flex items-center space-x-2 mb-2">
@@ -1601,18 +1711,42 @@ export default function AdminDashboard() {
                             </div>
                           ))
                         }
-                      </div>
-                      <Button
-                        disabled={currentPrompt?.questions?.length == 15}
-                        variant="outline"
-                        className="mt-2"
-                        onClick={() => {
-                          handleUpdateQuestions([...currentPrompt.questions, ""])
-                        }}
+                      </div> */}
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={currentPrompt?.questions.map((_, i) => `q-${i}`)}
+                        strategy={verticalListSortingStrategy}
                       >
-                        Add Question
-                      </Button>
-                    </div>
+                        <div id="questions-container">
+                          {currentPrompt?.questions?.map((question, index) => (
+                            <SortableQuestion
+                              key={index}
+                              id={`q-${index}`}
+                              index={index}
+                              question={question}
+                              onChange={handleChangePromptQuestion}
+                              onRemove={() => handleUpdateQuestions(currentPrompt.questions.filter((_, i) => i !== index))}
+
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                    <Button
+                      // disabled={currentPrompt?.questions?.length == 15}
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => {
+                        handleUpdateQuestions([...currentPrompt.questions, ""])
+                      }}
+                    >
+                      Add Question
+                    </Button>
+                    {/* </div> */}
                   </div>
 
                   <div className="space-y-2">
@@ -1794,7 +1928,7 @@ export default function AdminDashboard() {
                         }
                       </div>
                       <Button
-                        disabled={currentPrompt?.questions.length == 15}
+                        // disabled={currentPrompt?.questions.length == 15}
                         variant="outline"
                         className="mt-2"
                         onClick={() => {
@@ -1924,11 +2058,11 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
 
-        {isLoading &&
+        {/* {isLoading &&
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
           </div>
-        }
+        } */}
       </main>
 
       {/* Success Email Dialog */}
