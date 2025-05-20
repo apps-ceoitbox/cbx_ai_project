@@ -1,5 +1,4 @@
 "use strict";
-// import OpenAI from "openai";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -21,42 +20,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AI = void 0;
-// export interface ApiProvider {
-//     name: "ChatGPT (OpenAI)" | "Claude (Anthropic)" | "Gemini (Google)" | "Groq (Groq)" | "Llama (Meta)" | "Deepseek" | "Ollama (Self-hosted)" | "Perplexity" | "Mistral";
-//     model: string;
-//     apiKey: string;
-//     temperature: number;
-//     maxTokens: number;
-// }
-// export class AI {
-//     apiProvider: ApiProvider;
-//     ai: OpenAI;
-//     constructor(apiProvider: ApiProvider) {
-//         this.apiProvider = apiProvider;
-//         this.ai = new OpenAI({
-//             apiKey: apiProvider.apiKey,
-//         });
-//     }
-//     async generateResponse(prompt: string) {
-//         switch (this.apiProvider.name) {
-//             case "ChatGPT (OpenAI)": {
-//                 const response = await this.ai.chat.completions.create({
-//                     model: this.apiProvider.model,
-//                     messages: [{ role: "user", content: prompt }],
-//                     temperature: this.apiProvider.temperature,
-//                     max_tokens: this.apiProvider.maxTokens,
-//                 });
-//                 console.log(response.choices[0].message.content);
-//                 let content = response.choices[0].message.content.trim(); // Remove leading/trailing spaces
-//                 // If response contains backticks, extract only JSON part
-//                 if (content.startsWith("```")) {
-//                     content = content.replace(/```json|```/g, "").trim();
-//                 }
-//                 return JSON.parse(content)
-//             }
-//         }
-//     }
-// }   
 const aiInstructions = {
     summarize: "Read the content carefully and summarize it in 3–5 concise bullet points, highlighting the most important ideas.",
     questions: "Give answers to the questions asked by the user listed below in the goal section",
@@ -93,10 +56,40 @@ class AI {
         }
     }
     generateResponse(prompt_1) {
-        return __awaiter(this, arguments, void 0, function* (prompt, JSON = false) {
-            var _a, e_1, _b, _c;
+        return __awaiter(this, arguments, void 0, function* (prompt, JSON = false, stream = false, streamCallback = () => { }) {
+            var _a, e_1, _b, _c, _d, e_2, _e, _f, _g, e_3, _h, _j, _k, e_4, _l, _m, _o, e_5, _p, _q;
+            var _r, _s, _t, _u, _v, _w;
             switch (this.apiProvider.name) {
                 case "ChatGPT (OpenAI)": { // Done
+                    if (stream) {
+                        const response = yield this.ai.chat.completions.create({
+                            model: this.apiProvider.model,
+                            messages: [{ role: "user", content: prompt }],
+                            temperature: this.apiProvider.temperature,
+                            max_tokens: this.apiProvider.maxTokens,
+                            stream: true,
+                        });
+                        let finalText = "";
+                        try {
+                            for (var _x = true, response_1 = __asyncValues(response), response_1_1; response_1_1 = yield response_1.next(), _a = response_1_1.done, !_a; _x = true) {
+                                _c = response_1_1.value;
+                                _x = false;
+                                const chunk = _c;
+                                const content = (_t = (_s = (_r = chunk.choices) === null || _r === void 0 ? void 0 : _r[0]) === null || _s === void 0 ? void 0 : _s.delta) === null || _t === void 0 ? void 0 : _t.content;
+                                if (content) {
+                                    streamCallback(content);
+                                }
+                            }
+                        }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        finally {
+                            try {
+                                if (!_x && !_a && (_b = response_1.return)) yield _b.call(response_1);
+                            }
+                            finally { if (e_1) throw e_1.error; }
+                        }
+                        return this.parseResponse(finalText);
+                    }
                     const response = yield this.ai.chat.completions.create({
                         model: this.apiProvider.model,
                         messages: [{ role: "user", content: prompt }],
@@ -109,6 +102,38 @@ class AI {
                     return this.parseResponse(response.choices[0].message.content);
                 }
                 case "Claude (Anthropic)": { // Done
+                    if (stream) {
+                        const response = yield this.ai.messages.create({
+                            model: this.apiProvider.model,
+                            max_tokens: this.apiProvider.maxTokens,
+                            temperature: this.apiProvider.temperature,
+                            messages: [{ role: "user", content: prompt }],
+                            stream: true,
+                        });
+                        let finalText = "";
+                        try {
+                            for (var _y = true, response_2 = __asyncValues(response), response_2_1; response_2_1 = yield response_2.next(), _d = response_2_1.done, !_d; _y = true) {
+                                _f = response_2_1.value;
+                                _y = false;
+                                const message = _f;
+                                if (message.type === "content_block_delta") {
+                                    finalText += message.delta.text;
+                                    streamCallback(message.delta.text);
+                                }
+                            }
+                        }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        finally {
+                            try {
+                                if (!_y && !_d && (_e = response_2.return)) yield _e.call(response_2);
+                            }
+                            finally { if (e_2) throw e_2.error; }
+                        }
+                        if (JSON) {
+                            return this.parseResponseToJSON(finalText);
+                        }
+                        return this.parseResponse(finalText);
+                    }
                     const response = yield this.ai.messages.create({
                         model: this.apiProvider.model,
                         max_tokens: this.apiProvider.maxTokens,
@@ -116,24 +141,23 @@ class AI {
                         messages: [{ role: "user", content: prompt }],
                         stream: true,
                     });
-                    console.log(response);
                     let finalText = "";
                     try {
-                        for (var _d = true, response_1 = __asyncValues(response), response_1_1; response_1_1 = yield response_1.next(), _a = response_1_1.done, !_a; _d = true) {
-                            _c = response_1_1.value;
-                            _d = false;
-                            const message = _c;
+                        for (var _z = true, response_3 = __asyncValues(response), response_3_1; response_3_1 = yield response_3.next(), _g = response_3_1.done, !_g; _z = true) {
+                            _j = response_3_1.value;
+                            _z = false;
+                            const message = _j;
                             if (message.type === "content_block_delta") {
                                 finalText += message.delta.text;
                             }
                         }
                     }
-                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                    catch (e_3_1) { e_3 = { error: e_3_1 }; }
                     finally {
                         try {
-                            if (!_d && !_a && (_b = response_1.return)) yield _b.call(response_1);
+                            if (!_z && !_g && (_h = response_3.return)) yield _h.call(response_3);
                         }
-                        finally { if (e_1) throw e_1.error; }
+                        finally { if (e_3) throw e_3.error; }
                     }
                     if (JSON) {
                         return this.parseResponseToJSON(finalText);
@@ -141,6 +165,30 @@ class AI {
                     return this.parseResponse(finalText);
                 }
                 case "Gemini (Google)": { // Done
+                    if (stream) {
+                        const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
+                        const response = yield model.generateContentStream(prompt);
+                        let finalText = "";
+                        try {
+                            for (var _0 = true, _1 = __asyncValues(response.stream), _2; _2 = yield _1.next(), _k = _2.done, !_k; _0 = true) {
+                                _m = _2.value;
+                                _0 = false;
+                                const chunk = _m;
+                                const text = chunk.text();
+                                if (text) {
+                                    streamCallback(text);
+                                }
+                            }
+                        }
+                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                        finally {
+                            try {
+                                if (!_0 && !_k && (_l = _1.return)) yield _l.call(_1);
+                            }
+                            finally { if (e_4) throw e_4.error; }
+                        }
+                        return this.parseResponse(finalText);
+                    }
                     const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
                     const response = yield model.generateContent(prompt);
                     if (JSON) {
@@ -149,6 +197,35 @@ class AI {
                     return this.parseResponse(response.response.text());
                 }
                 case "Perplexity": { // Done
+                    if (stream) {
+                        const response = yield this.ai.chat.completions.create({
+                            model: this.apiProvider.model,
+                            messages: [{ role: "user", content: prompt }],
+                            temperature: this.apiProvider.temperature,
+                            max_tokens: this.apiProvider.maxTokens,
+                            stream: true,
+                        });
+                        let finalText = "";
+                        try {
+                            for (var _3 = true, response_4 = __asyncValues(response), response_4_1; response_4_1 = yield response_4.next(), _o = response_4_1.done, !_o; _3 = true) {
+                                _q = response_4_1.value;
+                                _3 = false;
+                                const chunk = _q;
+                                const content = (_w = (_v = (_u = chunk.choices) === null || _u === void 0 ? void 0 : _u[0]) === null || _v === void 0 ? void 0 : _v.delta) === null || _w === void 0 ? void 0 : _w.content;
+                                if (content) {
+                                    streamCallback(content);
+                                }
+                            }
+                        }
+                        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                        finally {
+                            try {
+                                if (!_3 && !_o && (_p = response_4.return)) yield _p.call(response_4);
+                            }
+                            finally { if (e_5) throw e_5.error; }
+                        }
+                        return this.parseResponse(finalText);
+                    }
                     const response = yield this.ai.chat.completions.create({
                         model: "sonar-pro",
                         messages: [{ role: "user", content: prompt }],
@@ -161,6 +238,19 @@ class AI {
                     return this.parseResponse(response.choices[0].message.content);
                 }
                 case "Mistral": { // Done
+                    if (stream) {
+                        const client = new mistralai_1.Mistral({ apiKey: this.apiProvider.apiKey });
+                        const chatResponse = yield client.chat.complete({
+                            model: this.apiProvider.model || "mistral-large-latest",
+                            messages: [{ role: 'user', content: prompt }],
+                        });
+                        if (JSON) {
+                            streamCallback(this.parseResponseToJSON(chatResponse.choices[0].message.content));
+                            return this.parseResponseToJSON(chatResponse.choices[0].message.content);
+                        }
+                        streamCallback(this.parseResponse(chatResponse.choices[0].message.content));
+                        return this.parseResponse(chatResponse.choices[0].message.content);
+                    }
                     const client = new mistralai_1.Mistral({ apiKey: this.apiProvider.apiKey });
                     const chatResponse = yield client.chat.complete({
                         model: this.apiProvider.model || "mistral-large-latest",
@@ -187,6 +277,14 @@ class AI {
                             Authorization: `Bearer ${this.apiProvider.apiKey}`
                         },
                     });
+                    if (stream) {
+                        if (JSON) {
+                            streamCallback(this.parseResponseToJSON(response.data.choices[0].message.content));
+                            return this.parseResponseToJSON(response.data.choices[0].message.content);
+                        }
+                        streamCallback(this.parseResponse(response.data.choices[0].message.content));
+                        return this.parseResponse(response.data.choices[0].message.content);
+                    }
                     if (JSON) {
                         return this.parseResponseToJSON(response.data.choices[0].message.content);
                     }

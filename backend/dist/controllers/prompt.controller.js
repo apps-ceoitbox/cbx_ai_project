@@ -19,7 +19,6 @@ const prompt_model_1 = __importDefault(require("../models/prompt.model"));
 const asyncHandler_1 = require("../utils/asyncHandler");
 const ai_model_1 = __importDefault(require("../models/ai.model"));
 const AI_1 = require("../utils/AI");
-const submission_model_1 = __importDefault(require("../models/submission.model"));
 dotenv_1.default.config();
 class PromptController {
 }
@@ -30,6 +29,21 @@ PromptController.createPrompt = (0, asyncHandler_1.asyncHandler)((req, res) => _
     res
         .status(errorCodes_1.HttpStatusCodes.OK)
         .json({ message: "Prompt created successfully", data: prompt });
+}));
+PromptController.duplicatePrompt = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const prompt = yield prompt_model_1.default.findOne({ _id: req.body.promptId }).lean();
+    const newPrompt = yield prompt_model_1.default.create(Object.assign(Object.assign({}, prompt), { heading: `Copy of ${prompt.heading}`, _id: undefined }));
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Prompt duplicated successfully", data: newPrompt });
+}));
+PromptController.toggleVisibility = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const prompt = yield prompt_model_1.default.findById(req.params.id);
+    prompt.visibility = !prompt.visibility;
+    yield prompt.save();
+    res
+        .status(errorCodes_1.HttpStatusCodes.OK)
+        .json({ message: "Prompt visibility toggled successfully", data: prompt });
 }));
 PromptController.getAllPrompts = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const prompts = yield prompt_model_1.default.find().sort({ createdAt: -1 });
@@ -77,76 +91,30 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         temperature: apiProvider.temperature,
         maxTokens: apiProvider.maxTokens,
     });
-    const response = yield ai.generateResponse(genPrompt);
-    submission_model_1.default.create({
-        name: req.user.userName,
-        email: req.user.email,
-        company: req.user.companyName,
-        category: prompt.category,
-        tool: prompt.heading,
-        date: new Date(),
-        apiUsed: apiProvider.name,
-        questionsAndAnswers: questions,
-        generatedContent: response,
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Transfer-Encoding", "chunked");
+    let finalText = "";
+    const response = yield ai.generateResponse(genPrompt, false, true, (text) => {
+        finalText += text;
+        res.write(text);
     });
-    res
-        .status(errorCodes_1.HttpStatusCodes.OK)
-        .json({ message: "Response generated successfully", data: response });
+    // Submission.create({
+    //   name: req.user.userName,
+    //   email: req.user.email,
+    //   company: req.user.companyName,
+    //   category: prompt.category,
+    //   tool: prompt.heading,
+    //   date: new Date(),
+    //   apiUsed: apiProvider.name,
+    //   questionsAndAnswers: questions,
+    //   generatedContent: finalText,
+    // });
+    res.end();
+    // res
+    //   .status(HttpStatusCodes.OK)
+    //   .json({ message: "Response generated successfully", data: response });
 }));
 exports.default = PromptController;
-// function generatePrompt(userAnswers, promptData) {
-//     const formattedAnswers = Object.entries(userAnswers)
-//         .map(
-//             ([question, answer]) =>
-//                 `<div style="margin-bottom: 10px;">
-//                     <strong style="color: #c0392b;">${question}:</strong>
-//                     <span style="color: #2c3e50;"> ${answer}</span>
-//                 </div>`
-//         )
-//         .join("\n");
-//     const prompt = `
-// ${promptData.initialGreetingsMessage}
-// Objective: ${promptData.objective}
-// <h3 style="color: #c0392b;">User Responses:</h3>
-// <div style="margin-bottom: 20px;">
-// ${formattedAnswers}
-// </div>
-// <h3 style="color: #c0392b;">Additional Knowledge Base:</h3>
-// <div style="color: #2c3e50; margin-bottom: 20px;">${promptData.knowledgeBase}</div>
-// <h3 style="color: #c0392b;">Additional Details:</h3>
-// <div style="color: #2c3e50; margin-bottom: 20px;">${promptData.promptTemplate}</div>
-// Based on the information above, generate a clean and modern HTML layout with the following structure and rules:
-// 🔧 STRUCTURE:
-// - Return a complete HTML block wrapped inside:  
-//   \`<div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">...</div>\`
-// 📌 SECTIONS TO INCLUDE:
-// 1. <h1>Title:</h1>  
-//    Use the provided title: "${promptData.heading}" with red color (#c0392b)
-// 2. Use multiple <section> elements with:
-//    - <h2 style="color: #c0392b;">Section Title</h2>
-//    - <p> blocks with insights, explanations, and supporting text
-//    - <ul> or <ol> for bullet points
-//    - <table> (with inline styles: border, padding, zebra striping) for structured data
-//    - <div class="chart"> as placeholders for visualizations
-// 3. Use this for charts:
-// \`
-// <div class="chart" style="border: 2px dashed #c0392b; padding: 20px; background: #fef4f3; border-radius: 6px; color: #c0392b; text-align: center; margin-bottom: 20px;">
-//   Chart Placeholder: [Title or Label]
-// </div>
-// \`
-// 💡 STYLE GUIDELINES:
-// - Use light background (#fff), dark text (#2c3e50), red accent (#c0392b)
-// - Add border-radius, spacing (20px+), clean fonts, and soft box-shadow
-// - Tables should be readable, styled with alternating row colors (#f9f9f9, #fff)
-// 🚫 RESTRICTIONS:
-// - DO NOT include comments, markdown, or explanations
-// - Return only valid, beautiful HTML content
-// - The content should start with the <div> container
-// 🎯 GOAL:
-// - Output should look like a rich, formatted ChatGPT response with clearly separated sections, tables, lists, and chart blocks in a light-red theme.
-//     `;
-//     return prompt;
-// }
 function generatePrompt(userAnswers, promptData) {
     const formattedAnswers = Object.entries(userAnswers)
         .map(([question, answer]) => `<div style="margin-bottom: 10px;">
@@ -208,6 +176,7 @@ function generatePrompt(userAnswers, promptData) {
      - <div class="chart" style="border: 2px dashed #c0392b; padding: 20px; background: #fef4f3; border-radius: 6px; color: #c0392b; text-align: center; margin-bottom: 20px;">
          Chart Placeholder: [Title or Label]
        </div>
+     - Charts should be generated using Svg.
   
   💡 STYLE RULES:
   - All text should use #2c3e50
@@ -224,6 +193,7 @@ function generatePrompt(userAnswers, promptData) {
   
   🎯 GOAL:
   - Final HTML should look clean, readable, modern, and styled with inline CSS only.
+  - Include a graph/chart as a chart using Svg, where needed.
   - Make sure that the html you generate is long and detailed.
   - Content must begin with the <div> container as mentioned.
   `;
