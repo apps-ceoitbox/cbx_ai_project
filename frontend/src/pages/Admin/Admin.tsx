@@ -30,6 +30,9 @@ import {
   CheckCircle,
   Info,
   EyeOff,
+  Play,
+  Copy,
+  RefreshCcw,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -111,7 +114,7 @@ export default function AdminDashboard() {
   const nav = useNavigate()
   const axios = useAxios("admin");
 
-  const { adminAuth, userAuth } = useData();
+  const { adminAuth, userAuth, apiLink, setGenerateResponse } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [submissions, setSubmissions] = useState([]);
@@ -128,6 +131,7 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isMobile, setIsMobile] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(null);
 
 
   useEffect(() => {
@@ -553,78 +557,63 @@ export default function AdminDashboard() {
       })
   }
 
-  // Fixed DOCX download function
-  // const handleDownloadDOCX = (submission) => {
-  //   if (!submission?.generatedContent) {
-  //     toast.error("No report data available.")
-  //     return
-  //   }
+  const handleDuplicatePrompt = async (promptId: string) => {
+    await axios.post("/prompt/duplicate", { promptId })
+    toast.success("Prompt Duplicated Successfully!")
+    getPrompts()
+  }
 
-  //   try {
-  //     // Create a new Document
-  //     const doc = new Document({
-  //       sections: [{
-  //         properties: {},
-  //         children: [
-  //           new Paragraph({
-  //             text: submission.tool || "Report",
-  //             heading: HeadingLevel.TITLE,
-  //             thematicBreak: true,
-  //           }),
-  //           new Paragraph({
-  //             text: `Generated on ${new Date().toLocaleDateString()}`,
-  //             style: "Normal",
-  //           }),
-  //         ]
-  //       }]
-  //     })
+  const handleRegenerate = async (submission: {
+    _id: string;
+    name: string;
+    email: string;
+    company: string;
+    category: string;
+    tool: string;
+    date: string;
+    status: string;
+    apiUsed: string;
+    questionsAndAnswers: Record<string, string>;
+    generatedContent: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }) => {
+    const toolId = promptsData.find((p) => {
+      return p.heading === submission.tool
+    })?._id;
+    setIsSubmitting(submission._id)
+    const res = await fetch(`${apiLink}prompt/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        authorization: `Bearer ${userAuth?.token}` // Add the token here
+      },
+      body: JSON.stringify({
+        questions: submission.questionsAndAnswers,
+        toolId: toolId
+      }),
+    });
+    setIsSubmitting(null)
+    nav(`/reports/${toolId}`)
 
-  //     // Create an array to hold all section paragraphs
-  //     const sectionParagraphs = []
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
 
-  //     // Add each section as paragraphs
-  //     submission.generatedContent.sections.forEach(section => {
-  //       // Strip markdown bold syntax from strings for DOCX
-  //       const title = section.title.replace(/\*\*/g, '')
-  //       const content = section.content.replace(/\*\*/g, '')
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunk = decoder.decode(value, { stream: true });
+      setGenerateResponse(p => p + chunk)
+      console.log(chunk)
+    }
+  }
 
-  //       sectionParagraphs.push(
-  //         new Paragraph({
-  //           text: title,
-  //           heading: HeadingLevel.HEADING_2,
-  //           spacing: {
-  //             before: 400,
-  //             after: 200,
-  //           },
-  //         })
-  //       )
-
-  //       sectionParagraphs.push(
-  //         new Paragraph({
-  //           text: content,
-  //           style: "Normal",
-  //         })
-  //       )
-  //     })
-
-  //     // @ts-ignore
-  //     doc.addSection({
-  //       children: sectionParagraphs
-  //     })
-
-  //     // Generate and download DOCX
-  //     Packer.toBlob(doc).then(blob => {
-  //       saveAs(blob, `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.docx`)
-  //       toast.success("DOCX Downloaded")
-  //     }).catch(error => {
-  //       console.error("DOCX generation error:", error)
-  //       toast.error("Failed to export DOCX. Please try again.")
-  //     })
-  //   } catch (error) {
-  //     console.error("DOCX generation error:", error)
-  //     toast.error("Failed to create DOCX. Please try again.")
-  //   }
-  // }
+  const handleToggleVisibility = (promptId: string) => {
+    axios.post(`/prompt/toggle-visibility/${promptId}`)
+    toast.success("Prompt Visibility Toggled Successfully!")
+    getPrompts()
+  }
 
   // @ts-ignore
   const isAiProvidersChanged = !(JSON.stringify(apiProviders) == prevApiProviderString.current)
@@ -852,7 +841,9 @@ export default function AdminDashboard() {
                             <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
                             <TableCell className="py-2">
                               <div className="flex space-x-2">
-
+                                <Button variant="outline" size="sm" title="Regenerate" onClick={() => handleRegenerate(submission)}>
+                                  <RefreshCcw className={`h-4 w-4 ${isSubmitting == submission._id ? "animate-spin" : ""}`} />
+                                </Button>
                                 <Dialog>
                                   <DialogTrigger asChild>
                                     <Button className=" text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
@@ -1407,13 +1398,13 @@ export default function AdminDashboard() {
                             <TableCell >
                               <div className="flex items-center gap-2 " >
                                 <p> {prompt.heading}</p>
-                                <div>
+                                <Button variant="ghost" size="icon" onClick={() => handleToggleVisibility(prompt._id)}>
                                   {prompt.visibility ? (
                                     <Eye size={16} className="text-gray-500" />
                                   ) : (
                                     <EyeOff size={16} className="text-gray-500" />
                                   )}
-                                </div>
+                                </Button>
                               </div>
 
                             </TableCell>
@@ -1438,6 +1429,22 @@ export default function AdminDashboard() {
                             <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.updatedAt)}</TableCell>
                             <TableCell>
                               <div className="flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  title="Duplicate"
+                                  onClick={() => handleDuplicatePrompt(prompt._id)}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  title="Start"
+                                  onClick={() => nav(`/tools/${prompt._id}`)}
+                                >
+                                  <Play className="h-4 w-4" />
+                                </Button>
 
                                 <Button
                                   variant="outline"
