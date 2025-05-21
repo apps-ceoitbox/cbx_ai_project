@@ -101,17 +101,18 @@ export default class PromptController {
       res.write(text);
     });
 
-    // Submission.create({
-    //   name: req.user.userName,
-    //   email: req.user.email,
-    //   company: req.user.companyName,
-    //   category: prompt.category,
-    //   tool: prompt.heading,
-    //   date: new Date(),
-    //   apiUsed: apiProvider.name,
-    //   questionsAndAnswers: questions,
-    //   generatedContent: finalText,
-    // });
+    Submission.create({
+      name: req.user.userName,
+      email: req.user.email,
+      company: req.user.companyName,
+      category: prompt.category,
+      tool: prompt.heading,
+      toolID: prompt?._id,
+      date: new Date(),
+      apiUsed: apiProvider.name,
+      questionsAndAnswers: questions,
+      generatedContent: finalText,
+    });
     res.end();
     // res
     //   .status(HttpStatusCodes.OK)

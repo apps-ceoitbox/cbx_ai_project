@@ -19,6 +19,7 @@ const prompt_model_1 = __importDefault(require("../models/prompt.model"));
 const asyncHandler_1 = require("../utils/asyncHandler");
 const ai_model_1 = __importDefault(require("../models/ai.model"));
 const AI_1 = require("../utils/AI");
+const submission_model_1 = __importDefault(require("../models/submission.model"));
 dotenv_1.default.config();
 class PromptController {
 }
@@ -98,17 +99,18 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         finalText += text;
         res.write(text);
     });
-    // Submission.create({
-    //   name: req.user.userName,
-    //   email: req.user.email,
-    //   company: req.user.companyName,
-    //   category: prompt.category,
-    //   tool: prompt.heading,
-    //   date: new Date(),
-    //   apiUsed: apiProvider.name,
-    //   questionsAndAnswers: questions,
-    //   generatedContent: finalText,
-    // });
+    submission_model_1.default.create({
+        name: req.user.userName,
+        email: req.user.email,
+        company: req.user.companyName,
+        category: prompt.category,
+        tool: prompt.heading,
+        toolID: prompt === null || prompt === void 0 ? void 0 : prompt._id,
+        date: new Date(),
+        apiUsed: apiProvider.name,
+        questionsAndAnswers: questions,
+        generatedContent: finalText,
+    });
     res.end();
     // res
     //   .status(HttpStatusCodes.OK)
