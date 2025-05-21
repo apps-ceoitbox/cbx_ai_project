@@ -146,7 +146,7 @@ export default function AdminDashboard() {
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
-  const [_, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isMobile, setIsMobile] = useState(false);
@@ -2015,11 +2015,11 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* {isLoading &&
+        {isLoading &&
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
           </div>
-        } */}
+        }
       </main>
 
       {/* Success Email Dialog */}
