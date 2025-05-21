@@ -151,3 +151,7 @@ body {
     display: flex !important;
   }
 }
+
+.questions * {
+  all: unset !important;
+}

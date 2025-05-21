@@ -33,8 +33,8 @@ import {
   Play,
   Copy,
   RefreshCcw,
-  GripVertical,
   HelpCircle,
+  Grip,
 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { useAxios, useData } from "@/context/AppContext"
@@ -63,7 +63,21 @@ import html2pdf from 'html2pdf.js'
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import AdminHeader from "@/components/Custom/AdminHeader"
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
 
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
@@ -132,7 +146,7 @@ export default function AdminDashboard() {
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [_, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isMobile, setIsMobile] = useState(false);
@@ -523,19 +537,6 @@ export default function AdminDashboard() {
     })
   }
 
-
-  const onDragEnd = (result) => {
-    if (!result.destination) return
-
-    const reordered = Array.from(currentPrompt.questions)
-    const [moved] = reordered.splice(result.source.index, 1)
-    reordered.splice(result.destination.index, 0, moved)
-
-    handleUpdateQuestions(reordered)
-  }
-
-  console.log("currentPrompt", currentPrompt?.questions)
-
   // Fixed PDF download function
   const handleDownloadPDF = (submission) => {
     // Get the report content element
@@ -635,6 +636,8 @@ export default function AdminDashboard() {
   // @ts-ignore
   const isAiProvidersChanged = !(JSON.stringify(apiProviders) == prevApiProviderString.current)
   const isCurrentPromptChanged = !(JSON.stringify(currentPrompt) == prevcurrentPrompt.current)
+
+
 
   return (
     <div className="min-h-screen bg-gray-50" >
@@ -1254,7 +1257,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
 
-          <TabsContent value="manage-prompts">
+          <TabsContent id="manage-prompts" value="manage-prompts">
             <div className="grid grid-cols-1 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
@@ -1567,7 +1570,12 @@ export default function AdminDashboard() {
                   <CardTitle className="text-primary-red">{activeTab === "create-prompt" ? "Create Template" : "Edit Template"}</CardTitle>
                   <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
                     className="mr-4 bg-primary-red  hover:bg-red-700 transition-colors duration-200" variant="ghost"
-                    onClick={() => setActiveTab('manage-prompts')}>
+                    onClick={() => {
+                      setActiveTab('manage-prompts')
+                      setTimeout(() => {
+                        document.getElementById("manage-prompts")?.scrollIntoView({ behavior: 'auto' })
+                      }, 100)
+                    }}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
@@ -1662,65 +1670,10 @@ export default function AdminDashboard() {
                         }
                       </div> */}
 
-
-                      <DragDropContext onDragEnd={onDragEnd}>
-                        <Droppable droppableId="questions">
-                          {(provided) => (
-                            <div
-                              id="questions-container"
-                              {...provided.droppableProps}
-                              ref={provided.innerRef}
-                            >
-                              {(currentPrompt?.questions || []).map((question, index) => (
-
-                                <Draggable
-                                  key={`question-${index}`}
-                                  draggableId={`question-${index}`}
-                                  index={index}
-                                >
-                                  {(provided, snapshot) => (
-                                    <div
-                                      className={`flex items-center space-x-2 mb-2 bg-white p-2 rounded ${snapshot.isDragging ? 'shadow-lg' : ''}`}
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                    >
-
-                                      <div {...provided.dragHandleProps} className="cursor-grab text-gray-400">
-                                        <GripVertical className="w-4 h-4" />
-                                      </div>
-
-
-                                      <Input
-                                        placeholder={`Question ${index + 1}`}
-                                        value={question}
-                                        onChange={(e) => handleChangePromptQuestion(index, e.target.value)}
-                                      />
-
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() =>
-                                          handleUpdateQuestions(currentPrompt.questions.filter((_, i) => i !== index))
-                                        }
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  )}
-                                </Draggable>
-
-                              ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
-                      </DragDropContext>
-
+                      <QuestionList questions={currentPrompt?.questions || []} setQuestions={(val) => setCurrentPrompt(prev => ({ ...prev, questions: val }))} handleChangePromptQuestion={handleChangePromptQuestion} handleUpdateQuestions={handleUpdateQuestions} />
 
                     </div>
                     <Button
-                      // disabled={currentPrompt?.questions?.length == 15}
                       variant="outline"
                       className="mt-2"
                       onClick={() => {
@@ -1799,7 +1752,12 @@ export default function AdminDashboard() {
                     <Button variant="destructive">Delete</Button>
 
                     <div className="space-x-2">
-                      <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
+                      <Button variant="outline" onClick={() => {
+                        setActiveTab("manage-prompts")
+                        setTimeout(() => {
+                          document.getElementById("manage-prompts")?.scrollIntoView({ behavior: 'auto' })
+                        }, 100)
+                      }}>
                         Cancel
                       </Button>
                       <Button onClick={handleSaveOrCreatePrompt} className="bg-primary-red hover:bg-red-700">
@@ -1819,7 +1777,12 @@ export default function AdminDashboard() {
                   <CardTitle className="text-primary-red">{"Edit Template"}</CardTitle>
                   <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
                     className="mr-4 bg-primary-red  hover:bg-red-700 transition-colors duration-200" variant="ghost"
-                    onClick={() => setActiveTab('manage-prompts')}>
+                    onClick={() => {
+                      setActiveTab('manage-prompts')
+                      setTimeout(() => {
+                        document.getElementById("manage-prompts")?.scrollIntoView({ behavior: 'auto' })
+                      }, 100)
+                    }}>
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
@@ -1894,7 +1857,7 @@ export default function AdminDashboard() {
                     <Label>Questions to Collect Information</Label>
                     <div className="border rounded-md p-4 space-y-4">
                       {/* Questions will be dynamically added here */}
-                      <div id="questions-container">
+                      {/* <div id="questions-container">
                         {
                           (currentPrompt?.questions || []).map((question, index) => (
                             <div key={index} className="flex items-center space-x-2 mb-2">
@@ -1911,7 +1874,11 @@ export default function AdminDashboard() {
                             </div>
                           ))
                         }
-                      </div>
+                      </div> */}
+
+                      <QuestionList questions={currentPrompt?.questions || []} setQuestions={(val) => setCurrentPrompt(prev => ({ ...prev, questions: val }))} handleChangePromptQuestion={handleChangePromptQuestion} handleUpdateQuestions={handleUpdateQuestions} />
+
+
                       <Button
                         // disabled={currentPrompt?.questions.length == 15}
                         variant="outline"
@@ -2028,7 +1995,12 @@ export default function AdminDashboard() {
                     </AlertDialog>
 
                     <div className="space-x-2">
-                      <Button variant="outline" onClick={() => setActiveTab("manage-prompts")}>
+                      <Button variant="outline" onClick={() => {
+                        setActiveTab("manage-prompts")
+                        setTimeout(() => {
+                          document.getElementById("manage-prompts")?.scrollIntoView({ behavior: 'auto' })
+                        }, 100)
+                      }}>
                         Cancel
                       </Button>
                       <Button disabled={!isCurrentPromptChanged} onClick={handleSaveOrCreatePrompt} className="bg-primary-red hover:bg-red-700">
@@ -2077,6 +2049,96 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
     </div >
+  )
+}
+
+
+function SortableQuestion({ id, index, value, onChange, onRemove }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className="border rounded p-2 bg-white flex items-center space-x-2"
+    >
+      <Button {...listeners} variant="ghost" size="icon" >
+        <Grip className="h-4 w-4" />
+      </Button>
+      <Input
+        placeholder={`Question ${index + 1}`}
+        value={value}
+        onChange={(e) => onChange(index, e.target.value)}
+      />
+      <Button variant="ghost" size="icon" onClick={() => onRemove(index)}>
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
+
+function QuestionList({ questions, setQuestions, handleChangePromptQuestion, handleUpdateQuestions }) {
+
+  const sensors = useSensors(useSensor(PointerSensor))
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+    if (active.id !== over?.id) {
+      const oldIndex = questions.findIndex((_, i) => `question-${i}` === active.id)
+      const newIndex = questions.findIndex((_, i) => `question-${i}` === over.id)
+      const newQuestions = arrayMove(questions, oldIndex, newIndex)
+      setQuestions(newQuestions)
+      handleUpdateQuestions(newQuestions)
+    }
+  }
+
+  const handleChange = (index, value) => {
+    const updated = [...questions]
+    updated[index] = value
+    setQuestions(updated)
+    handleChangePromptQuestion(index, value)
+  }
+
+  const handleRemove = (index) => {
+    const updated = questions.filter((_, i) => i !== index)
+    setQuestions(updated)
+    handleUpdateQuestions(updated)
+  }
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext
+        items={questions.map((_, index) => `question-${index}`)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-2" id="questions-container">
+          {questions.map((q, index) => (
+            <SortableQuestion
+              key={`question-${index}`}
+              id={`question-${index}`}
+              index={index}
+              value={q}
+              onChange={handleChange}
+              onRemove={handleRemove}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   )
 }
 
