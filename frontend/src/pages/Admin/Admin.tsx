@@ -63,7 +63,7 @@ import html2pdf from 'html2pdf.js'
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import AdminHeader from "@/components/Custom/AdminHeader"
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
@@ -523,6 +523,7 @@ export default function AdminDashboard() {
     })
   }
 
+
   const onDragEnd = (result) => {
     if (!result.destination) return
 
@@ -569,9 +570,14 @@ export default function AdminDashboard() {
   }
 
   const handleDuplicatePrompt = async (promptId: string) => {
-    await axios.post("/prompt/duplicate", { promptId })
-    toast.success("Prompt Duplicated Successfully!")
-    getPrompts()
+    try {
+      await axios.post("/prompt/duplicate", { promptId })
+      toast.success("Prompt Duplicated Successfully!")
+      getPrompts()
+    } catch (error) {
+      console.log(error);
+    }
+
   }
 
   const handleRegenerate = async (submission: {
@@ -670,7 +676,6 @@ export default function AdminDashboard() {
 
           <TabsContent value="dashboard">
             <Card>
-
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -1572,6 +1577,7 @@ export default function AdminDashboard() {
                   {currentPrompt ? "Modify an existing prompt template" : "Design a new prompt template for your tools"}
                 </CardDescription>
               </CardHeader>
+
               <CardContent>
                 <div className="space-y-6">
                   <div className="grid grid-cols-3 gap-4">
@@ -1663,31 +1669,34 @@ export default function AdminDashboard() {
                             <div
                               id="questions-container"
                               {...provided.droppableProps}
-                              ref={provided.innerRef}>
+                              ref={provided.innerRef}
+                            >
                               {(currentPrompt?.questions || []).map((question, index) => (
+
                                 <Draggable
                                   key={`question-${index}`}
                                   draggableId={`question-${index}`}
-                                  index={index}>
+                                  index={index}
+                                >
                                   {(provided, snapshot) => (
                                     <div
                                       className={`flex items-center space-x-2 mb-2 bg-white p-2 rounded ${snapshot.isDragging ? 'shadow-lg' : ''}`}
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
                                     >
-                                      {/* Drag handle icon */}
+
                                       <div {...provided.dragHandleProps} className="cursor-grab text-gray-400">
                                         <GripVertical className="w-4 h-4" />
                                       </div>
 
-                                      {/* Input field */}
+
                                       <Input
                                         placeholder={`Question ${index + 1}`}
                                         value={question}
                                         onChange={(e) => handleChangePromptQuestion(index, e.target.value)}
                                       />
 
-                                      {/* Delete button */}
                                       <Button
                                         variant="ghost"
                                         size="icon"
@@ -1700,6 +1709,7 @@ export default function AdminDashboard() {
                                     </div>
                                   )}
                                 </Draggable>
+
                               ))}
                               {provided.placeholder}
                             </div>
