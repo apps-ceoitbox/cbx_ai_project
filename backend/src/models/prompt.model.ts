@@ -23,7 +23,7 @@ interface DefaultAiProvider {
 
 const promptSchema: Schema = new Schema(
   {
-    heading: { type: String, required: true, unique: true },
+    heading: { type: String, required: true },
     category: { type: String, },
     visibility: { type: Boolean, default: true },
     objective: { type: String, default: "" },

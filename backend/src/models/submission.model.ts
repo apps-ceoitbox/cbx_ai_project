@@ -22,6 +22,7 @@ const submissionSchema: Schema = new Schema(
     company: { type: String },
     category: { type: String, required: true },
     tool: { type: String, required: true },
+    toolID: { type: String, required:false },
     date: { type: Date, required: true },
     status: { type: String, required: true, default: "Completed" },
     apiUsed: { type: String, required: true, default: "" },
