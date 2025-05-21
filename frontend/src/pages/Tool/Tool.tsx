@@ -188,7 +188,8 @@ export default function ToolQuestionsPage() {
                   onChange={(e) => handleChange(currentQuestion, e.target.value)}
                   className={errors[currentQuestion] ? "border-red-500" : ""}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" && e.shiftKey === false) {
+                      e.preventDefault()
                       handleNext()
                     }
                   }}
