@@ -155,3 +155,19 @@ body {
 .questions * {
   all: unset !important;
 }
+
+#report-content * {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100% !important;
+}
+
+#report-content table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#report-content img {
+  max-width: 100%;
+  height: auto;
+}

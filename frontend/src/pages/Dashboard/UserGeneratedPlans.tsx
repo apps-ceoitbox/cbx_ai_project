@@ -23,6 +23,7 @@ import {
     LogOut,
     Loader2,
     CheckCircle,
+    Copy,
 } from "lucide-react"
 
 import { formatBoldText } from "../Report/Report"
@@ -51,6 +52,7 @@ const UserGeneratedPlans: React.FC = () => {
     const [isEmailSending, setIsEmailSending] = useState(false);
     const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
     const [sentToEmail, setSentToEmail] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     const [filters, setFilters] = useState({
         tool: "",
@@ -67,11 +69,15 @@ const UserGeneratedPlans: React.FC = () => {
 
     const getAllUserSubmissionsData = async () => {
         try {
+            setIsLoading(true);
             const res = await axios.get("/submission/user");
             setSubmissions(res?.data?.data)
         } catch (error) {
             console.log(error)
+        } finally {
+            setIsLoading(false);
         }
+
     }
 
     useEffect(() => {
@@ -261,21 +267,74 @@ const UserGeneratedPlans: React.FC = () => {
     };
 
 
-    const handleSendEmail = async (submission) => {
-        // Set loading state to true
-        setIsEmailSending(true);
+    // const handleSendEmail = async (submission) => {
+    //     setIsEmailSending(true);
 
+    //     try {
+    //         // Get the report content element
+    //         const reportElement = document.getElementById('report-content')
+
+    //         if (!reportElement) {
+    //             toast.error("Could not generate PDF. Please try again.")
+    //             setIsEmailSending(false);
+    //             return
+    //         }
+
+    //         // Configure PDF options
+    //         const options = {
+    //             margin: [10, 10, 10, 10],
+    //             filename: `${submission?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+    //             image: { type: 'jpeg', quality: 0.98 },
+    //             html2canvas: { scale: 2, useCORS: true },
+    //             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    //         }
+
+    //         const worker = html2pdf().set(options).from(reportElement);
+
+    //         // Get PDF as base64
+    //         const blob = await worker.outputPdf("blob");
+    //         const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+    //         let base64PDF = await fileToBase64(pdfFile)
+
+    //         await axios.post("/users/email", {
+    //             to: userAuth.user?.email,
+    //             subject: submission.tool || "",
+    //             body: `
+    //     <!DOCTYPE html>
+    //     <html>
+    //       <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+    //         <p>Dear ${userAuth?.user?.userName},</p>
+    //         <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
+    //       </body>
+    //     </html>`,
+    //             attachment: base64PDF
+    //         })
+
+    //         // Save the email for displaying in success popup
+    //         setSentToEmail(userAuth.user?.email);
+
+    //         // Show success popup
+    //         setEmailSuccessOpen(true);
+    //     } catch (error) {
+    //         console.error("Email sending error:", error);
+    //         toast.error("Failed to send email. Please try again.");
+    //     } finally {
+    //         // Set loading state back to false
+    //         setIsEmailSending(false);
+    //     }
+    // }
+
+    const handleSendEmail = async (submission) => {
+        setIsEmailSending(true);
         try {
-            // Get the report content element
-            const reportElement = document.getElementById('report-content')
+            const reportElement = document.getElementById('report-content');
 
             if (!reportElement) {
-                toast.error("Could not generate PDF. Please try again.")
+                toast.error("Content not found. Please try again.");
                 setIsEmailSending(false);
-                return
+                return;
             }
 
-            // Configure PDF options
             const options = {
                 margin: [10, 10, 10, 10],
                 filename: `${submission?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
@@ -291,33 +350,79 @@ const UserGeneratedPlans: React.FC = () => {
             const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
             let base64PDF = await fileToBase64(pdfFile)
 
+
+            // Extract styled HTML content from report
+            const fullHTML = `
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <style>
+                  body {
+                    background-color: #fff;
+                    padding: 24px;
+                    color: #2c3e50;
+                    font-family: 'Segoe UI', sans-serif;
+                    font-size: 16px;
+                    line-height: 1.6;
+                  }
+                </style>
+              </head>
+              <body>
+                   <p>Dear ${userAuth?.user?.userName},</p>
+                   <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
+                   ${reportElement.innerHTML}
+              </body>
+            </html>
+          `;
+
             await axios.post("/users/email", {
                 to: userAuth.user?.email,
-                subject: submission.tool || "",
-                body: `
-        <!DOCTYPE html>
-        <html>
-          <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
-            <p>Dear ${userAuth?.user?.userName},</p>
-            <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
-          </body>
-        </html>`,
+                subject: submission.tool || "Report",
+                body: fullHTML,
                 attachment: base64PDF
-            })
+            });
 
-            // Save the email for displaying in success popup
-            setSentToEmail(userAuth.user?.email);
-
-            // Show success popup
+            // Success
+            setSentToEmail(userAuth?.user?.email);
             setEmailSuccessOpen(true);
         } catch (error) {
             console.error("Email sending error:", error);
             toast.error("Failed to send email. Please try again.");
         } finally {
-            // Set loading state back to false
             setIsEmailSending(false);
         }
-    }
+    };
+
+
+
+
+    const handleCopyContent = async () => {
+        const contentElement = document.getElementById("report-content");
+        if (!contentElement) {
+            toast.error("Content not found");
+            return;
+        }
+
+        const fullHTML = `
+          <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.6;">
+            ${contentElement.innerHTML}
+          </div>
+        `;
+
+        if (navigator.clipboard && window.ClipboardItem) {
+            try {
+                const blob = new Blob([fullHTML], { type: "text/html" });
+                const clipboardItem = new ClipboardItem({ "text/html": blob });
+                await navigator.clipboard.write([clipboardItem]);
+                toast.success("Report copied to clipboard!");
+            } catch (err) {
+                console.error("Copy failed:", err);
+                toast.error("Failed to copy.");
+            }
+        } else {
+            toast.error("Clipboard API not supported.");
+        }
+    };
 
     return (
         <div className="min-h-screen ">
@@ -485,31 +590,35 @@ const UserGeneratedPlans: React.FC = () => {
                                                             </Button>
 
                                                         </DialogTrigger>
-                                                        <DialogContent style={{ zIndex: 999 }} className="max-w-[90vw] sm:max-w-[80vw] md:max-w-[70vw] max-h-[90vh] overflow-auto"  >
+                                                        <DialogContent style={{ zIndex: 999 }} className="max-w-[90vw] sm:max-w-[80vw] md:max-w-[80vw] max-h-[90vh] overflow-auto"  >
 
-                                                            <div className="w-full  mx-auto mt-4" >
-                                                                <Card className="border-2">
-                                                                    <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                                                                        <CardTitle className="text-2xl">{submission?.tool}</CardTitle>
-                                                                        <CardDescription className="text-gray-100">
-                                                                            Generated on {formatDateTime(submission.createdAt)}
-                                                                        </CardDescription>
-                                                                    </CardHeader>
+                                                            {/* <div className="w-full  mx-auto mt-4" > */}
+                                                            <Card className="border-2 mt-3">
+                                                                <CardHeader className="bg-primary-red text-white rounded-t-lg ">
+                                                                    <CardTitle className="text-2xl">{submission?.tool}</CardTitle>
+                                                                    <CardDescription className="text-gray-100">
+                                                                        Generated on {formatDateTime(submission.createdAt)}
+                                                                    </CardDescription>
+                                                                </CardHeader>
 
-                                                                    <CardContent dangerouslySetInnerHTML={{ __html: submission?.generatedContent }} id="report-content" className="pt-6">
+                                                                <CardContent
+                                                                    dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
+                                                                    id="report-content"
+                                                                    className="pt-6 "
+                                                                    style={{ padding: "0px" }}
+                                                                >
+                                                                </CardContent>
 
-                                                                    </CardContent>
-
-                                                                    <CardFooter className="flex flex-wrap gap-4 justify-center">
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            className="flex items-center"
-                                                                            onClick={() => handleDownloadPDF(submission)}
-                                                                        >
-                                                                            <Download className="mr-2 h-4 w-4" />
-                                                                            Download PDF
-                                                                        </Button>
-                                                                        {/* <Button
+                                                                <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        className="flex items-center"
+                                                                        onClick={() => handleDownloadPDF(submission)}
+                                                                    >
+                                                                        <Download className="mr-2 h-4 w-4" />
+                                                                        Download PDF
+                                                                    </Button>
+                                                                    {/* <Button
                                                                             variant="outline"
                                                                             className="flex items-center"
                                                                             onClick={() => handleDownloadDOCX(submission)}
@@ -517,27 +626,35 @@ const UserGeneratedPlans: React.FC = () => {
                                                                             <FileText className="mr-2 h-4 w-4" />
                                                                             Export DOCX
                                                                         </Button> */}
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        className="flex items-center"
+                                                                        onClick={handleCopyContent}
+                                                                    >
+                                                                        <Copy className="mr-2 h-4 w-4" />
+                                                                        Copy
+                                                                    </Button>
 
-                                                                        <Button
-                                                                            className="bg-primary-red hover:bg-red-700 flex items-center"
-                                                                            onClick={() => handleSendEmail(submission)}
-                                                                            disabled={isEmailSending}
-                                                                        >
-                                                                            {isEmailSending ? (
-                                                                                <>
-                                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                                                    Sending...
-                                                                                </>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <Mail className="mr-2 h-4 w-4" />
-                                                                                    Send to Email
-                                                                                </>
-                                                                            )}
-                                                                        </Button>
-                                                                    </CardFooter>
-                                                                </Card>
-                                                            </div>
+                                                                    <Button
+                                                                        className="bg-primary-red hover:bg-red-700 flex items-center"
+                                                                        onClick={() => handleSendEmail(submission)}
+                                                                        disabled={isEmailSending}
+                                                                    >
+                                                                        {isEmailSending ? (
+                                                                            <>
+                                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                                Sending...
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <Mail className="mr-2 h-4 w-4" />
+                                                                                Send to Email
+                                                                            </>
+                                                                        )}
+                                                                    </Button>
+                                                                </CardFooter>
+                                                            </Card>
+                                                            {/* </div> */}
                                                         </DialogContent>
                                                     </Dialog>
                                                 </div>
@@ -560,6 +677,12 @@ const UserGeneratedPlans: React.FC = () => {
                     </div>
                 </CardContent>
 
+
+                {isLoading &&
+                    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                        <Loader2 className="h-16 w-16 text-primary-red animate-spin" />
+                    </div>
+                }
 
 
             </Card>

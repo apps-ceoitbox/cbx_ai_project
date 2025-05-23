@@ -153,6 +153,8 @@ export default function AdminDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(null);
 
 
+
+
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -289,11 +291,9 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    // Check if admin is authenticated
     if (adminAuth.user) {
       setIsAdmin(true)
     }
-    // If not authenticated, redirect to admin login
     if (!adminAuth.user) {
       nav("/admin/login")
     }
@@ -302,18 +302,73 @@ export default function AdminDashboard() {
     getPrompts()
   }, [adminAuth.user])
 
+
+  // const handleSendEmail = async (submission) => {
+  //   setIsEmailSending(true);
+  //   try {
+  //     const reportElement = document.getElementById('report-content')
+
+  //     if (!reportElement) {
+  //       toast.error("Could not generate PDF. Please try again.")
+  //       setIsEmailSending(false);
+  //       return
+  //     }
+
+  //     // Configure PDF options
+  //     const options = {
+  //       margin: [10, 10, 10, 10],
+  //       filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+  //       image: { type: 'jpeg', quality: 0.98 },
+  //       html2canvas: { scale: 2, useCORS: true },
+  //       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  //     }
+
+  //     const worker = html2pdf().set(options).from(reportElement);
+
+  //     // Get PDF as base64
+  //     const blob = await worker.outputPdf("blob");
+  //     const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+  //     let base64PDF = await fileToBase64(pdfFile)
+
+  //     await axios.post("/users/email", {
+  //       to: submission?.email,
+  //       subject: submission.tool || "",
+  //       body: `
+  //       <!DOCTYPE html>
+  //       <html>
+  //         <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+  //           <p>Dear ${userAuth?.user?.userName},</p>
+  //           <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
+  //         </body>
+  //       </html>`,
+  //       attachment: base64PDF
+  //     })
+
+  //     // Save the email for displaying in success popup
+  //     setSentToEmail(submission?.email);
+
+  //     // Show success popup
+  //     setEmailSuccessOpen(true);
+  //   } catch (error) {
+  //     console.error("Email sending error:", error);
+  //     toast.error("Failed to send email. Please try again.");
+  //   } finally {
+  //     // Set loading state back to false
+  //     setIsEmailSending(false);
+  //   }
+  // }
+
   const handleSendEmail = async (submission) => {
     setIsEmailSending(true);
     try {
-      const reportElement = document.getElementById('report-content')
+      const reportElement = document.getElementById('report-content');
 
       if (!reportElement) {
-        toast.error("Could not generate PDF. Please try again.")
+        toast.error("Content not found. Please try again.");
         setIsEmailSending(false);
-        return
+        return;
       }
 
-      // Configure PDF options
       const options = {
         margin: [10, 10, 10, 10],
         filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
@@ -329,33 +384,49 @@ export default function AdminDashboard() {
       const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
       let base64PDF = await fileToBase64(pdfFile)
 
-      await axios.post("/users/email", {
-        to: submission?.email,
-        subject: submission.tool || "",
-        body: `
+      // Extract styled HTML content from report
+      const fullHTML = `
         <!DOCTYPE html>
         <html>
-          <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+          <head>
+            <style>
+              body {
+                background-color: #fff;
+                padding: 24px;
+                color: #2c3e50;
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 16px;
+                line-height: 1.6;
+              }
+            </style>
+          </head>
+          <body>
             <p>Dear ${userAuth?.user?.userName},</p>
-            <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
+            <p>Please find below your ${submission?.tool || 'requested'} report:</p>
+            ${reportElement.innerHTML}
           </body>
-        </html>`,
+        </html>
+      `;
+
+      await axios.post("/users/email", {
+        to: submission?.email,
+        subject: submission.tool || "Report",
+        body: fullHTML,
         attachment: base64PDF
-      })
+      });
 
-      // Save the email for displaying in success popup
+      // Success
       setSentToEmail(submission?.email);
-
-      // Show success popup
       setEmailSuccessOpen(true);
     } catch (error) {
       console.error("Email sending error:", error);
       toast.error("Failed to send email. Please try again.");
     } finally {
-      // Set loading state back to false
       setIsEmailSending(false);
     }
-  }
+  };
+
+
 
   if (!isAdmin) {
     return (
@@ -467,7 +538,6 @@ export default function AdminDashboard() {
 
     return true
   })
-
 
   // Paginate results
   const totalPages = Math.ceil(filteredSubmissions?.length / itemsPerPage);
@@ -631,6 +701,34 @@ export default function AdminDashboard() {
     toast.success("Prompt Visibility Toggled Successfully!")
     getPrompts()
   }
+
+  const handleCopyContent = async () => {
+    const contentElement = document.getElementById("report-content");
+    if (!contentElement) {
+      toast.error("Content not found");
+      return;
+    }
+
+    const fullHTML = `
+      <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.6;">
+        ${contentElement.innerHTML}
+      </div>
+    `;
+
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        const blob = new Blob([fullHTML], { type: "text/html" });
+        const clipboardItem = new ClipboardItem({ "text/html": blob });
+        await navigator.clipboard.write([clipboardItem]);
+        toast.success("Report copied to clipboard!");
+      } catch (err) {
+        console.error("Copy failed:", err);
+        toast.error("Failed to copy.");
+      }
+    } else {
+      toast.error("Clipboard API not supported.");
+    }
+  };
 
 
   // @ts-ignore
@@ -855,17 +953,12 @@ export default function AdminDashboard() {
                                     </Button>
                                   </DialogTrigger>
 
-                                  <DialogContent className="max-w-[70vw] max-h-[90vh] overflow-auto">
+                                  <DialogContent className="max-w-[85%] max-h-[90vh] overflow-auto">
                                     <Tabs defaultValue="result" className="w-full" >
-
-
                                       <TabsList className="mb-4 mt-3 w-full">
-
-
                                         <TabsTrigger
                                           value="question"
-                                          className="flex items-center justify-center gap-2 text-black bg-white border border-gray-200 
-      data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
+                                          className="flex items-center justify-center gap-2 text-black bg-white border border-gray-200 data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
                                           style={{ width: "50%" }}
                                         >
                                           <HelpCircle className="w-4 h-4" /> Q & A
@@ -873,8 +966,7 @@ export default function AdminDashboard() {
 
                                         <TabsTrigger
                                           value="result"
-                                          className="flex items-center justify-center gap-2 text-black bg-white border border-gray-200 
-      data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
+                                          className="flex items-center justify-center gap-2 text-black bg-white border border-gray-200 data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
                                           style={{ width: "50%" }}
                                         >
                                           <FileText className="w-4 h-4" /> Result
@@ -884,51 +976,65 @@ export default function AdminDashboard() {
 
                                       {/* Result Tab */}
                                       <TabsContent value="result">
-                                        <div className="w-full mx-auto mt-4">
-                                          <Card className="mb-6 border-2">
-                                            <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                                              <CardTitle className="text-2xl">{submission?.tool || "Report"}</CardTitle>
-                                              <CardDescription className="text-gray-100">
-                                                Generated on {formatDateTime(submission.createdAt)}
-                                              </CardDescription>
-                                            </CardHeader>
+                                        {/* <div className="w-full mx-auto mt-4" > */}
+                                        <Card className="mb-6 border-2" >
+                                          <CardHeader className="bg-primary-red text-white rounded-t-lg">
+                                            <CardTitle className="text-2xl">{submission?.tool || "Report"}</CardTitle>
+                                            <CardDescription className="text-gray-100">
+                                              Generated on {formatDateTime(submission.createdAt)}
+                                            </CardDescription>
+                                          </CardHeader>
 
-                                            <CardContent
-                                              dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
-                                              id="report-content"
-                                              className="pt-6"
-                                            />
+                                          <CardContent
+                                            dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
+                                            id="report-content"
+                                            className="pt-6"
+                                            style={{ padding: "0px" }}
+                                          >
+                                          </CardContent>
 
-                                            <CardFooter className="flex flex-wrap gap-4 justify-center">
-                                              <Button
-                                                variant="outline"
-                                                className="flex items-center"
-                                                onClick={() => handleDownloadPDF(submission)}
-                                              >
-                                                <Download className="mr-2 h-4 w-4" />
-                                                Download PDF
-                                              </Button>
+                                          <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">
+                                            <Button
+                                              variant="outline"
+                                              className="flex items-center"
+                                              onClick={() => handleDownloadPDF(submission)}
+                                            >
+                                              <Download className="mr-2 h-4 w-4" />
+                                              Download PDF
+                                            </Button>
 
-                                              <Button
-                                                className="bg-primary-red hover:bg-red-700 flex items-center"
-                                                onClick={() => handleSendEmail(submission)}
-                                                disabled={isEmailSending}
-                                              >
-                                                {isEmailSending ? (
-                                                  <>
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    Sending...
-                                                  </>
-                                                ) : (
-                                                  <>
-                                                    <Mail className="mr-2 h-4 w-4" />
-                                                    Send to Email
-                                                  </>
-                                                )}
-                                              </Button>
-                                            </CardFooter>
-                                          </Card>
-                                        </div>
+                                            <Button
+                                              variant="outline"
+                                              className="flex items-center"
+                                              onClick={handleCopyContent}
+                                            >
+                                              <Copy className="mr-2 h-4 w-4" />
+                                              Copy
+                                            </Button>
+
+                                            <Button
+                                              className="bg-primary-red hover:bg-red-700 flex items-center"
+                                              onClick={() => handleSendEmail(submission)}
+                                              disabled={isEmailSending}
+                                            >
+                                              {isEmailSending ? (
+                                                <>
+                                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                  Sending...
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <Mail className="mr-2 h-4 w-4" />
+                                                  Send to Email
+                                                </>
+                                              )}
+                                            </Button>
+
+
+                                          </CardFooter>
+
+                                        </Card>
+                                        {/* </div> */}
                                       </TabsContent>
 
                                       {/* Question Tab */}
