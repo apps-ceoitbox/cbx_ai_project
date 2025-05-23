@@ -35,6 +35,7 @@ jobs:
             echo "Pulling latest code"
             git pull origin main
 
+            
             echo "Installing Node.js for root user (if not already installed)"
             if ! command -v npm >/dev/null 2>&1; then
                 echo "Node.js not found, installing..."
