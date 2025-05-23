@@ -22,7 +22,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          ssh -o StrictHostKeyChecking=no root@173.249.4.201 <<'EOF'
+          ssh -o StrictHostKeyChecking=no root@103.209.144.216 <<'EOF'
             set -e
 
             cd /var/www/cbx_ai_project/backend
