@@ -206,5 +206,5 @@ function generatePrompt(userAnswers, promptData) {
   - Content must begin with the <div> container as mentioned.
   `;
 
-  return prompt;
+  return prompt;
 }
