@@ -13,16 +13,17 @@ function getURL(link) {
 const currentURL = window.location.href;
 // let apiLink = `${getURL(currentURL)}/`;
 let apiLink = `${getURL(currentURL)}/api/`;
-export const useAxios = (tokenType: "admin" | "user") => {
+export const useAxios = (tokenType: "admin" | "user" | "audit") => {
   const axiosInstance = axios.create({
     baseURL: `${apiLink}`,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem(tokenType === "admin" ? "adminToken" : "userToken")}`,
+      Authorization: `Bearer ${localStorage.getItem(tokenType === "admin" ? "adminToken" : tokenType === "audit" ? "auditToken" : "userToken")}`,
     }
   });
   return axiosInstance;
 }
+
 
 export const useData = () => {
   const data = useContext(AppContext);
@@ -42,8 +43,16 @@ export const AppProvider = ({ children }) => {
     isLoading: false,
   });
 
+  const [auditAuth, setAuditAuth] = useState({
+    token: localStorage.getItem("auditToken"),
+    user: null,
+    isLoading: false,
+  });
+
 
   const [generateResponse, setGenerateResponse] = useState("");
+  const [auditResponse, setAuditResponse] = useState("");
+  const [auditClientResponse, setAuditClientResponse] = useState("");
   const [astroResult, setAstroResult] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -55,8 +64,14 @@ export const AppProvider = ({ children }) => {
         setAdminAuth,
         userAuth,
         setUserAuth,
+        auditAuth,
+        setAuditAuth,
         generateResponse,
         setGenerateResponse,
+        auditResponse,
+        setAuditResponse,
+        auditClientResponse,
+        setAuditClientResponse,
         astroResult,
         setAstroResult,
         mobileMenuOpen,

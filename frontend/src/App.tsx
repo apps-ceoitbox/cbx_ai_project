@@ -12,13 +12,17 @@ function App() {
   const { userAuth, setUserAuth, setAdminAuth } = useData();
   const userAxios = useAxios("user");
   const adminAxios = useAxios("admin");
+  const auditAxios = useAxios("audit");
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { apiLink } = useData();
 
-  const hiddenSidebarPaths = ["/login", "/", "/admin/login"];
-  const hideSidebar = hiddenSidebarPaths.includes(location.pathname);
+  const hiddenSidebarPaths = ["/login", "/admin/login", "/audit-login", "/audit-reports", "/audit-tools"];
+  const hideSidebar = hiddenSidebarPaths.find(i => {
+    if (i == "/") return true;
+    return location.pathname.includes(i);
+  });
 
 
   useEffect(() => {
@@ -73,46 +77,67 @@ function App() {
         })
       })
     }
+    // const auditToken = localStorage.getItem("auditToken");
+
+    // if (auditToken) {
+    //   setAdminAuth(p => ({
+    //     ...p,
+    //     isLoading: true
+    //   }))
+    //   adminAxios.get("/users/getUser").then((res) => {
+    //     setAdminAuth({
+    //       user: res.data,
+    //       token: adminToken,
+    //       isLoading: false
+    //     })
+    //   }).catch(() => {
+    //     setAdminAuth({
+    //       user: null,
+    //       token: adminToken,
+    //       isLoading: false
+    //     })
+    //   })
+    // }
   }, [])
 
 
   useEffect(() => {
     if (userAuth.token) return;
     try {
-        const searchParams = new URLSearchParams(location.search);
-        const code = searchParams.get("code");
-        if (code == null) {
-            return
-        }
-        setUserAuth(p => ({
+      const searchParams = new URLSearchParams(location.search);
+      const code = searchParams.get("code");
+      if (code == null) {
+        return
+      }
+      setUserAuth(p => ({
+        ...p,
+        isLoading: true
+      }))
+      axios.get(`${apiLink}/auth/user/google/callback?code=` + code)
+        .then(({ data: res }) => {
+          if (res.error) {
+            toast.error(res.error);
+            setUserAuth(p => ({
+              ...p,
+              isLoading: false
+            }))
+            return;
+          }
+          setUserAuth(p => ({
             ...p,
-            isLoading: true
-        }))
-        axios.get(`${apiLink}/auth/user/google/callback?code=` + code)
-            .then(({ data: res }) => {
-                if (res.error) {
-                    toast.error(res.error);
-                    setUserAuth(p => ({
-                        ...p,
-                        isLoading: false
-                    }))
-                    return;
-                }
-                setUserAuth(p => ({
-                    ...p,
-                    token: res.token,
-                    user: res.data,
-                    isLoading: false
-                }))
-                localStorage.setItem("userToken", res.token);
-                navigate("/dashboard")
-            });
-    } catch (err) {
-        setUserAuth(p => ({
-            ...p,
+            token: res.token,
+            user: res.data,
             isLoading: false
-        }))
-        console.log(err.message);
+          }))
+          localStorage.setItem("userToken", res.token);
+          navigate("/dashboard")
+        });
+    } catch (err) {
+      setUserAuth(p => ({
+        ...p,
+        isLoading: false
+      }))
+      console.log(err.message);
     }
   }, [])
 

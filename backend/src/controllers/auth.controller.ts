@@ -122,6 +122,37 @@ export default class AuthController {
         res.status(HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user });
     })
 
+    // Method to login a new user
+    static auditLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+        const { userName, email, companyName = "", mobile = 0 } = req.body as UserInterface;
+
+        if (!userName || !email) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'All fields are required' });
+            return
+        }
+        if (checkEmail(email)) {
+            res.status(HttpStatusCodes.BAD_REQUEST).json({ error: 'Invalid email' });
+            return
+        }
+
+        // Check if the user exists
+        const user = await User.findOne({ email }).lean();
+
+        if (!user) {
+            let newUser = await User.create({ userName, email, companyName, mobile });
+
+            const token = jwt.sign({ userId: newUser._id, access: "audit" }, JWT_SECRET);
+
+            res.status(HttpStatusCodes.CREATED).json({ message: 'User registered successfully', data: newUser, token, access: "audit" });
+            return
+        }
+
+        // Generate JWT
+        const token = jwt.sign({ userId: user._id, access: "audit" }, JWT_SECRET);
+
+        res.status(HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user, access: "audit" });
+    })
+
     // Method to get all users
     static initiateGoogleLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
         const authUrl = client.generateAuthUrl({

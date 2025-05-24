@@ -932,7 +932,7 @@ export default function AdminDashboard() {
                       {paginatedSubmissions.length > 0 ? (
                         paginatedSubmissions.map((submission) => (
                           <TableRow key={submission.id} className="h-8 px-2" >
-                            <TableCell className="font-medium py-2">{submission.name}</TableCell>
+                            <TableCell className="font-medium py-2">{submission.name} {submission.type && `(${submission.type})`}</TableCell>
                             <TableCell className="py-2">{submission.email}</TableCell>
                             <TableCell className="py-2">{submission.company || "--"}</TableCell>
                             <TableCell className="py-2">{submission.tool}</TableCell>
