@@ -11,9 +11,12 @@ import Settings from '@/pages/DocumentReader/Settings'
 import AfterLoginHomePage from '@/pages/Home/AfterLoginHomePage'
 import Footer from '@/pages/Home/Footer'
 import HomePage from '@/pages/Home/HomePage'
+import AuditLoginPage from '@/pages/Login/AuditLoginPage'
     import LoginPage from '@/pages/Login/Login'
 import NotFound from '@/pages/NotFound'
+import AuditReportPage from '@/pages/Report/AuditReportPage'
 import ReportPage from '@/pages/Report/Report'
+import AuditTool from '@/pages/Tool/AuditTool'
 import ToolQuestionsPage from '@/pages/Tool/Tool'
 import { Route, Routes } from 'react-router-dom'
 
@@ -28,10 +31,13 @@ const AppRoutes = () => {
                 {/* Plan Generator */}
                 {/* <Route path="/login" element={<GoogleLoginPage />} /> */}
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/audit-login" element={<AuditLoginPage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/generated-plans" element={<UserGeneratedPlans />} />
                 <Route path="/reports/:toolId" element={<ReportPage />} />
+                <Route path="/audit-reports/:toolId" element={<AuditReportPage />} />
                 <Route path="/tools/:toolId" element={<ToolQuestionsPage />} />
+                <Route path="/audit-tools/:toolId" element={<AuditTool />} />
 
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/login" element={<AdminLoginPage />} />
