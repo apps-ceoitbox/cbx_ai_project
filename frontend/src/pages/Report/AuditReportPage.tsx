@@ -191,7 +191,7 @@ export default function AuditReportPage() {
               <div className="w-full max-w-4xl mx-auto" >
                 <Card className="mb-6 border-2">
                   <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                    <CardTitle className="text-2xl">{tool?.heading || "Internal Report"}</CardTitle>
+                    <CardTitle className="text-2xl">{tool?.heading || "Internal Report"} (Internal)</CardTitle>
                     <CardDescription className="text-gray-100">
                       Generated on{" "}
                       {new Date().toLocaleString("en-US", {
@@ -254,7 +254,7 @@ export default function AuditReportPage() {
               <div className="w-full max-w-4xl mx-auto" >
                 <Card className="mb-6 border-2">
                   <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                    <CardTitle className="text-2xl">{tool?.heading || "Client Report"}</CardTitle>
+                    <CardTitle className="text-2xl">{tool?.heading || "Client Report"} (Client)</CardTitle>
                     <CardDescription className="text-gray-100">
                       Generated on{" "}
                       {new Date().toLocaleString("en-US", {
