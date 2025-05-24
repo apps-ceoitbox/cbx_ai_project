@@ -156,6 +156,11 @@ body {
   all: unset !important;
 }
 
+#report-content {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 #report-content * {
   word-wrap: break-word;
   overflow-wrap: break-word;

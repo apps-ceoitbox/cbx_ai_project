@@ -4,7 +4,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Download, Mail, Loader2, CheckCircle, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Download, Mail, Loader2, CheckCircle, LayoutDashboard, Copy } from "lucide-react";
 import { useAxios, useData } from "@/context/AppContext";
 import html2pdf from 'html2pdf.js';
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx";
@@ -89,7 +89,8 @@ export default function ReportPage() {
       filename: `${tool?.heading || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     }
 
     // Generate and download PDF
@@ -106,18 +107,73 @@ export default function ReportPage() {
       })
   }
 
+  // const handleSendEmail = async () => {
+  //   setIsEmailSending(true);
+  //   try {
+  //     const reportElement = document.getElementById('report-content')
+
+  //     if (!reportElement) {
+  //       toast.error("Could not generate PDF. Please try again.")
+  //       setIsEmailSending(false);
+  //       return
+  //     }
+
+  //     // Configure PDF options
+  //     const options = {
+  //       margin: [10, 10, 10, 10],
+  //       filename: `${tool?.heading || "Report"}_${new Date().toISOString().split('T')[0]}.pdf`,
+  //       image: { type: 'jpeg', quality: 0.98 },
+  //       html2canvas: { scale: 2, useCORS: true },
+  //       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  //     }
+
+  //     const worker = html2pdf().set(options).from(reportElement);
+
+  //     // Get PDF as base64
+  //     const blob = await worker.outputPdf("blob");
+  //     const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+  //     let base64PDF = await fileToBase64(pdfFile)
+
+  //     await axios.post("/users/email", {
+  //       to: userAuth.user?.email,
+  //       subject: tool?.heading || "Report" || "",
+  //       body: `
+  //       <!DOCTYPE html>
+  //       <html>
+  //         <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
+  //           <p>Dear ${userAuth?.user?.userName},</p>
+  //           <p>Please find enclosed the ${tool?.heading} Plan as requested by you.</p>
+  //         </body>
+  //       </html>`,
+  //       attachment: base64PDF
+  //     })
+
+  //     // Save the email for displaying in success popup
+  //     setSentToEmail(userAuth.user?.email);
+
+  //     // Show success popup
+  //     setEmailSuccessOpen(true);
+  //   } catch (error) {
+  //     console.error("Email sending error:", error);
+  //     toast.error("Failed to send email. Please try again.");
+  //   } finally {
+  //     // Set loading state back to false
+  //     setIsEmailSending(false);
+  //   }
+  // }
+
+
   const handleSendEmail = async () => {
     setIsEmailSending(true);
     try {
-      const reportElement = document.getElementById('report-content')
+      const reportElement = document.getElementById('report-content');
 
       if (!reportElement) {
-        toast.error("Could not generate PDF. Please try again.")
+        toast.error("Content not found. Please try again.");
         setIsEmailSending(false);
-        return
+        return;
       }
 
-      // Configure PDF options
       const options = {
         margin: [10, 10, 10, 10],
         filename: `${tool?.heading || "Report"}_${new Date().toISOString().split('T')[0]}.pdf`,
@@ -133,33 +189,75 @@ export default function ReportPage() {
       const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
       let base64PDF = await fileToBase64(pdfFile)
 
-      await axios.post("/users/email", {
-        to: userAuth.user?.email,
-        subject: tool?.heading || "Report" || "",
-        body: `
+      // Extract styled HTML content from report
+      const fullHTML = `
         <!DOCTYPE html>
         <html>
-          <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
-            <p>Dear ${userAuth?.user?.userName},</p>
-            <p>Please find enclosed the ${tool?.heading} Plan as requested by you.</p>
+          <head>
+            <style>
+              body {
+                background-color: #fff;
+                padding: 24px;
+                color: #2c3e50;
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 16px;
+                line-height: 1.6;
+              }
+            </style>
+          </head>
+          <body>
+             <p>Dear ${userAuth?.user?.userName},</p>
+             <p>Please find enclosed the ${tool?.heading} Plan as requested by you.</p>
+            ${reportElement.innerHTML}
           </body>
-        </html>`,
+        </html>
+      `;
+
+      await axios.post("/users/email", {
+        to: userAuth?.user?.email,
+        subject: tool.heading || "Report",
+        body: fullHTML,
         attachment: base64PDF
-      })
+      });
 
-      // Save the email for displaying in success popup
-      setSentToEmail(userAuth.user?.email);
-
-      // Show success popup
+      // Success
+      setSentToEmail(userAuth?.user?.email);
       setEmailSuccessOpen(true);
     } catch (error) {
       console.error("Email sending error:", error);
       toast.error("Failed to send email. Please try again.");
     } finally {
-      // Set loading state back to false
       setIsEmailSending(false);
     }
-  }
+  };
+
+  const handleCopyContent = async () => {
+    const contentElement = document.getElementById("report-content");
+    if (!contentElement) {
+      toast.error("Content not found");
+      return;
+    }
+
+    const fullHTML = `
+        <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.6;">
+          ${contentElement.innerHTML}
+        </div>
+      `;
+
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        const blob = new Blob([fullHTML], { type: "text/html" });
+        const clipboardItem = new ClipboardItem({ "text/html": blob });
+        await navigator.clipboard.write([clipboardItem]);
+        toast.success("Report copied to clipboard!");
+      } catch (err) {
+        console.error("Copy failed:", err);
+        toast.error("Failed to copy.");
+      }
+    } else {
+      toast.error("Clipboard API not supported.");
+    }
+  };
 
 
   if (!userAuth?.user) {
@@ -203,10 +301,11 @@ export default function ReportPage() {
             <p className="text-lg">Generating your report...</p>
           </div>
         ) : report ? (
-          <div className="w-full max-w-4xl mx-auto" >
+          <div className="w-full max-w-[90%] mx-auto" >
             <Card className="mb-6 border-2">
               <CardHeader className="bg-primary-red text-white rounded-t-lg">
                 <CardTitle className="text-2xl">{tool?.heading || "Report"}</CardTitle>
+
                 <CardDescription className="text-gray-100">
                   Generated on{" "}
                   {new Date().toLocaleString("en-US", {
@@ -221,15 +320,25 @@ export default function ReportPage() {
 
               </CardHeader>
 
-              <CardContent dangerouslySetInnerHTML={{ __html: generateResponse }} id="report-content" className="pt-6">
+              <CardContent dangerouslySetInnerHTML={{ __html: generateResponse }}
+                id="report-content"
+                className="pt-6" />
 
-              </CardContent>
-
-              <CardFooter className="flex flex-wrap gap-4 justify-center">
+              <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">
                 <Button variant="outline" className="flex items-center" onClick={handleDownloadPDF}>
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={handleCopyContent}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </Button>
+
                 {/* <Button variant="outline" className="flex items-center" onClick={handleDownloadDOCX}>
                   <FileText className="mr-2 h-4 w-4" />
                   Export DOCX
