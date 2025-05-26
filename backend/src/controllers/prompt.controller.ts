@@ -181,6 +181,7 @@ function generatePrompt(userAnswers, promptData, user:any={}, type="") {
   - Final HTML should look clean, readable, modern, and styled with inline CSS only.
   - Include a graph/chart as a chart using Svg, where needed.
   - There charts should not have extra white space around them.
+  - If the chart is generated, make sure to give it scroll auto if it is too long.
   - Make sure that the html you generate is long and detailed.
   - Content must begin with the <div> container as mentioned.
   `;
