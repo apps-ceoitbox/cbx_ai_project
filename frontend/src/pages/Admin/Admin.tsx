@@ -609,7 +609,6 @@ export default function AdminDashboard() {
 
   // Fixed PDF download function
   const handleDownloadPDF = (submission) => {
-    // Get the report content element
     const reportElement = document.getElementById('report-content')
 
     if (!reportElement) {
@@ -624,7 +623,7 @@ export default function AdminDashboard() {
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      // pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     }
 
     // Generate and download PDF

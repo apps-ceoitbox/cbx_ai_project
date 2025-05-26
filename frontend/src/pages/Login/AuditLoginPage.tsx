@@ -83,7 +83,7 @@ export default function AuditLoginPage() {
             isLoading: false
           }
         })
-
+        console.log("res", res)
         localStorage.setItem("auditToken", res?.data?.token);
         toast.success("Login successful");
         nav("/audit-tools/6831a28ccebd5911db92df92")

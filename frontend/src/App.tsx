@@ -9,20 +9,21 @@ import axios from "axios";
 
 function App() {
   const navigate = useNavigate();
-  const { userAuth, setUserAuth, setAdminAuth } = useData();
+  const { userAuth, setUserAuth, setAdminAuth, setAuditAuth } = useData();
   const userAxios = useAxios("user");
   const adminAxios = useAxios("admin");
-  const auditAxios = useAxios("audit");
+  // const auditAxios = useAxios("audit");
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { apiLink } = useData();
 
-  const hiddenSidebarPaths = ["/login", "/admin/login", "/audit-login", "/audit-reports", "/audit-tools"];
-  const hideSidebar = hiddenSidebarPaths.find(i => {
-    if (i == "/") return true;
-    return location.pathname.includes(i);
-  });
+  const hiddenSidebarPaths = ["/", "/login", "/admin/login", "/audit-login", "/audit-reports", "/audit-tools"];
+  const hideSidebar = hiddenSidebarPaths.some(path => location.pathname === path);
+  // const hideSidebar = hiddenSidebarPaths.find(i => {
+  //   if (i == "/") return true;
+  //   return location.pathname.includes(i);
+  // });
 
 
   useEffect(() => {
@@ -77,27 +78,28 @@ function App() {
         })
       })
     }
-    // const auditToken = localStorage.getItem("auditToken");
 
-    // if (auditToken) {
-    //   setAdminAuth(p => ({
-    //     ...p,
-    //     isLoading: true
-    //   }))
-    //   adminAxios.get("/users/getUser").then((res) => {
-    //     setAdminAuth({
-    //       user: res.data,
-    //       token: adminToken,
-    //       isLoading: false
-    //     })
-    //   }).catch(() => {
-    //     setAdminAuth({
-    //       user: null,
-    //       token: adminToken,
-    //       isLoading: false
-    //     })
-    //   })
-    // }
+    const auditToken = localStorage.getItem("auditToken");
+
+    if (auditToken) {
+      setAuditAuth(p => ({
+        ...p,
+        isLoading: true
+      }))
+      adminAxios.get("/users/getUser").then((res) => {
+        setAuditAuth({
+          user: res.data,
+          token: auditToken,
+          isLoading: false
+        })
+      }).catch(() => {
+        setAuditAuth({
+          user: null,
+          token: auditToken,
+          isLoading: false
+        })
+      })
+    }
   }, [])
 
 

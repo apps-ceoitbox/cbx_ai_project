@@ -210,7 +210,7 @@ import { useState } from "react";
 function AppSidebar({ collapsed, setCollapsed }) {
     const nav = useNavigate();
     const location = useLocation();
-    const { userAuth, setUserAuth, adminAuth, setAdminAuth } = useData();
+    const { userAuth, setUserAuth, adminAuth, setAdminAuth, } = useData();
     // const isToolsPage = location.pathname.startsWith("/tools/");
     // const isReportPage = location.pathname.startsWith("/reports/");
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);

@@ -54,6 +54,7 @@ export default function AuditReportPage() {
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
 
+  console.log("auditAuth", auditAuth)
 
   useEffect(() => {
     const fetchTool = async () => {
@@ -66,7 +67,7 @@ export default function AuditReportPage() {
   const handleDownloadPDF = () => {
 
     // Get the report content element
-    const reportElement = document.getElementById('report-content')
+    const reportElement = document.getElementById('audit-response')
     if (!reportElement) {
       toast.error("Could not generate PDF. Please try again.")
       return
@@ -78,7 +79,8 @@ export default function AuditReportPage() {
       filename: `${tool?.heading || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     }
 
     // Generate and download PDF
@@ -98,7 +100,7 @@ export default function AuditReportPage() {
   const handleSendEmail = async () => {
     setIsEmailSending(true);
     try {
-      const reportElement = document.getElementById('report-content')
+      const reportElement = document.getElementById('audit-response')
 
       if (!reportElement) {
         toast.error("Could not generate PDF. Please try again.")
@@ -112,7 +114,8 @@ export default function AuditReportPage() {
         filename: `${tool?.heading || "Report"}_${new Date().toISOString().split('T')[0]}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       }
 
       const worker = html2pdf().set(options).from(reportElement);
@@ -137,7 +140,7 @@ export default function AuditReportPage() {
       })
 
       // Save the email for displaying in success popup
-      setSentToEmail(auditAuth.user?.email);
+      setSentToEmail(auditAuth?.user?.email);
 
       // Show success popup
       setEmailSuccessOpen(true);
@@ -206,7 +209,7 @@ export default function AuditReportPage() {
 
                   </CardHeader>
 
-                  <CardContent dangerouslySetInnerHTML={{ __html: auditResponse }} id="auditResponse" className="pt-6">
+                  <CardContent dangerouslySetInnerHTML={{ __html: auditResponse }} id="audit-response" className="pt-6">
 
                   </CardContent>
 
@@ -351,3 +354,4 @@ export default function AuditReportPage() {
     </div>
   )
 }
+
