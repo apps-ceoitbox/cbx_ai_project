@@ -37,7 +37,7 @@ const authenticateToken = (req, res, next) => __awaiter(void 0, void 0, void 0, 
             next();
             return;
         }
-        req.user = user; // Attach decoded token to request
+        req.user = Object.assign(Object.assign({}, user), { access: decoded.access || "user" }); // Attach decoded token to request
         next(); // Proceed to the next middleware or route
     }
     catch (error) {

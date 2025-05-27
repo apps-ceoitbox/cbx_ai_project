@@ -4,7 +4,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Download, Mail, Loader2, CheckCircle, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Download, Mail, Loader2, CheckCircle, LogOut } from "lucide-react";
 import { useAxios, useData } from "@/context/AppContext";
 import html2pdf from 'html2pdf.js';
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx";
@@ -45,16 +45,15 @@ const fileToBase64 = (file) => {
 export default function AuditReportPage() {
   const nav = useNavigate();
   const params = useParams();
-  const { auditAuth, auditResponse,
-    auditClientResponse } = useData();
-  const axios = useAxios("user");
+  const { auditAuth, auditResponse, auditClientResponse, setUserAuth, setAdminAuth, setAuditAuth } = useData();
+  const axios = useAxios("audit");
   const toolId = params.toolId as string;
   const [tool, setTool] = useState<PromptInterface | null>(null)
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
 
-  console.log("auditAuth", auditAuth)
+  // console.log("auditAuth", auditAuth)
 
   useEffect(() => {
     const fetchTool = async () => {
@@ -165,13 +164,19 @@ export default function AuditReportPage() {
           <Logo size="sm" />
           <div className="flex items-center gap-4">
 
-            <Button
-              variant="outline"
-              className="text-black border-white hover:bg-primary-red hover:text-white"
-              onClick={() => nav("/dashboard")}
-            >
-              <LayoutDashboard className="w-5 h-5" />
-              Dashboard
+            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
+              onClick={() => {
+                localStorage.removeItem("userToken")
+                localStorage.removeItem("adminToken")
+                localStorage.removeItem("auditToken")
+                setUserAuth(p => ({ ...p, user: null, token: null }))
+                setAdminAuth(p => ({ ...p, user: null, token: null }))
+                setAuditAuth(p => ({ ...p, user: null, token: null }))
+                toast.success("Logout successful")
+                nav("/login")
+              }}>
+              <LogOut className="w-5 h-5" />
+              Logout
             </Button>
 
           </div>
@@ -188,7 +193,7 @@ export default function AuditReportPage() {
           <h1 style={{ minWidth: "100px" }} className="text-2xl font-bold">{tool ? tool.heading : "Report"} Results</h1>
           <div style={{ minWidth: "100px" }} ></div>
         </div>
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5">
           <div>
             {auditResponse ? (
               <div className="w-full max-w-4xl mx-auto" >

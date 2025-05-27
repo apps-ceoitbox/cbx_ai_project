@@ -18,6 +18,9 @@ function App() {
   const [isMobile, setIsMobile] = useState(false);
   const { apiLink } = useData();
 
+  const isToolsPage = location.pathname.startsWith("/audit-tools/");
+  const isAuditReportPage = location.pathname.startsWith("/audit-reports/");
+
   const hiddenSidebarPaths = ["/", "/login", "/admin/login", "/audit-login", "/audit-reports", "/audit-tools"];
   const hideSidebar = hiddenSidebarPaths.some(path => location.pathname === path);
   // const hideSidebar = hiddenSidebarPaths.find(i => {
@@ -148,6 +151,8 @@ function App() {
     <div className="flex w-full h-screen">
 
       {
+        !isAuditReportPage &&
+        !isToolsPage &&
         !isMobile &&
         !hideSidebar && (
           <AppSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
@@ -158,7 +163,7 @@ function App() {
 
       <main
         className="flex-1 overflow-y-auto transition-all duration-300"
-        style={{ marginLeft: isMobile || hideSidebar ? 0 : collapsed ? "5rem" : "15rem" }}>
+        style={{ marginLeft: isAuditReportPage || isToolsPage || isMobile || hideSidebar ? 0 : collapsed ? "5rem" : "15rem" }}>
         <AppRoutes />
       </main>
     </div>

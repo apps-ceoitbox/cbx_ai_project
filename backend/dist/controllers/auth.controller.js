@@ -109,6 +109,29 @@ AuthController.userLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awai
     const token = jsonwebtoken_1.default.sign({ userId: user._id }, JWT_SECRET);
     res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user });
 }));
+// Method to login a new user
+AuthController.auditLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userName, email, companyName = "", mobile = 0 } = req.body;
+    if (!userName || !email) {
+        res.status(errorCodes_1.HttpStatusCodes.BAD_REQUEST).json({ error: 'All fields are required' });
+        return;
+    }
+    if (checkEmail(email)) {
+        res.status(errorCodes_1.HttpStatusCodes.BAD_REQUEST).json({ error: 'Invalid email' });
+        return;
+    }
+    // Check if the user exists
+    const user = yield user_model_1.default.findOne({ email }).lean();
+    if (!user) {
+        let newUser = yield user_model_1.default.create({ userName, email, companyName, mobile });
+        const token = jsonwebtoken_1.default.sign({ userId: newUser._id, access: "audit" }, JWT_SECRET);
+        res.status(errorCodes_1.HttpStatusCodes.CREATED).json({ message: 'User registered successfully', data: newUser, token, access: "audit" });
+        return;
+    }
+    // Generate JWT
+    const token = jsonwebtoken_1.default.sign({ userId: user._id, access: "audit" }, JWT_SECRET);
+    res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Login successful', token, data: user, access: "audit" });
+}));
 // Method to get all users
 AuthController.initiateGoogleLogin = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const authUrl = client.generateAuthUrl({

@@ -164,7 +164,7 @@ body {
 #report-content * {
   word-wrap: break-word;
   overflow-wrap: break-word;
-  /* max-width: 100% !important; */
+  max-width: 100% !important;
 }
 
 #report-content table {
@@ -181,3 +181,25 @@ body {
   height: 100% !important;
   width: 100% !important;
 } */
+
+/* Report */
+#report-contents {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#report-contents * {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* max-width: 100% !important; */
+}
+
+#report-contents table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#report-contents img {
+  max-width: 100%;
+  height: auto;
+}

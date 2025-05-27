@@ -77,7 +77,7 @@ export default function ReportPage() {
   const handleDownloadPDF = () => {
 
     // Get the report content element
-    const reportElement = document.getElementById('report-content')
+    const reportElement = document.getElementById('report-contents')
     if (!reportElement) {
       toast.error("Could not generate PDF. Please try again.")
       return
@@ -110,7 +110,7 @@ export default function ReportPage() {
   // const handleSendEmail = async () => {
   //   setIsEmailSending(true);
   //   try {
-  //     const reportElement = document.getElementById('report-content')
+  //     const reportElement = document.getElementById('report-contents')
 
   //     if (!reportElement) {
   //       toast.error("Could not generate PDF. Please try again.")
@@ -166,7 +166,7 @@ export default function ReportPage() {
   const handleSendEmail = async () => {
     setIsEmailSending(true);
     try {
-      const reportElement = document.getElementById('report-content');
+      const reportElement = document.getElementById('report-contents');
 
       if (!reportElement) {
         toast.error("Content not found. Please try again.");
@@ -232,7 +232,7 @@ export default function ReportPage() {
   };
 
   const handleCopyContent = async () => {
-    const contentElement = document.getElementById("report-content");
+    const contentElement = document.getElementById("report-contents");
     if (!contentElement) {
       toast.error("Content not found");
       return;
@@ -321,7 +321,7 @@ export default function ReportPage() {
               </CardHeader>
 
               <CardContent dangerouslySetInnerHTML={{ __html: generateResponse }}
-                id="report-content"
+                id="report-contents"
                 className="pt-6" />
 
               <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">

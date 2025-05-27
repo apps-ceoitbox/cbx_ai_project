@@ -79,12 +79,14 @@ PromptController.getPromptByToolId = (0, asyncHandler_1.asyncHandler)((req, res)
         .json({ message: "Prompts fetched successfully", data: prompts });
 }));
 PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b, _c;
     const questions = req.body.questions;
     const prompt = yield prompt_model_1.default.findOne({ _id: req.body.toolId });
     const apiProvider = yield ai_model_1.default.findOne({
         name: prompt.defaultAiProvider.name,
     });
-    const genPrompt = generatePrompt(questions, prompt);
+    const genPrompt = generatePrompt(questions, prompt, req === null || req === void 0 ? void 0 : req.user, (_b = req === null || req === void 0 ? void 0 : req.body) === null || _b === void 0 ? void 0 : _b.type);
+    // console.log(genPrompt, req.body.type)
     const ai = new AI_1.AI({
         name: apiProvider === null || apiProvider === void 0 ? void 0 : apiProvider.name,
         model: prompt.defaultAiProvider.model,
@@ -110,6 +112,7 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         apiUsed: apiProvider.name,
         questionsAndAnswers: questions,
         generatedContent: finalText,
+        type: ((_c = req.body) === null || _c === void 0 ? void 0 : _c.type) || ""
     });
     res.end();
     // res
@@ -117,28 +120,35 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
     //   .json({ message: "Response generated successfully", data: response });
 }));
 exports.default = PromptController;
-function generatePrompt(userAnswers, promptData) {
+function generatePrompt(userAnswers, promptData, user = {}, type = "") {
+    let tempPromptData = promptData.promptTemplate || "";
+    if (type) {
+        let temp = tempPromptData.split("CLIENT_PROMPT");
+        console.log(temp);
+        tempPromptData = type == "internal" ? temp[0] : temp[1];
+    }
     const formattedAnswers = Object.entries(userAnswers)
-        .map(([question, answer]) => `<div style="margin-bottom: 10px;">
-            <strong style="color: #c0392b; font-weight: bold;">${question}:</strong>
-            <span style="color: #2c3e50;"> ${answer}</span>
-          </div>`)
+        .map(([question, answer]) => `Question: ${question}
+         Answer: ${answer}
+        `)
         .join("\n");
     const prompt = `
   ${promptData.initialGreetingsMessage}
+
+  User Name: ${user.userName}
+  User Email: ${user.email}
+  ${user.companyName ? `User Company: ${user.companyName}` : ""}
   
   Objective: ${promptData.objective}
   
-  <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">User Responses:</h3>
-  <div style="margin-bottom: 20px;">
+  User Responses:
   ${formattedAnswers}
-  </div>
   
-  <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">Additional Knowledge Base:</h3>
-  <div style="color: #2c3e50; margin-bottom: 20px; font-size: 16px; line-height: 1.6;">${promptData.knowledgeBase}</div>
+  Additional Knowledge Base:
+  ${promptData.knowledgeBase}
   
-  <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">Additional Details:</h3>
-  <div style="color: #2c3e50; margin-bottom: 20px; font-size: 16px; line-height: 1.6;">${promptData.promptTemplate}</div>
+  Additional Details:
+  ${tempPromptData}
   
   Based on the information above, generate a clean and modern HTML layout using the following structure and rules:
   
@@ -147,38 +157,6 @@ function generatePrompt(userAnswers, promptData) {
   <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-size: 16px; line-height: 1.6;">
     ...content...
   </div>
-  
-  📌 SECTIONS TO INCLUDE:
-  1. <h1 style="color: #c0392b; font-size: 28px; font-weight: bold; margin-bottom: 16px;">${promptData.heading}</h1>
-  
-  2. Use multiple <section style="margin-bottom: 30px;"> elements with:
-     - <h2 style="color: #c0392b; font-size: 22px; font-weight: 600; margin-bottom: 12px;">Section Title</h2>
-     - <p style="font-size: 16px; color: #2c3e50; margin-bottom: 12px;">Insight or supporting explanation</p>
-     - <ul style="padding-left: 20px; margin-bottom: 16px;">
-         <li style="margin-bottom: 6px;">Bullet item</li>
-       </ul>
-     - <ol style="padding-left: 20px; margin-bottom: 16px;">
-         <li style="margin-bottom: 6px;">Ordered item</li>
-       </ol>
-     - <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-         <thead>
-           <tr>
-             <th style="border: 1px solid #ddd; padding: 8px; background: #fef4f3; color: #c0392b;">Header</th>
-           </tr>
-         </thead>
-         <tbody>
-           <tr style="background-color: #f9f9f9;">
-             <td style="border: 1px solid #ddd; padding: 8px;">Cell</td>
-           </tr>
-           <tr style="background-color: #fff;">
-             <td style="border: 1px solid #ddd; padding: 8px;">Cell</td>
-           </tr>
-         </tbody>
-       </table>
-     - <div class="chart" style="border: 2px dashed #c0392b; padding: 20px; background: #fef4f3; border-radius: 6px; color: #c0392b; text-align: center; margin-bottom: 20px;">
-         Chart Placeholder: [Title or Label]
-       </div>
-     - Charts should be generated using Svg.
   
   💡 STYLE RULES:
   - All text should use #2c3e50
@@ -196,8 +174,86 @@ function generatePrompt(userAnswers, promptData) {
   🎯 GOAL:
   - Final HTML should look clean, readable, modern, and styled with inline CSS only.
   - Include a graph/chart as a chart using Svg, where needed.
+  - There charts should not have extra white space around them.
+  - If the chart is generated, make sure to give it scroll auto if it is too long.
   - Make sure that the html you generate is long and detailed.
   - Content must begin with the <div> container as mentioned.
   `;
     return prompt;
 }
+// function generatePrompt(userAnswers, promptData) {
+//   const formattedAnswers = Object.entries(userAnswers)
+//     .map(
+//       ([question, answer]) =>
+//         `<div style="margin-bottom: 10px;">
+//             <strong style="color: #c0392b; font-weight: bold;">${question}:</strong>
+//             <span style="color: #2c3e50;"> ${answer}</span>
+//           </div>`
+//     )
+//     .join("\n");
+//   const prompt = `
+//   ${promptData.initialGreetingsMessage}
+//   Objective: ${promptData.objective}
+//   <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">User Responses:</h3>
+//   <div style="margin-bottom: 20px;">
+//   ${formattedAnswers}
+//   </div>
+//   <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">Additional Knowledge Base:</h3>
+//   <div style="color: #2c3e50; margin-bottom: 20px; font-size: 16px; line-height: 1.6;">${promptData.knowledgeBase}</div>
+//   <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">Additional Details:</h3>
+//   <div style="color: #2c3e50; margin-bottom: 20px; font-size: 16px; line-height: 1.6;">${promptData.promptTemplate}</div>
+//   Based on the information above, generate a clean and modern HTML layout using the following structure and rules:
+//   🔧 STRUCTURE:
+//   - Wrap everything inside:
+//   <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-size: 16px; line-height: 1.6;">
+//     ...content...
+//   </div>
+//   📌 SECTIONS TO INCLUDE:
+//   1. <h1 style="color: #c0392b; font-size: 28px; font-weight: bold; margin-bottom: 16px;">${promptData.heading}</h1>
+//   2. Use multiple <section style="margin-bottom: 30px;"> elements with:
+//      - <h2 style="color: #c0392b; font-size: 22px; font-weight: 600; margin-bottom: 12px;">Section Title</h2>
+//      - <p style="font-size: 16px; color: #2c3e50; margin-bottom: 12px;">Insight or supporting explanation</p>
+//      - <ul style="padding-left: 20px; margin-bottom: 16px;">
+//          <li style="margin-bottom: 6px;">Bullet item</li>
+//        </ul>
+//      - <ol style="padding-left: 20px; margin-bottom: 16px;">
+//          <li style="margin-bottom: 6px;">Ordered item</li>
+//        </ol>
+//      - <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+//          <thead>
+//            <tr>
+//              <th style="border: 1px solid #ddd; padding: 8px; background: #fef4f3; color: #c0392b;">Header</th>
+//            </tr>
+//          </thead>
+//          <tbody>
+//            <tr style="background-color: #f9f9f9;">
+//              <td style="border: 1px solid #ddd; padding: 8px;">Cell</td>
+//            </tr>
+//            <tr style="background-color: #fff;">
+//              <td style="border: 1px solid #ddd; padding: 8px;">Cell</td>
+//            </tr>
+//          </tbody>
+//        </table>
+//      - <div class="chart" style="border: 2px dashed #c0392b; padding: 20px; background: #fef4f3; border-radius: 6px; color: #c0392b; text-align: center; margin-bottom: 20px;">
+//          Chart Placeholder: [Title or Label]
+//        </div>
+//      - Charts should be generated using Svg.
+//   💡 STYLE RULES:
+//   - All text should use #2c3e50
+//   - Accent color is #c0392b (red)
+//   - Font: 'Segoe UI', sans-serif
+//   - Add spacing (20px+), clean font sizes, and soft box shadows
+//   - Table rows should alternate background colors (#f9f9f9, #fff)
+//   🚫 DO NOT include:
+//   - Markdown
+//   - JavaScript
+//   - External styles
+//   - Comments
+//   🎯 GOAL:
+//   - Final HTML should look clean, readable, modern, and styled with inline CSS only.
+//   - Include a graph/chart as a chart using Svg, where needed.
+//   - Make sure that the html you generate is long and detailed.
+//   - Content must begin with the <div> container as mentioned.
+//   `;
+//   return prompt;
+// }

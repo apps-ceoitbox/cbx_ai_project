@@ -940,20 +940,22 @@ export default function AdminDashboard() {
                             <TableCell className="py-2">{submission.apiUsed}</TableCell>
                             <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
                             <TableCell className="py-2">
-                              <div className="flex space-x-2">
+                              <div className="flex space-x-2" >
                                 <Button variant="outline" size="sm" title="Regenerate" onClick={() => handleRegenerate(submission)}>
                                   <RefreshCcw className={`h-4 w-4 ${isSubmitting == submission._id ? "animate-spin" : ""}`} />
                                 </Button>
 
 
-                                <Dialog>
+                                <Dialog >
                                   <DialogTrigger asChild>
                                     <Button className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
                                       <Eye className="h-4 w-4" />
                                     </Button>
                                   </DialogTrigger>
 
-                                  <DialogContent className="max-w-[85%] max-h-[90vh] overflow-auto">
+                                  <DialogContent
+                                    className="w-full max-w-[85%] max-h-[90vh] overflow-auto"
+                                  >
                                     <Tabs defaultValue="result" className="w-full" >
                                       <TabsList className="mb-4 mt-3 w-full">
                                         <TabsTrigger
@@ -975,9 +977,14 @@ export default function AdminDashboard() {
 
 
                                       {/* Result Tab */}
-                                      <TabsContent value="result">
-                                        {/* <div className="w-full mx-auto mt-4" > */}
-                                        <Card className="mb-6 border-2" >
+                                      <TabsContent value="result" >
+                                        {/* <div
+                                          className="w-full max-w-[85%] mx-auto mt-4"
+                                         
+                                        > */}
+                                        <Card
+                                          className="mb-6 border-2"
+                                        >
                                           <CardHeader className="bg-primary-red text-white rounded-t-lg">
                                             <CardTitle className="text-2xl">{submission?.tool || "Report"}</CardTitle>
                                             <CardDescription className="text-gray-100">
@@ -988,10 +995,9 @@ export default function AdminDashboard() {
                                           <CardContent
                                             dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
                                             id="report-content"
-                                            className="pt-6"
+                                            className="pt-6 "
                                             style={{ padding: "0px" }}
-                                          >
-                                          </CardContent>
+                                          />
 
                                           <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">
                                             <Button
@@ -1051,7 +1057,6 @@ export default function AdminDashboard() {
                                     </Tabs>
                                   </DialogContent>
                                 </Dialog>
-
 
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>

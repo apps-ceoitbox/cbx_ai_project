@@ -9,9 +9,10 @@ import { toast } from 'sonner';
 const Header = () => {
     const nav = useNavigate();
     const location = useLocation();
-    const { setUserAuth, mobileMenuOpen, setMobileMenuOpen } = useData();
+    const { setUserAuth, mobileMenuOpen, setMobileMenuOpen, setAuditAuth } = useData();
     const [isMobile, setIsMobile] = useState(false);
     const isToolsPage = location.pathname.startsWith("/tools/");
+    const isAuditToolsPage = location.pathname.startsWith("/audit-tools/");
 
 
     useEffect(() => {
@@ -45,7 +46,7 @@ const Header = () => {
 
                 <div className="flex items-center gap-4">
 
-                    {location.pathname !== "/dashboard" &&
+                    {location.pathname !== "/dashboard" && !isAuditToolsPage &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
                                 nav("/dashboard")
@@ -57,7 +58,7 @@ const Header = () => {
                         </Button>
                     }
 
-                    {location.pathname !== "/generated-plans" && !isToolsPage &&
+                    {location.pathname !== "/generated-plans" && !isToolsPage && !isAuditToolsPage &&
                         <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
                                 nav("/generated-plans")
@@ -70,8 +71,10 @@ const Header = () => {
 
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
                         onClick={() => {
-                            localStorage.removeItem("userToken")
+                            localStorage.removeItem("userToken");
+                            localStorage.removeItem("auditToken");
                             setUserAuth(p => ({ ...p, user: null, token: null }))
+                            setAuditAuth(p => ({ ...p, user: null, token: null }))
                             toast.success("Logout successful")
                             nav("/login")
                         }}>
@@ -85,7 +88,7 @@ const Header = () => {
                     }
                 </div>
             </div>
-        </header>
+        </header >
     )
 }
 
