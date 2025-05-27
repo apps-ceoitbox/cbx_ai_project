@@ -954,10 +954,12 @@ export default function AdminDashboard() {
                                   </DialogTrigger>
 
                                   <DialogContent
-                                    className="w-full max-w-[85%] max-h-[90vh] overflow-auto"
+                                    style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+                                  // className="w-full max-w-[85%] max-h-[90vh] overflow-auto"
+
                                   >
-                                    <Tabs defaultValue="result" className="w-full" >
-                                      <TabsList className="mb-4 mt-3 w-full">
+                                    <Tabs defaultValue="result" className="w-full" style={{ overflow: "hidden" }}>
+                                      <TabsList className="mb-4 mt-3 w-full" >
                                         <TabsTrigger
                                           value="question"
                                           className="flex items-center justify-center gap-2 text-black bg-white border border-gray-200 data-[state=active]:bg-[#e50914] data-[state=active]:text-white"
@@ -977,13 +979,10 @@ export default function AdminDashboard() {
 
 
                                       {/* Result Tab */}
-                                      <TabsContent value="result" >
-                                        {/* <div
-                                          className="w-full max-w-[85%] mx-auto mt-4"
-                                         
-                                        > */}
+                                      <TabsContent value="result" className="overflow-auto max-h-[70vh]">
                                         <Card
-                                          className="mb-6 border-2"
+                                          className="mb-6 border-2 w-full max-w-[100%]  mx-auto mt-4 "
+                                          style={{ width: "100%" }}
                                         >
                                           <CardHeader className="bg-primary-red text-white rounded-t-lg">
                                             <CardTitle className="text-2xl">{submission?.tool || "Report"}</CardTitle>
@@ -995,7 +994,7 @@ export default function AdminDashboard() {
                                           <CardContent
                                             dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
                                             id="report-content"
-                                            className="pt-6 "
+                                            className="pt-6"
                                             style={{ padding: "0px" }}
                                           />
 
@@ -1040,11 +1039,11 @@ export default function AdminDashboard() {
                                           </CardFooter>
 
                                         </Card>
-                                        {/* </div> */}
                                       </TabsContent>
 
+
                                       {/* Question Tab */}
-                                      <TabsContent value="question">
+                                      <TabsContent value="question" style={{ overflowY: "auto", maxHeight: "70vh" }}>
                                         <div className="space-y-6 px-4 py-6">
                                           {Object.entries(submission?.questionsAndAnswers).map(([question, answer], index) => (
                                             <div key={index} className="bg-gray-50 p-4 rounded shadow">

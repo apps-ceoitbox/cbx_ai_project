@@ -588,35 +588,43 @@ const UserGeneratedPlans: React.FC = () => {
                                                             </Button>
 
                                                         </DialogTrigger>
-                                                        <DialogContent style={{ zIndex: 999 }} className="max-w-[90vw] sm:max-w-[80vw] md:max-w-[80vw] max-h-[90vh] overflow-auto"  >
+                                                        <DialogContent
+                                                            style={{ zIndex: 999 }}
+                                                            // className="max-w-[90vw] sm:max-w-[80vw] md:max-w-[80vw] max-h-[90vh] overflow-auto" 
+                                                            style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+                                                        >
 
-                                                            {/* <div className="w-full  mx-auto mt-4" > */}
-                                                            <Card className="border-2 mt-3">
-                                                                <CardHeader className="bg-primary-red text-white rounded-t-lg ">
-                                                                    <CardTitle className="text-2xl">{submission?.tool}</CardTitle>
-                                                                    <CardDescription className="text-gray-100">
-                                                                        Generated on {formatDateTime(submission.createdAt)}
-                                                                    </CardDescription>
-                                                                </CardHeader>
-
-                                                                <CardContent
-                                                                    dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
-                                                                    id="report-content"
-                                                                    className="pt-6 "
-                                                                    style={{ padding: "0px" }}
+                                                            <div className="overflow-auto max-h-[80vh] mt-2" >
+                                                                <Card
+                                                                    className="mb-6 border-2 w-full max-w-[100%]  mx-auto mt-4 "
+                                                                    style={{ width: "100%" }}
                                                                 >
-                                                                </CardContent>
+                                                                    <CardHeader className="bg-primary-red text-white rounded-t-lg ">
+                                                                        <CardTitle className="text-2xl">{submission?.tool}</CardTitle>
+                                                                        <CardDescription className="text-gray-100">
+                                                                            Generated on {formatDateTime(submission.createdAt)}
+                                                                        </CardDescription>
+                                                                    </CardHeader>
 
-                                                                <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        className="flex items-center"
-                                                                        onClick={() => handleDownloadPDF(submission)}
+                                                                    <CardContent
+                                                                        dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
+                                                                        id="report-content"
+                                                                        className="pt-6 "
+                                                                        style={{ padding: "0px" }}
                                                                     >
-                                                                        <Download className="mr-2 h-4 w-4" />
-                                                                        Download PDF
-                                                                    </Button>
-                                                                    {/* <Button
+                                                                    </CardContent>
+
+
+                                                                    <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            className="flex items-center"
+                                                                            onClick={() => handleDownloadPDF(submission)}
+                                                                        >
+                                                                            <Download className="mr-2 h-4 w-4" />
+                                                                            Download PDF
+                                                                        </Button>
+                                                                        {/* <Button
                                                                             variant="outline"
                                                                             className="flex items-center"
                                                                             onClick={() => handleDownloadDOCX(submission)}
@@ -624,35 +632,35 @@ const UserGeneratedPlans: React.FC = () => {
                                                                             <FileText className="mr-2 h-4 w-4" />
                                                                             Export DOCX
                                                                         </Button> */}
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        className="flex items-center"
-                                                                        onClick={handleCopyContent}
-                                                                    >
-                                                                        <Copy className="mr-2 h-4 w-4" />
-                                                                        Copy
-                                                                    </Button>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            className="flex items-center"
+                                                                            onClick={handleCopyContent}
+                                                                        >
+                                                                            <Copy className="mr-2 h-4 w-4" />
+                                                                            Copy
+                                                                        </Button>
 
-                                                                    <Button
-                                                                        className="bg-primary-red hover:bg-red-700 flex items-center"
-                                                                        onClick={() => handleSendEmail(submission)}
-                                                                        disabled={isEmailSending}
-                                                                    >
-                                                                        {isEmailSending ? (
-                                                                            <>
-                                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                                                Sending...
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <Mail className="mr-2 h-4 w-4" />
-                                                                                Send to Email
-                                                                            </>
-                                                                        )}
-                                                                    </Button>
-                                                                </CardFooter>
-                                                            </Card>
-                                                            {/* </div> */}
+                                                                        <Button
+                                                                            className="bg-primary-red hover:bg-red-700 flex items-center"
+                                                                            onClick={() => handleSendEmail(submission)}
+                                                                            disabled={isEmailSending}
+                                                                        >
+                                                                            {isEmailSending ? (
+                                                                                <>
+                                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                                    Sending...
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <Mail className="mr-2 h-4 w-4" />
+                                                                                    Send to Email
+                                                                                </>
+                                                                            )}
+                                                                        </Button>
+                                                                    </CardFooter>
+                                                                </Card>
+                                                            </div>
                                                         </DialogContent>
                                                     </Dialog>
                                                 </div>

@@ -113,7 +113,6 @@ export default function AuditTool() {
         done = doneReading;
         const chunk = decoder.decode(value, { stream: true });
         setAuditResponse(p => p + chunk)
-        console.log(chunk)
       }
     })
 

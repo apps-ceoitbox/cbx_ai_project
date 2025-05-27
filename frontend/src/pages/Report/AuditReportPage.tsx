@@ -53,12 +53,12 @@ export default function AuditReportPage() {
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
 
-  // console.log("auditAuth", auditAuth)
+
 
   useEffect(() => {
     const fetchTool = async () => {
       const response = await axios.get(`/prompt/${toolId}`);
-      setTool(response.data.data);
+      setTool(response?.data?.data);
     }
     fetchTool()
   }, [toolId])
@@ -96,7 +96,9 @@ export default function AuditReportPage() {
       })
   }
 
-  const handleSendEmail = async () => {
+  const handleSendEmail = async (data) => {
+    console.log("data", data)
+    return
     setIsEmailSending(true);
     try {
       const reportElement = document.getElementById('audit-response')
@@ -230,7 +232,7 @@ export default function AuditReportPage() {
 
                     <Button
                       className="bg-primary-red hover:bg-red-700 flex items-center"
-                      onClick={handleSendEmail}
+                      onClick={() => handleSendEmail(auditResponse)}
                       disabled={isEmailSending}
                     >
                       {isEmailSending ? (

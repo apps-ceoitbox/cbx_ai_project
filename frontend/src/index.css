@@ -164,7 +164,7 @@ body {
 #report-content * {
   word-wrap: break-word;
   overflow-wrap: break-word;
-  max-width: 100% !important;
+  /* max-width: 100% !important; */
 }
 
 #report-content table {
