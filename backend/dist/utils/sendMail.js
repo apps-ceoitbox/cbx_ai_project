@@ -17,7 +17,7 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 function MAIL(_a) {
-    return __awaiter(this, arguments, void 0, function* ({ to, subject, body, attachment, template = null }) {
+    return __awaiter(this, arguments, void 0, function* ({ to, subject, body, attachment, cc = [], template = null }) {
         let buffer = null;
         if (attachment) {
             buffer = Buffer.from(attachment, 'base64');
@@ -36,6 +36,7 @@ function MAIL(_a) {
             to,
             subject: subject,
             html: template == "OTP" ? EmailTemplate(body) : body,
+            cc,
             attachments: []
         };
         if (buffer) {

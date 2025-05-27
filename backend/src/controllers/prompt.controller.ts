@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import AiSettings from "../models/ai.model";
 import { AI, ApiProvider } from "../utils/AI";
 import Submission from "../models/submission.model";
+import { MAIL } from "../utils/sendMail";
 dotenv.config();
 
 export default class PromptController {
@@ -101,7 +102,21 @@ export default class PromptController {
       res.write(text);
     });
 
-
+    if(req.body?.type == "internal") {
+      MAIL({
+        to: "raghbir@ceoitbox.in",
+        subject: `Audit Report - ${prompt.heading}`,
+        body: finalText,
+      })
+    }
+    else if(req.body?.type == "client") {
+      MAIL({
+        to: req.user.email,
+        subject: `${prompt.heading}`,
+        body: finalText,
+        cc:["raghbir@ceoitbox.in"]
+      })
+    }
 
     Submission.create({
       name: req.user.userName,

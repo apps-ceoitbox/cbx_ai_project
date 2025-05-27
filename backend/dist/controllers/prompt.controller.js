@@ -20,6 +20,7 @@ const asyncHandler_1 = require("../utils/asyncHandler");
 const ai_model_1 = __importDefault(require("../models/ai.model"));
 const AI_1 = require("../utils/AI");
 const submission_model_1 = __importDefault(require("../models/submission.model"));
+const sendMail_1 = require("../utils/sendMail");
 dotenv_1.default.config();
 class PromptController {
 }
@@ -79,7 +80,7 @@ PromptController.getPromptByToolId = (0, asyncHandler_1.asyncHandler)((req, res)
         .json({ message: "Prompts fetched successfully", data: prompts });
 }));
 PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c;
+    var _b, _c, _d, _e;
     const questions = req.body.questions;
     const prompt = yield prompt_model_1.default.findOne({ _id: req.body.toolId });
     const apiProvider = yield ai_model_1.default.findOne({
@@ -101,6 +102,21 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         finalText += text;
         res.write(text);
     });
+    if (((_c = req.body) === null || _c === void 0 ? void 0 : _c.type) == "internal") {
+        (0, sendMail_1.MAIL)({
+            to: "raghbir@ceoitbox.in",
+            subject: `Audit Report - ${prompt.heading}`,
+            body: finalText,
+        });
+    }
+    else if (((_d = req.body) === null || _d === void 0 ? void 0 : _d.type) == "client") {
+        (0, sendMail_1.MAIL)({
+            to: req.user.email,
+            subject: `${prompt.heading}`,
+            body: finalText,
+            cc: ["raghbir@ceoitbox.in"]
+        });
+    }
     submission_model_1.default.create({
         name: req.user.userName,
         email: req.user.email,
@@ -112,7 +128,7 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         apiUsed: apiProvider.name,
         questionsAndAnswers: questions,
         generatedContent: finalText,
-        type: ((_c = req.body) === null || _c === void 0 ? void 0 : _c.type) || ""
+        type: ((_e = req.body) === null || _e === void 0 ? void 0 : _e.type) || ""
     });
     res.end();
     // res

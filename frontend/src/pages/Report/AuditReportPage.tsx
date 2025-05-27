@@ -193,76 +193,13 @@ export default function AuditReportPage() {
           <h1 style={{ minWidth: "100px" }} className="text-2xl font-bold">{tool ? tool.heading : "Report"} Results</h1>
           <div style={{ minWidth: "100px" }} ></div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5">
-          <div>
-            {auditResponse ? (
-              <div className="w-full max-w-4xl mx-auto" >
-                <Card className="mb-6 border-2">
-                  <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                    <CardTitle className="text-2xl">{tool?.heading || "Internal Report"} (Internal)</CardTitle>
-                    <CardDescription className="text-gray-100">
-                      Generated on{" "}
-                      {new Date().toLocaleString("en-US", {
-                        month: "short",
-                        day: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
-                    </CardDescription>
-
-                  </CardHeader>
-
-                  <CardContent dangerouslySetInnerHTML={{ __html: auditResponse }} id="audit-response" className="pt-6">
-
-                  </CardContent>
-
-                  <CardFooter className="flex flex-wrap gap-4 justify-center">
-                    <Button variant="outline" className="flex items-center" onClick={handleDownloadPDF}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download PDF
-                    </Button>
-                    {/* <Button variant="outline" className="flex items-center" onClick={handleDownloadDOCX}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Export DOCX
-                </Button> */}
-
-                    <Button
-                      className="bg-primary-red hover:bg-red-700 flex items-center"
-                      onClick={handleSendEmail}
-                      disabled={isEmailSending}
-                    >
-                      {isEmailSending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <Mail className="mr-2 h-4 w-4" />
-                          Send to Email
-                        </>
-                      )}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-lg">No report found. Please try again.</p>
-                <Button className="mt-4 bg-primary-red hover:bg-red-700" onClick={() => nav("/dashboard")}>
-                  Return to Dashboard
-                </Button>
-              </div>
-            )}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-5">
           <div>
             {auditClientResponse ? (
               <div className="w-full max-w-4xl mx-auto" >
                 <Card className="mb-6 border-2">
                   <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                    <CardTitle className="text-2xl">{tool?.heading || "Client Report"} (Client)</CardTitle>
+                    <CardTitle className="text-2xl">{tool?.heading || "Report"}</CardTitle>
                     <CardDescription className="text-gray-100">
                       Generated on{" "}
                       {new Date().toLocaleString("en-US", {
