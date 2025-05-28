@@ -676,7 +676,6 @@ export default function AdminDashboard() {
       .save()
       .then(() => {
         toast.success("PDF Downloaded Successfully")
-        // Clean up added styles
         if (styleElement && styleElement.parentNode) {
           styleElement.parentNode.removeChild(styleElement);
         }
