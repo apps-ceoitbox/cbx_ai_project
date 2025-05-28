@@ -56,11 +56,10 @@ export default function ReportPage() {
   const [sentToEmail, setSentToEmail] = useState("");
 
 
-
   useEffect(() => {
     const fetchTool = async () => {
       const response = await axios.get(`/prompt/${toolId}`);
-      setTool(response.data.data);
+      setTool(response?.data?.data);
     }
     fetchTool()
   }, [toolId])
@@ -76,7 +75,6 @@ export default function ReportPage() {
 
 
   const handleDownloadPDF = () => {
-
     // Get the report content element
     const reportElement = document.getElementById('report-contents')
     if (!reportElement) {
@@ -113,61 +111,6 @@ export default function ReportPage() {
         toast.error("Failed to download PDF. Please try again.")
       })
   }
-
-  // const handleSendEmail = async () => {
-  //   setIsEmailSending(true);
-  //   try {
-  //     const reportElement = document.getElementById('report-contents')
-
-  //     if (!reportElement) {
-  //       toast.error("Could not generate PDF. Please try again.")
-  //       setIsEmailSending(false);
-  //       return
-  //     }
-
-  //     // Configure PDF options
-  //     const options = {
-  //       margin: [10, 10, 10, 10],
-  //       filename: `${tool?.heading || "Report"}_${new Date().toISOString().split('T')[0]}.pdf`,
-  //       image: { type: 'jpeg', quality: 0.98 },
-  //       html2canvas: { scale: 2, useCORS: true },
-  //       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  //     }
-
-  //     const worker = html2pdf().set(options).from(reportElement);
-
-  //     // Get PDF as base64
-  //     const blob = await worker.outputPdf("blob");
-  //     const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
-  //     let base64PDF = await fileToBase64(pdfFile)
-
-  //     await axios.post("/users/email", {
-  //       to: userAuth.user?.email,
-  //       subject: tool?.heading || "Report" || "",
-  //       body: `
-  //       <!DOCTYPE html>
-  //       <html>
-  //         <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
-  //           <p>Dear ${userAuth?.user?.userName},</p>
-  //           <p>Please find enclosed the ${tool?.heading} Plan as requested by you.</p>
-  //         </body>
-  //       </html>`,
-  //       attachment: base64PDF
-  //     })
-
-  //     // Save the email for displaying in success popup
-  //     setSentToEmail(userAuth.user?.email);
-
-  //     // Show success popup
-  //     setEmailSuccessOpen(true);
-  //   } catch (error) {
-  //     console.error("Email sending error:", error);
-  //     toast.error("Failed to send email. Please try again.");
-  //   } finally {
-  //     // Set loading state back to false
-  //     setIsEmailSending(false);
-  //   }
-  // }
 
   const handleSendEmail = async () => {
     setIsEmailSending(true);
@@ -221,7 +164,7 @@ export default function ReportPage() {
 
       await axios.post("/users/email", {
         to: userAuth?.user?.email,
-        subject: tool.heading || "Report",
+        subject: tool?.heading || "Report",
         body: fullHTML,
         attachment: base64PDF
       });
@@ -389,13 +332,7 @@ export default function ReportPage() {
               <CheckCircle className="h-6 w-6 text-white mr-2" />
               Email Sent Successfully
             </DialogTitle>
-            {/* <DialogDescription className="text-gray-100">
-              Your report has been sent to:
-            </DialogDescription> */}
           </DialogHeader>
-          {/* <div className="py-6 bg-white">
-            <p className="text-center font-medium text-black">{sentToEmail}</p>
-          </div> */}
           <div className="py-6 bg-white">
             <p className="text-center font-medium text-black">
               We have emailed the plan on{" "}
@@ -415,3 +352,14 @@ export default function ReportPage() {
     </div>
   )
 }
+
+
+
+// function cleanCodeFences(markdownString) {
+//   if (typeof markdownString !== 'string') return '';
+
+//   return markdownString
+//     .replace(/^\s*```(?:html)?\s*/i, '')
+//     .replace(/\s*```\s*$/i, '')
+//     .trim();
+// }

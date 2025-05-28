@@ -96,7 +96,7 @@ export default function ToolQuestionsPage() {
       done = doneReading;
       const chunk = decoder.decode(value, { stream: true });
       setGenerateResponse(p => p + chunk)
-      console.log(chunk)
+
     }
 
     // axios.post(`/prompt/generate`, {

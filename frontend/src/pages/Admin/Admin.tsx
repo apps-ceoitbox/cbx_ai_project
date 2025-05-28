@@ -80,8 +80,8 @@ import { CSS } from '@dnd-kit/utilities'
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+// import html2canvas from 'html2canvas';
+// import jsPDF from 'jspdf';
 
 
 export const templateCategories = [
@@ -163,20 +163,20 @@ export default function AdminDashboard() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // @ts-ignore
-        const base64String = reader.result.split(',')[1]; // remove data:application/pdf;base64,
-        resolve(base64String);
-      };
+  // const fileToBase64 = (file) => {
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       // @ts-ignore
+  //       const base64String = reader.result.split(',')[1]; // remove data:application/pdf;base64,
+  //       resolve(base64String);
+  //     };
 
-      reader.onerror = reject;
+  //     reader.onerror = reject;
 
-      reader.readAsDataURL(file); // Triggers the conversion
-    });
-  };
+  //     reader.readAsDataURL(file); // Triggers the conversion
+  //   });
+  // };
 
   const handleProviderChange = (providerName: string) => {
     setSelectedProviderName(providerName);
@@ -303,6 +303,7 @@ export default function AdminDashboard() {
 
 
   const handleSendEmail = async (submission) => {
+    console.log(submission)
     setIsEmailSending(true);
     try {
       const reportElement = document.getElementById('report-content');
@@ -313,50 +314,93 @@ export default function AdminDashboard() {
         return;
       }
 
-      const options = {
-        margin: [10, 10, 10, 10],
-        filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }
+      // const options = {
+      //   margin: [10, 10, 10, 10],
+      //   filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+      //   image: { type: 'jpeg', quality: 0.98 },
+      //   html2canvas: { scale: 2, useCORS: true },
+      //   jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      // }
 
-      const worker = html2pdf().set(options).from(reportElement);
+      // const worker = html2pdf().set(options).from(reportElement);
 
       // Get PDF as base64
-      const blob = await worker.outputPdf("blob");
-      const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
-      let base64PDF = await fileToBase64(pdfFile)
+      // const blob = await worker.outputPdf("blob");
+      // const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
+      // let base64PDF = await fileToBase64(pdfFile)
 
       // Extract styled HTML content from report
       const fullHTML = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <style>
-              body {
-                background-color: #fff;
-                padding: 24px;
-                color: #2c3e50;
-                font-family: 'Segoe UI', sans-serif;
-                font-size: 16px;
-                line-height: 1.6;
-              }
-            </style>
-          </head>
-          <body>
-            <p>Dear ${userAuth?.user?.userName},</p>
-            <p>Please find below your ${submission?.tool || 'requested'} report:</p>
-            ${reportElement.innerHTML}
-          </body>
-        </html>
-      `;
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              background-color: #f5f5f5;
+              font-family: 'Segoe UI', sans-serif;
+              color: #333;
+            }
+            .email-container {
+              max-width: 600px;
+              margin: 40px auto;
+              background-color: #ffffff;
+              border: 1px solid #e0e0e0;
+              border-radius: 10px;
+              padding: 32px;
+            }
+            h1 {
+              color: #d32f2f;
+              font-size: 24px;
+              margin-bottom: 16px;
+            }
+            p {
+              font-size: 16px;
+              line-height: 1.6;
+            }
+            .btn-container {
+              margin-top: 32px;
+              text-align: center;
+            }
+            .view-button {
+              background-color: #d32f2f;
+              color: #ffffff;
+              text-decoration: none;
+              padding: 14px 26px;
+              border-radius: 6px;
+              font-weight: bold;
+              font-size: 16px;
+              display: inline-block;
+            }
+            .view-button:hover {
+              background-color: #b71c1c;
+            }
+        
+          </style>
+        </head>
+        <body>
+          <div class="email-container">
+            <h1>Your Report is Ready</h1>
+            <p>Hi ${submission?.name},</p>
+            <p>We’ve prepared your ${submission?.tool || 'requested'} report. You can view it by clicking the button below.</p>
+            <div class="btn-container">
+              <a href="https://ai.ceoitbox.com/view/${submission?._id}" target="_blank" class="view-button" style="color: #ffffff">
+                View Your Report
+              </a>
+            </div>
+          </div>
+        
+        </body>
+      </html>
+    `;
+
 
       await axios.post("/users/email", {
         to: submission?.email,
-        subject: submission.tool || "Report",
+        subject: submission?.tool || "Report",
         body: fullHTML,
-        attachment: base64PDF
+        // attachment: base64PDF
       });
 
       // Success
