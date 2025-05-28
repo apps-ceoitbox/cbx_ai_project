@@ -63,38 +63,146 @@ export default function AuditReportPage() {
     fetchTool()
   }, [toolId])
 
-  const handleDownloadPDF = () => {
+  // const handleDownloadPDF = () => {
 
-    // Get the report content element
-    const reportElement = document.getElementById('audit-response')
+  //   // Get the report content element
+  //   const reportElement = document.getElementById('audit-response')
+  //   if (!reportElement) {
+  //     toast.error("Could not generate PDF. Please try again.")
+  //     return
+  //   }
+
+  //   // Configure PDF options
+  //   const options = {
+  //     margin: [10, 10, 10, 10],
+  //     filename: `${tool?.heading || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
+  //     image: { type: 'jpeg', quality: 0.98 },
+  //     html2canvas: { scale: 2, useCORS: true },
+  //     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+  //     pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  //   }
+
+  //   // Generate and download PDF
+  //   html2pdf()
+  //     .set(options)
+  //     .from(reportElement)
+  //     .save()
+  //     .then(() => {
+  //       toast.success("PDF Downloaded")
+  //     })
+  //     .catch(error => {
+  //       console.error("PDF generation error:", error)
+  //       toast.error("Failed to download PDF. Please try again.")
+  //     })
+  // }
+  const handleDownloadPDF = () => {
+    const reportElement = document.getElementById('report-content')
+
     if (!reportElement) {
       toast.error("Could not generate PDF. Please try again.")
       return
     }
 
-    // Configure PDF options
+    // Optimize SVG elements for PDF
+    const svgElements = reportElement.querySelectorAll('svg');
+    svgElements.forEach(svg => {
+      svg.style.setProperty('height', '100%', 'important');
+      svg.style.setProperty('width', '100%', 'important');
+    });
+
+    // Add CSS classes to prevent breaking
+    const addPageBreakStyles = () => {
+      const style = document.createElement('style');
+      style.textContent = `
+              .pdf-no-break {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+              }
+              .pdf-page-break-before {
+                page-break-before: always !important;
+                break-before: page !important;
+              }
+              .pdf-page-break-after {
+                page-break-after: always !important;
+                break-after: page !important;
+              }
+            `;
+      document.head.appendChild(style);
+      return style;
+    };
+
+    const styleElement = addPageBreakStyles();
+
+    // Configure PDF options with better page handling
     const options = {
-      margin: [10, 10, 10, 10],
+      margin: [5, 5, 5, 5], // Reduced margins for less white space
       filename: `${tool?.heading || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      image: {
+        type: 'jpeg',
+        quality: 0.95 // Slightly reduced for better performance
+      },
+      html2canvas: {
+        scale: 1.5, // Reduced scale for better performance and less memory usage
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        letterRendering: true,
+        logging: false,
+        height: null, // Let it calculate automatically
+        width: null   // Let it calculate automatically
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: {
+        mode: ['avoid-all', 'css', 'legacy'],
+        before: '.pdf-page-break-before',
+        after: '.pdf-page-break-after',
+        avoid: '.pdf-no-break'
+      }
     }
 
     // Generate and download PDF
     html2pdf()
       .set(options)
       .from(reportElement)
+      .toPdf()
+      .get('pdf')
+      .then((pdf) => {
+        // Optional: Add custom page numbering or headers/footers here
+        const totalPages = pdf.internal.getNumberOfPages();
+
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          // Remove any extra margins or spacing
+          pdf.setFontSize(8);
+          // Optional: Add page numbers
+          // pdf.text(`Page ${i} of ${totalPages}`, 200, 290);
+        }
+
+        return pdf;
+      })
       .save()
       .then(() => {
-        toast.success("PDF Downloaded")
+        toast.success("PDF Downloaded Successfully")
+        // Clean up added styles
+        if (styleElement && styleElement.parentNode) {
+          styleElement.parentNode.removeChild(styleElement);
+        }
       })
       .catch(error => {
         console.error("PDF generation error:", error)
         toast.error("Failed to download PDF. Please try again.")
+        // Clean up added styles on error too
+        if (styleElement && styleElement.parentNode) {
+          styleElement.parentNode.removeChild(styleElement);
+        }
       })
   }
+
 
   const handleSendEmail = async () => {
     setIsEmailSending(true);
