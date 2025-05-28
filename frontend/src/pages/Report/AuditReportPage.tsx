@@ -45,7 +45,7 @@ const fileToBase64 = (file) => {
 export default function AuditReportPage() {
   const nav = useNavigate();
   const params = useParams();
-  const { auditAuth, auditResponse, auditClientResponse, setUserAuth, setAdminAuth, setAuditAuth } = useData();
+  const { auditAuth, auditClientResponse, setUserAuth, setAdminAuth, setAuditAuth } = useData();
   const axios = useAxios("audit");
   const toolId = params.toolId as string;
   const [tool, setTool] = useState<PromptInterface | null>(null)

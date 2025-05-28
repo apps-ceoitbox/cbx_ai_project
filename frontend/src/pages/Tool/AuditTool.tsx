@@ -71,7 +71,7 @@ export default function AuditTool() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
-    const [auditRes, clientAuditRes] = await Promise.all([
+    const [_, clientAuditRes] = await Promise.all([
       fetch(`${apiLink}prompt/generate`, {
         method: 'POST',
         headers: {
