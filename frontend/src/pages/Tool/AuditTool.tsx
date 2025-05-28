@@ -103,19 +103,19 @@ export default function AuditTool() {
     setShowConfirmation(true)
     nav(`/audit-reports/${toolId}`)
 
-    setTimeout(async () => {
-      const reader = auditRes.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
+    // setTimeout(async () => {
+    //   const reader = auditRes.body.getReader();
+    //   const decoder = new TextDecoder();
+    //   let done = false;
 
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunk = decoder.decode(value, { stream: true });
-        setAuditResponse(p => p + chunk)
-        console.log(chunk)
-      }
-    })
+    //   while (!done) {
+    //     const { value, done: doneReading } = await reader.read();
+    //     done = doneReading;
+    //     const chunk = decoder.decode(value, { stream: true });
+    //     setAuditResponse(p => p + chunk)
+    //     console.log(chunk)
+    //   }
+    // })
 
     setTimeout(async () => {
       const reader1 = clientAuditRes.body.getReader();
