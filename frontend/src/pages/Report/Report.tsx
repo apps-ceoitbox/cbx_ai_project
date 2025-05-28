@@ -83,6 +83,12 @@ export default function ReportPage() {
       return
     }
 
+    const svgElements = reportElement.querySelectorAll('svg');
+    svgElements.forEach(svg => {
+      svg.style.setProperty('height', '100%', 'important');
+      svg.style.setProperty('width', '100%', 'important');
+    });
+
     // Configure PDF options
     const options = {
       margin: [10, 10, 10, 10],
