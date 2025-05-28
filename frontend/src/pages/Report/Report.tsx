@@ -55,7 +55,7 @@ export default function ReportPage() {
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
 
-  console.log(generateResponse)
+
 
   useEffect(() => {
     const fetchTool = async () => {
@@ -64,6 +64,7 @@ export default function ReportPage() {
     }
     fetchTool()
   }, [toolId])
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setReport(generateResponse)
@@ -96,7 +97,7 @@ export default function ReportPage() {
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      // pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     }
 
     // Generate and download PDF
@@ -167,7 +168,6 @@ export default function ReportPage() {
   //     setIsEmailSending(false);
   //   }
   // }
-
 
   const handleSendEmail = async () => {
     setIsEmailSending(true);

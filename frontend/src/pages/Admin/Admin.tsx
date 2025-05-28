@@ -80,6 +80,8 @@ import { CSS } from '@dnd-kit/utilities'
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 
 export const templateCategories = [
@@ -299,61 +301,6 @@ export default function AdminDashboard() {
     getPrompts()
   }, [adminAuth.user])
 
-
-  // const handleSendEmail = async (submission) => {
-  //   setIsEmailSending(true);
-  //   try {
-  //     const reportElement = document.getElementById('report-content')
-
-  //     if (!reportElement) {
-  //       toast.error("Could not generate PDF. Please try again.")
-  //       setIsEmailSending(false);
-  //       return
-  //     }
-
-  //     // Configure PDF options
-  //     const options = {
-  //       margin: [10, 10, 10, 10],
-  //       filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
-  //       image: { type: 'jpeg', quality: 0.98 },
-  //       html2canvas: { scale: 2, useCORS: true },
-  //       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  //     }
-
-  //     const worker = html2pdf().set(options).from(reportElement);
-
-  //     // Get PDF as base64
-  //     const blob = await worker.outputPdf("blob");
-  //     const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
-  //     let base64PDF = await fileToBase64(pdfFile)
-
-  //     await axios.post("/users/email", {
-  //       to: submission?.email,
-  //       subject: submission.tool || "",
-  //       body: `
-  //       <!DOCTYPE html>
-  //       <html>
-  //         <body style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">
-  //           <p>Dear ${userAuth?.user?.userName},</p>
-  //           <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
-  //         </body>
-  //       </html>`,
-  //       attachment: base64PDF
-  //     })
-
-  //     // Save the email for displaying in success popup
-  //     setSentToEmail(submission?.email);
-
-  //     // Show success popup
-  //     setEmailSuccessOpen(true);
-  //   } catch (error) {
-  //     console.error("Email sending error:", error);
-  //     toast.error("Failed to send email. Please try again.");
-  //   } finally {
-  //     // Set loading state back to false
-  //     setIsEmailSending(false);
-  //   }
-  // }
 
   const handleSendEmail = async (submission) => {
     setIsEmailSending(true);
@@ -647,6 +594,8 @@ export default function AdminDashboard() {
 
   const handleDownloadPDF = (submission) => {
     const reportElement = document.getElementById('report-content')
+    console.log("reportElement", reportElement)
+
 
     if (!reportElement) {
       toast.error("Could not generate PDF. Please try again.")
@@ -683,23 +632,23 @@ export default function AdminDashboard() {
 
     const styleElement = addPageBreakStyles();
 
-    // Configure PDF options with better page handling
+
     const options = {
-      margin: [5, 5, 5, 5], // Reduced margins for less white space
+      margin: [5, 5, 5, 5],
       filename: `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
       image: {
         type: 'jpeg',
-        quality: 0.95 // Slightly reduced for better performance
+        quality: 0.95
       },
       html2canvas: {
-        scale: 1.5, // Reduced scale for better performance and less memory usage
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         letterRendering: true,
         logging: false,
-        height: null, // Let it calculate automatically
-        width: null   // Let it calculate automatically
+        height: null,
+        width: null,
       },
       jsPDF: {
         unit: 'mm',
@@ -722,17 +671,6 @@ export default function AdminDashboard() {
       .toPdf()
       .get('pdf')
       .then((pdf) => {
-        // Optional: Add custom page numbering or headers/footers here
-        const totalPages = pdf.internal.getNumberOfPages();
-
-        for (let i = 1; i <= totalPages; i++) {
-          pdf.setPage(i);
-          // Remove any extra margins or spacing
-          pdf.setFontSize(8);
-          // Optional: Add page numbers
-          // pdf.text(`Page ${i} of ${totalPages}`, 200, 290);
-        }
-
         return pdf;
       })
       .save()
@@ -752,6 +690,8 @@ export default function AdminDashboard() {
         }
       })
   }
+
+
 
   const handleDuplicatePrompt = async (promptId: string) => {
     try {
