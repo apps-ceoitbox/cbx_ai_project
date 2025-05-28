@@ -104,7 +104,7 @@ export default class PromptController {
 
     if(req.body?.type == "internal") {
       MAIL({
-        to: "raghbir@ceoitbox.in",
+        to: "gdpreport@ceoitbox.in",
         subject: `Audit Report - ${prompt.heading}`,
         body: finalText,
       })
@@ -114,7 +114,7 @@ export default class PromptController {
         to: req.user.email,
         subject: `${prompt.heading}`,
         body: finalText,
-        cc:["raghbir@ceoitbox.in"]
+        cc:["gdpreport@ceoitbox.in"]
       })
     }
 
@@ -141,7 +141,6 @@ function generatePrompt(userAnswers, promptData, user:any={}, type="") {
   let tempPromptData = promptData.promptTemplate || "";
   if(type) {
     let temp = tempPromptData.split("CLIENT_PROMPT");
-    console.log(temp)
     tempPromptData = type == "internal" ? temp[0] : temp[1]
   }
   const formattedAnswers = Object.entries(userAnswers)
@@ -185,7 +184,8 @@ function generatePrompt(userAnswers, promptData, user:any={}, type="") {
   - Font: 'Segoe UI', sans-serif
   - Add spacing (20px+), clean font sizes, and soft box shadows
   - Table rows should alternate background colors (#f9f9f9, #fff)
-  
+  - Any HTML tag used (like h1, p, table, etc.) must have its CSS explicitly defined inline, including font size, font weight, colors, padding, margins, etc. — do not rely on browser defaults.
+
   🚫 DO NOT include:
   - Markdown
   - JavaScript
