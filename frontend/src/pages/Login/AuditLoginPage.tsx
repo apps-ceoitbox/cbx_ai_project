@@ -130,8 +130,8 @@ export default function AuditLoginPage() {
 
           <Card className="border-primary-red">
             <CardHeader className="bg-primary-red text-white rounded-t-lg">
-              <CardTitle className="text-2xl font-bold">Login</CardTitle>
-              <CardDescription className="text-gray-100">Enter your Registered Email ID to access CEOITBOX AI Tools</CardDescription>
+              <CardTitle className="text-2xl font-bold">Enter your Registered Email ID to access CEOITBOX AI Tools</CardTitle>
+              <CardDescription className="text-gray-100">Start your Growth journey here</CardDescription>
             </CardHeader>
 
             <CardContent className="pt-6">

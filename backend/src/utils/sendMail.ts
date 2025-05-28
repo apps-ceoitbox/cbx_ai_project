@@ -6,13 +6,14 @@ interface MailInterface {
   to: string;
   subject: string;
   body: string;
-  attachment?:string;
+  cc?: string[];
+  attachment?: string;
   template?: string | null;
 }
 
-export async function MAIL({ to, subject, body, attachment, template = null }: MailInterface) {
+export async function MAIL({ to, subject, body, attachment, cc = [], template = null }: MailInterface) {
   let buffer = null;
-  if(attachment) {
+  if (attachment) {
     buffer = Buffer.from(attachment, 'base64');
   }
 
@@ -30,12 +31,13 @@ export async function MAIL({ to, subject, body, attachment, template = null }: M
     to,
     subject: subject,
     html: template == "OTP" ? EmailTemplate(body) : body,
-    attachments:[]
+    cc,
+    attachments: []
   };
-  if(buffer) {
+  if (buffer) {
     mailOptions.attachments = [
       {
-        filename:subject,
+        filename: subject,
         content: buffer,
         contentType: 'application/pdf'
       }

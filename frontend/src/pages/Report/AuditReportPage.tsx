@@ -232,7 +232,7 @@ export default function AuditReportPage() {
 
                     <Button
                       className="bg-primary-red hover:bg-red-700 flex items-center"
-                      onClick={() => handleSendEmail(auditResponse)}
+                      onClick={handleSendEmail}
                       disabled={isEmailSending}
                     >
                       {isEmailSending ? (
@@ -264,7 +264,7 @@ export default function AuditReportPage() {
               <div className="w-full max-w-4xl mx-auto" >
                 <Card className="mb-6 border-2">
                   <CardHeader className="bg-primary-red text-white rounded-t-lg">
-                    <CardTitle className="text-2xl">{tool?.heading || "Client Report"} (Client)</CardTitle>
+                    <CardTitle className="text-2xl">{tool?.heading || "Report"}</CardTitle>
                     <CardDescription className="text-gray-100">
                       Generated on{" "}
                       {new Date().toLocaleString("en-US", {
