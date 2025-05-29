@@ -13,7 +13,7 @@ export default function AuditTool() {
   const axios = useAxios("audit");
   const nav = useNavigate();
   const params = useParams();
-  const { auditAuth, setAuditResponse, setAuditClientResponse, apiLink } = useData();
+  const { auditAuth, setAuditResponse, setAuditClientResponse, apiLink, setSubmissionID } = useData();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -126,7 +126,12 @@ export default function AuditTool() {
         const { value, done: doneReading } = await reader1.read();
         done1 = doneReading;
         const chunk = decoder1.decode(value, { stream: true });
-        setAuditClientResponse(p => p + chunk)
+        if (chunk.startsWith("{ID}-")) {
+          setSubmissionID(chunk.split("{ID}-")[1].trim());
+        }
+        else {
+          setAuditClientResponse(p => p + chunk)
+        }
       }
     })
 

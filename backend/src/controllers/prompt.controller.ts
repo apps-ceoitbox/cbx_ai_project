@@ -118,7 +118,7 @@ export default class PromptController {
       })
     }
 
-    Submission.create({
+    const submission = await Submission.create({
       name: req.user.userName,
       email: req.user.email,
       company: req.user.companyName,
@@ -131,6 +131,9 @@ export default class PromptController {
       generatedContent: finalText,
       type:req.body?.type || ""
     });
+
+    res.write(`{ID}-${submission._id}`);
+
     res.end();
     // res
     //   .status(HttpStatusCodes.OK)

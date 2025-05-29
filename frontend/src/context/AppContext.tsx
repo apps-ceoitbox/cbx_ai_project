@@ -56,6 +56,8 @@ export const AppProvider = ({ children }) => {
   const [astroResult, setAstroResult] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const [submissionID, setSubmissionID] = useState("");
+
 
   return (
     <AppContext.Provider
@@ -76,7 +78,9 @@ export const AppProvider = ({ children }) => {
         setAstroResult,
         mobileMenuOpen,
         setMobileMenuOpen,
-        apiLink
+        apiLink,
+        submissionID, 
+        setSubmissionID
       }}
     >
       {children}

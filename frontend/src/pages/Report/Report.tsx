@@ -45,7 +45,7 @@ const fileToBase64 = (file) => {
 export default function ReportPage() {
   const nav = useNavigate();
   const params = useParams();
-  const { userAuth, generateResponse } = useData();
+  const { userAuth, generateResponse, submissionID } = useData();
   const [isLoading, setIsLoading] = useState(true);
   const [report, setReport] = useState<any>(null);
   const axios = useAxios("user");
@@ -55,7 +55,6 @@ export default function ReportPage() {
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
 
-  console.log(generateResponse)
 
   useEffect(() => {
     const fetchTool = async () => {

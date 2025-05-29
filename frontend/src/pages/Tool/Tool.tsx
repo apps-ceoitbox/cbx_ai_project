@@ -13,7 +13,7 @@ export default function ToolQuestionsPage() {
   const axios = useAxios("user");
   const nav = useNavigate();
   const params = useParams();
-  const { userAuth, setGenerateResponse, apiLink } = useData();
+  const { userAuth, setGenerateResponse, apiLink, setSubmissionID } = useData();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -95,8 +95,12 @@ export default function ToolQuestionsPage() {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunk = decoder.decode(value, { stream: true });
-      setGenerateResponse(p => p + chunk)
-      console.log(chunk)
+      if (chunk.startsWith("{ID}-")) {
+        setSubmissionID(chunk.split("{ID}-")[1].trim());
+      }
+      else {
+        setGenerateResponse(p => p + chunk)
+      }
     }
 
     // axios.post(`/prompt/generate`, {
