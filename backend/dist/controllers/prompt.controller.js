@@ -117,7 +117,7 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
             cc: ["gdpreport@ceoitbox.in"]
         });
     }
-    submission_model_1.default.create({
+    const submission = yield submission_model_1.default.create({
         name: req.user.userName,
         email: req.user.email,
         company: req.user.companyName,
@@ -130,6 +130,7 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         generatedContent: finalText,
         type: ((_e = req.body) === null || _e === void 0 ? void 0 : _e.type) || ""
     });
+    res.write(`{ID}-${submission._id}`);
     res.end();
     // res
     //   .status(HttpStatusCodes.OK)
