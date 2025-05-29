@@ -101,23 +101,7 @@ export default class PromptController {
       finalText += text;
       res.write(text);
     });
-
-    if(req.body?.type == "internal") {
-      MAIL({
-        to: "gdpreport@ceoitbox.in",
-        subject: `Audit Report - ${prompt.heading}`,
-        body: finalText,
-      })
-    }
-    else if(req.body?.type == "client") {
-      MAIL({
-        to: req.user.email,
-        subject: `${prompt.heading}`,
-        body: finalText,
-        cc:["gdpreport@ceoitbox.in"]
-      })
-    }
-
+    
     const submission = await Submission.create({
       name: req.user.userName,
       email: req.user.email,
@@ -131,6 +115,87 @@ export default class PromptController {
       generatedContent: finalText,
       type:req.body?.type || ""
     });
+
+    const fullHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              background-color: #f5f5f5;
+              font-family: 'Segoe UI', sans-serif;
+              color: #333;
+            }
+            .email-container {
+              max-width: 600px;
+              margin: 40px auto;
+              background-color: #ffffff;
+              border: 1px solid #e0e0e0;
+              border-radius: 10px;
+              padding: 32px;
+            }
+            h1 {
+              color: #d32f2f;
+              font-size: 24px;
+              margin-bottom: 16px;
+            }
+            p {
+              font-size: 16px;
+              line-height: 1.6;
+            }
+            .btn-container {
+              margin-top: 32px;
+              text-align: center;
+            }
+            .view-button {
+              background-color: #d32f2f;
+              color: #ffffff;
+              text-decoration: none;
+              padding: 14px 26px;
+              border-radius: 6px;
+              font-weight: bold;
+              font-size: 16px;
+              display: inline-block;
+            }
+            .view-button:hover {
+              background-color: #b71c1c;
+            }
+        
+          </style>
+        </head>
+        <body>
+          <div class="email-container">
+            <h1>Your Report is Ready</h1>
+            <p>Hi ${req.user?.userName},</p>
+            <p>We’ve prepared your ${prompt?.heading || 'requested'} report. You can view it by clicking the button below.</p>
+            <div class="btn-container">
+              <a href="https://ai.ceoitbox.com/view/${submission?._id}" target="_blank" class="view-button" style="color: #ffffff">
+                View Your Report
+              </a>
+            </div>
+          </div>
+        
+        </body>
+      </html>
+    `;
+
+    if(req.body?.type == "internal") {
+      MAIL({
+        to: "gdpreport@ceoitbox.in",
+        subject: `Audit Report - ${prompt.heading}`,
+        body: fullHTML,
+      })
+    }
+    else if(req.body?.type == "client") {
+      MAIL({
+        to: req.user.email,
+        subject: `${prompt.heading}`,
+        body: fullHTML,
+        cc:["gdpreport@ceoitbox.in"]
+      })
+    }
 
     res.write(`{ID}-${submission._id}`);
 

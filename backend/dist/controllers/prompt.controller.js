@@ -80,7 +80,7 @@ PromptController.getPromptByToolId = (0, asyncHandler_1.asyncHandler)((req, res)
         .json({ message: "Prompts fetched successfully", data: prompts });
 }));
 PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c, _d, _e;
+    var _b, _c, _d, _e, _f;
     const questions = req.body.questions;
     const prompt = yield prompt_model_1.default.findOne({ _id: req.body.toolId });
     const apiProvider = yield ai_model_1.default.findOne({
@@ -102,21 +102,6 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         finalText += text;
         res.write(text);
     });
-    if (((_c = req.body) === null || _c === void 0 ? void 0 : _c.type) == "internal") {
-        (0, sendMail_1.MAIL)({
-            to: "gdpreport@ceoitbox.in",
-            subject: `Audit Report - ${prompt.heading}`,
-            body: finalText,
-        });
-    }
-    else if (((_d = req.body) === null || _d === void 0 ? void 0 : _d.type) == "client") {
-        (0, sendMail_1.MAIL)({
-            to: req.user.email,
-            subject: `${prompt.heading}`,
-            body: finalText,
-            cc: ["gdpreport@ceoitbox.in"]
-        });
-    }
     const submission = yield submission_model_1.default.create({
         name: req.user.userName,
         email: req.user.email,
@@ -128,8 +113,87 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         apiUsed: apiProvider.name,
         questionsAndAnswers: questions,
         generatedContent: finalText,
-        type: ((_e = req.body) === null || _e === void 0 ? void 0 : _e.type) || ""
+        type: ((_c = req.body) === null || _c === void 0 ? void 0 : _c.type) || ""
     });
+    const fullHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              background-color: #f5f5f5;
+              font-family: 'Segoe UI', sans-serif;
+              color: #333;
+            }
+            .email-container {
+              max-width: 600px;
+              margin: 40px auto;
+              background-color: #ffffff;
+              border: 1px solid #e0e0e0;
+              border-radius: 10px;
+              padding: 32px;
+            }
+            h1 {
+              color: #d32f2f;
+              font-size: 24px;
+              margin-bottom: 16px;
+            }
+            p {
+              font-size: 16px;
+              line-height: 1.6;
+            }
+            .btn-container {
+              margin-top: 32px;
+              text-align: center;
+            }
+            .view-button {
+              background-color: #d32f2f;
+              color: #ffffff;
+              text-decoration: none;
+              padding: 14px 26px;
+              border-radius: 6px;
+              font-weight: bold;
+              font-size: 16px;
+              display: inline-block;
+            }
+            .view-button:hover {
+              background-color: #b71c1c;
+            }
+        
+          </style>
+        </head>
+        <body>
+          <div class="email-container">
+            <h1>Your Report is Ready</h1>
+            <p>Hi ${(_d = req.user) === null || _d === void 0 ? void 0 : _d.userName},</p>
+            <p>We’ve prepared your ${(prompt === null || prompt === void 0 ? void 0 : prompt.heading) || 'requested'} report. You can view it by clicking the button below.</p>
+            <div class="btn-container">
+              <a href="https://ai.ceoitbox.com/view/${submission === null || submission === void 0 ? void 0 : submission._id}" target="_blank" class="view-button" style="color: #ffffff">
+                View Your Report
+              </a>
+            </div>
+          </div>
+        
+        </body>
+      </html>
+    `;
+    if (((_e = req.body) === null || _e === void 0 ? void 0 : _e.type) == "internal") {
+        (0, sendMail_1.MAIL)({
+            to: "gdpreport@ceoitbox.in",
+            subject: `Audit Report - ${prompt.heading}`,
+            body: fullHTML,
+        });
+    }
+    else if (((_f = req.body) === null || _f === void 0 ? void 0 : _f.type) == "client") {
+        (0, sendMail_1.MAIL)({
+            to: req.user.email,
+            subject: `${prompt.heading}`,
+            body: fullHTML,
+            cc: ["gdpreport@ceoitbox.in"]
+        });
+    }
     res.write(`{ID}-${submission._id}`);
     res.end();
     // res
