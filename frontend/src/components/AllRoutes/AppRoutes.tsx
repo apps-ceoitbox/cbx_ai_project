@@ -12,10 +12,11 @@ import AfterLoginHomePage from '@/pages/Home/AfterLoginHomePage'
 import Footer from '@/pages/Home/Footer'
 import HomePage from '@/pages/Home/HomePage'
 import AuditLoginPage from '@/pages/Login/AuditLoginPage'
-    import LoginPage from '@/pages/Login/Login'
+import LoginPage from '@/pages/Login/Login'
 import NotFound from '@/pages/NotFound'
 import AuditReportPage from '@/pages/Report/AuditReportPage'
 import ReportPage from '@/pages/Report/Report'
+import Result from '@/pages/Report/Result'
 import AuditTool from '@/pages/Tool/AuditTool'
 import ToolQuestionsPage from '@/pages/Tool/Tool'
 import { Route, Routes } from 'react-router-dom'
@@ -35,9 +36,12 @@ const AppRoutes = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/generated-plans" element={<UserGeneratedPlans />} />
                 <Route path="/reports/:toolId" element={<ReportPage />} />
-                <Route path="/audit-reports/:toolId" element={<AuditReportPage />} />
                 <Route path="/tools/:toolId" element={<ToolQuestionsPage />} />
+
+                {/* Audit */}
+                <Route path="/audit-reports/:toolId" element={<AuditReportPage />} />
                 <Route path="/audit-tools/:toolId" element={<AuditTool />} />
+                <Route path="/view/:id" element={<Result />} />
 
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/login" element={<AdminLoginPage />} />

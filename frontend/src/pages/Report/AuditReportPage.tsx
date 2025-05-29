@@ -63,18 +63,24 @@ export default function AuditReportPage() {
     fetchTool()
   }, [toolId])
 
-  // const handleDownloadPDF = () => {
 
-  //   // Get the report content element
+  // const handleDownloadPDF = () => {
   //   const reportElement = document.getElementById('audit-response')
   //   if (!reportElement) {
   //     toast.error("Could not generate PDF. Please try again.")
   //     return
   //   }
 
+  //   const svgElements = reportElement.querySelectorAll('svg');
+  //   svgElements.forEach(svg => {
+  //     svg.style.setProperty('height', '100%', 'important');
+  //     svg.style.setProperty('width', '100%', 'important');
+  //   });
+
+
   //   // Configure PDF options
   //   const options = {
-  //     margin: [10, 10, 10, 10],
+  //     margin: [5, 5, 5, 5],
   //     filename: `${tool?.heading || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
   //     image: { type: 'jpeg', quality: 0.98 },
   //     html2canvas: { scale: 2, useCORS: true },
@@ -95,8 +101,9 @@ export default function AuditReportPage() {
   //       toast.error("Failed to download PDF. Please try again.")
   //     })
   // }
+
   const handleDownloadPDF = () => {
-    const reportElement = document.getElementById('report-content')
+    const reportElement = document.getElementById('audit-response')
 
     if (!reportElement) {
       toast.error("Could not generate PDF. Please try again.")
@@ -202,7 +209,6 @@ export default function AuditReportPage() {
         }
       })
   }
-
 
   const handleSendEmail = async () => {
     setIsEmailSending(true);
@@ -322,9 +328,7 @@ export default function AuditReportPage() {
 
                   </CardHeader>
 
-                  <CardContent dangerouslySetInnerHTML={{ __html: auditClientResponse }} id="auditClientResponse" className="pt-6">
-
-                  </CardContent>
+                  <CardContent dangerouslySetInnerHTML={{ __html: auditClientResponse }} id="audit-response" className="pt-6" />
 
                   <CardFooter className="flex flex-wrap gap-4 justify-center">
                     <Button variant="outline" className="flex items-center" onClick={handleDownloadPDF}>

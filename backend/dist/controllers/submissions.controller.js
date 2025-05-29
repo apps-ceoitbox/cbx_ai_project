@@ -20,27 +20,39 @@ class SubmissionsController {
     static getSubmissions(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const submissions = yield submission_model_1.default.find().sort({ createdAt: -1 });
-            res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Submissions fetched successfully', data: submissions });
+            res
+                .status(errorCodes_1.HttpStatusCodes.OK)
+                .json({ message: "Submissions fetched successfully", data: submissions });
         });
     }
     static getUserSubmission(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const submission = yield submission_model_1.default.find({ email: req.user.email }).sort({ createdAt: -1 });
-            res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Submission fetched successfully', data: submission });
+            const submission = yield submission_model_1.default.find({ email: req.user.email }).sort({
+                createdAt: -1,
+            });
+            res
+                .status(errorCodes_1.HttpStatusCodes.OK)
+                .json({ message: "Submission fetched successfully", data: submission });
         });
     }
     static updateSubmission(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const id = req.params.id;
-            const submission = yield submission_model_1.default.findByIdAndUpdate(id, req.body, { new: true });
-            res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Submission updated successfully', data: submission });
+            const submission = yield submission_model_1.default.findByIdAndUpdate(id, req.body, {
+                new: true,
+            });
+            res
+                .status(errorCodes_1.HttpStatusCodes.OK)
+                .json({ message: "Submission updated successfully", data: submission });
         });
     }
     static deleteSubmission(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const id = req.params.id;
             const submission = yield submission_model_1.default.findByIdAndDelete(id);
-            res.status(errorCodes_1.HttpStatusCodes.OK).json({ message: 'Submission deleted successfully', data: submission });
+            res
+                .status(errorCodes_1.HttpStatusCodes.OK)
+                .json({ message: "Submission deleted successfully", data: submission });
         });
     }
 }

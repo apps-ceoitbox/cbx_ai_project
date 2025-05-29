@@ -167,10 +167,10 @@ body {
   /* max-width: 100% !important; */
 }
 
-#report-content table {
+/* #report-content table {
   width: 100%;
   table-layout: fixed;
-}
+} */
 
 #report-content img {
   max-width: 100%;
@@ -189,15 +189,15 @@ body {
 }
 
 #report-contents * {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
   /* max-width: 100% !important; */
 }
 
-#report-contents table {
+/* #report-contents table {
   width: 100%;
   table-layout: fixed;
-}
+} */
 
 #report-contents img {
   max-width: 100%;

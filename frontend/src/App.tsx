@@ -20,6 +20,7 @@ function App() {
 
   const isToolsPage = location.pathname.startsWith("/audit-tools/");
   const isAuditReportPage = location.pathname.startsWith("/audit-reports/");
+  const isAResultPage = location.pathname.startsWith("/view/");
 
   const hiddenSidebarPaths = ["/", "/login", "/admin/login", "/audit-login", "/audit-reports", "/audit-tools"];
   const hideSidebar = hiddenSidebarPaths.some(path => location.pathname === path);
@@ -151,6 +152,7 @@ function App() {
     <div className="flex w-full h-screen">
 
       {
+        !isAResultPage &&
         !isAuditReportPage &&
         !isToolsPage &&
         !isMobile &&
@@ -163,7 +165,7 @@ function App() {
 
       <main
         className="flex-1 overflow-y-auto transition-all duration-300"
-        style={{ marginLeft: isAuditReportPage || isToolsPage || isMobile || hideSidebar ? 0 : collapsed ? "5rem" : "15rem" }}>
+        style={{ marginLeft: isAResultPage || isAuditReportPage || isToolsPage || isMobile || hideSidebar ? 0 : collapsed ? "5rem" : "15rem" }}>
         <AppRoutes />
       </main>
     </div>
