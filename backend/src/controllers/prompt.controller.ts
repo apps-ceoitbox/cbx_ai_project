@@ -184,7 +184,7 @@ export default class PromptController {
     if(req.body?.type == "internal") {
       MAIL({
         to: "gdpreport@ceoitbox.in",
-        subject: `Audit Report - ${prompt.heading}`,
+        subject: `Internal | ${prompt.heading}`,
         body: fullHTML,
       })
     }

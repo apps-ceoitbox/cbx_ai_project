@@ -182,7 +182,7 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
     if (((_e = req.body) === null || _e === void 0 ? void 0 : _e.type) == "internal") {
         (0, sendMail_1.MAIL)({
             to: "gdpreport@ceoitbox.in",
-            subject: `Audit Report - ${prompt.heading}`,
+            subject: `Internal | ${prompt.heading}`,
             body: fullHTML,
         });
     }
