@@ -183,9 +183,21 @@ export default class PromptController {
 
     if(req.body?.type == "internal") {
       MAIL({
-        to: "gdpreport@ceoitbox.in",
+        to: "sjain@ceoitbox.in",
         subject: `Internal | ${prompt.heading}`,
         body: fullHTML,
+        cc:[
+          "sjain@ceoitbox.in",
+          "anurag@ceoitbox.in",
+          "avishek@ceoitbox.in",
+          "jeetu@ceoitbox.in",
+          "kuldeep@ceoitbox.in",
+          "siddharth@ceoitbox.in",
+          "sujit@ceoitbox.in",
+          "tejwai@ceoitbox.in",
+          "vinayak@ceoitbox.in",
+          "raghbir@ceoitbox.in"
+        ]
       })
     }
     else if(req.body?.type == "client") {
@@ -193,7 +205,18 @@ export default class PromptController {
         to: req.user.email,
         subject: `${prompt.heading}`,
         body: fullHTML,
-        cc:["gdpreport@ceoitbox.in"]
+        cc:[
+          "sjain@ceoitbox.in",
+          "anurag@ceoitbox.in",
+          "avishek@ceoitbox.in",
+          "jeetu@ceoitbox.in",
+          "kuldeep@ceoitbox.in",
+          "siddharth@ceoitbox.in",
+          "sujit@ceoitbox.in",
+          "tejwai@ceoitbox.in",
+          "vinayak@ceoitbox.in",
+          "raghbir@ceoitbox.in"
+        ]
       })
     }
 
@@ -205,6 +228,7 @@ export default class PromptController {
     //   .json({ message: "Response generated successfully", data: response });
   });
 }
+
 function generatePrompt(userAnswers, promptData, user:any={}, type="") {
   let tempPromptData = promptData.promptTemplate || "";
   if(type) {

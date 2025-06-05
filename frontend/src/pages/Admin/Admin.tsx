@@ -60,7 +60,6 @@ import {
 } from "@/components/ui/dialog"
 
 import html2pdf from 'html2pdf.js'
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import AdminHeader from "@/components/Custom/AdminHeader"
 import {
@@ -77,6 +76,7 @@ import {
   verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import DynamicPagination from "@/components/dynamicPagination"
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
@@ -133,10 +133,12 @@ export default function AdminDashboard() {
   const nav = useNavigate()
   const axios = useAxios("admin");
 
-  const { adminAuth, userAuth, apiLink, setGenerateResponse } = useData();
+  const { adminAuth, userAuth, apiLink, setGenerateResponse, setSubmissionID } = useData();
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [submissions, setSubmissions] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+
   const [apiProviders, setApiProviders] = useState<AiSettingsInterface[]>([]);
   const prevApiProviderString = useRef("");
   const [promptsData, setPromptsData] = useState<PromptInterface[]>([]);
@@ -148,11 +150,27 @@ export default function AdminDashboard() {
   const [sentToEmail, setSentToEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
   const [isMobile, setIsMobile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(null);
 
+  const [tools, setTools] = useState([]);
+  const [categories, setCategories] = useState(null);
+  const [apis, setApis] = useState(null);
 
+  const [filters, setFilters] = useState({
+    tool: "",
+    dateFrom: undefined as Date | undefined,
+    dateTo: undefined as Date | undefined,
+    api: "",
+    search: "",
+    group: "",
+  })
+
+  console.log({
+    tools,
+categories,
+apis
+  })
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -164,19 +182,6 @@ export default function AdminDashboard() {
   }, []);
 
   // const fileToBase64 = (file) => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       // @ts-ignore
-  //       const base64String = reader.result.split(',')[1]; // remove data:application/pdf;base64,
-  //       resolve(base64String);
-  //     };
-
-  //     reader.onerror = reject;
-
-  //     reader.readAsDataURL(file); // Triggers the conversion
-  //   });
-  // };
 
   const handleProviderChange = (providerName: string) => {
     setSelectedProviderName(providerName);
@@ -197,14 +202,7 @@ export default function AdminDashboard() {
     handleAiProviderAndModelChange(selectedProviderName, model);
   };
 
-  const [filters, setFilters] = useState({
-    tool: "",
-    dateFrom: undefined as Date | undefined,
-    dateTo: undefined as Date | undefined,
-    api: "",
-    search: "",
-    group: "",
-  })
+
 
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
   const prevcurrentPrompt = useRef("");
@@ -222,9 +220,34 @@ export default function AdminDashboard() {
 
   const getAllUsersSubmissionsData = async () => {
     try {
-      setIsLoading(true);
-      const res = await axios.get("/submission");
+      const params = {
+        page: String(currentPage),
+        limit: "10",
+        tool: filters.tool || "",
+        category: filters.group || "",
+        dateFrom: filters?.dateFrom ? new Date(filters?.dateFrom)?.toISOString() : "",
+        dateTo: filters?.dateTo ? new Date(filters?.dateTo)?.toISOString() : "",
+        api: filters.api || "",
+        search: filters.search || "",
+      };
+      const queryString = new URLSearchParams(params).toString();
+      const res = await axios.get(`/submission?${queryString}`);
+      setTotalPages(res.data.totalPages || 0);
       setSubmissions(res?.data?.data)
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
+
+  const getFieldValues = async () => {
+    try {
+      setIsLoading(true);
+      const {data:res} = await axios.get(`/submission/fieldValues`);
+      console.log(res)
+      setTools(res?.data?.tool || []);
+      setCategories(res?.data?.category || []);
+      setApis(res?.data?.apiUsed || []);
     } catch (error) {
       console.log(error)
     } finally {
@@ -296,11 +319,17 @@ export default function AdminDashboard() {
     if (!adminAuth.user) {
       nav("/admin/login")
     }
-    getAllUsersSubmissionsData();
     getApiProviders()
     getPrompts()
   }, [adminAuth.user])
 
+  useEffect(() => {
+        getAllUsersSubmissionsData();
+  },[filters, currentPage])
+
+  useEffect(() => {
+        getFieldValues();
+  },[])
 
   const handleSendEmail = async (submission) => {
     console.log(submission)
@@ -314,22 +343,6 @@ export default function AdminDashboard() {
         return;
       }
 
-      // const options = {
-      //   margin: [10, 10, 10, 10],
-      //   filename: `${submission?.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
-      //   image: { type: 'jpeg', quality: 0.98 },
-      //   html2canvas: { scale: 2, useCORS: true },
-      //   jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      // }
-
-      // const worker = html2pdf().set(options).from(reportElement);
-
-      // Get PDF as base64
-      // const blob = await worker.outputPdf("blob");
-      // const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
-      // let base64PDF = await fileToBase64(pdfFile)
-
-      // Extract styled HTML content from report
       const fullHTML = `
       <!DOCTYPE html>
       <html>
@@ -434,53 +447,6 @@ export default function AdminDashboard() {
     )
   }
 
-  const filteredSubmissions = submissions?.filter((submission) => {
-    // Filter by tool
-    if (filters.tool && filters.tool !== "all" && submission.tool !== filters.tool) {
-      return false
-    }
-
-
-    // Filter by group
-    if (filters.group && filters.group !== "all" && (submission?.category || "") !== filters.group) {
-      return false;
-    }
-
-    // Filter by API
-    if (filters.api && filters.api !== "all" && submission.apiUsed !== filters.api) {
-      return false
-    }
-
-    // Filter by date range
-    if (filters.dateFrom) {
-      const submissionDate = new Date(submission.date)
-      if (submissionDate < filters.dateFrom) {
-        return false
-      }
-    }
-
-    if (filters.dateTo) {
-      const submissionDate = new Date(submission.date)
-      const endOfDay = new Date(filters.dateTo)
-      endOfDay.setHours(23, 59, 59, 999)
-      if (submissionDate > endOfDay) {
-        return false
-      }
-    }
-
-    // Filter by search term
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase()
-      return (
-        submission.name.toLowerCase().includes(searchTerm) ||
-        submission.email.toLowerCase().includes(searchTerm) ||
-        submission.company.toLowerCase().includes(searchTerm)
-      )
-    }
-
-    return true
-  })
-
   const filteredTemplates = promptsData?.filter((submission) => {
     // Filter by tool
     if (filters.tool && filters.tool !== "all" && (submission?.heading || "") !== filters.tool) {
@@ -526,14 +492,6 @@ export default function AdminDashboard() {
 
     return true
   })
-
-  // Paginate results
-  const totalPages = Math.ceil(filteredSubmissions?.length / itemsPerPage);
-  const paginatedSubmissions = filteredSubmissions?.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -594,47 +552,6 @@ export default function AdminDashboard() {
       return temp
     })
   }
-
-  // Fixed PDF download function
-  // const handleDownloadPDF = (submission) => {
-  //   const reportElement = document.getElementById('report-content')
-
-  //   if (!reportElement) {
-  //     toast.error("Could not generate PDF. Please try again.")
-  //     return
-  //   }
-
-  //   const svgElements = reportElement.querySelectorAll('svg');
-  //   svgElements.forEach(svg => {
-  //     svg.style.setProperty('height', '100%', 'important');
-  //     svg.style.setProperty('width', '100%', 'important');
-  //   });
-
-  //   // Configure PDF options
-  //   const options = {
-  //     margin: [10, 10, 10, 10],
-  //     filename: `${submission.tool || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
-  //     image: { type: 'jpeg', quality: 0.98 },
-  //     html2canvas: { scale: 2, useCORS: true },
-
-  //     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-  //     pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-
-  //   }
-
-  //   // Generate and download PDF
-  //   html2pdf()
-  //     .set(options)
-  //     .from(reportElement)
-  //     .save()
-  //     .then(() => {
-  //       toast.success("PDF Downloaded")
-  //     })
-  //     .catch(error => {
-  //       console.error("PDF generation error:", error)
-  //       toast.error("Failed to download PDF. Please try again.")
-  //     })
-  // }
 
   const handleDownloadPDF = (submission) => {
     const reportElement = document.getElementById('report-content')
@@ -777,6 +694,7 @@ export default function AdminDashboard() {
         toolId: toolId
       }),
     });
+    setGenerateResponse("")
     setIsSubmitting(null)
     nav(`/reports/${toolId}`)
 
@@ -788,7 +706,12 @@ export default function AdminDashboard() {
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunk = decoder.decode(value, { stream: true });
-      setGenerateResponse(p => p + chunk)
+       if (chunk.startsWith("{ID}-")) {
+        setSubmissionID(chunk.split("{ID}-")[1].trim());
+      }
+      else {
+        setGenerateResponse(p => p + chunk)
+      }
     }
   }
 
@@ -911,7 +834,7 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All tools</SelectItem>
-                        {[...new Set(submissions.map(item => item.tool))]?.map((item) => (
+                        {(tools || [])?.map((item) => (
                           <SelectItem key={item} value={item}>
                             {item}
                           </SelectItem>
@@ -928,7 +851,7 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All category</SelectItem>
-                        {[...new Set(submissions?.map(item => item.category))]?.map((group) => (
+                        {(categories || [])?.map((group) => (
                           <SelectItem key={group} value={group}>
                             {group}
                           </SelectItem>
@@ -945,7 +868,7 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All APIs</SelectItem>
-                        {[...new Set(submissions.map(item => item.apiUsed))].filter(item => item)?.map((api) => (
+                        {(apis || []).filter(item => item)?.map((api) => (
                           <SelectItem key={api._id} value={api}>
                             {api}
                           </SelectItem>
@@ -1025,8 +948,8 @@ export default function AdminDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginatedSubmissions.length > 0 ? (
-                        paginatedSubmissions.map((submission) => (
+                      {submissions?.length > 0 ? (
+                        (submissions || []).map((submission) => (
                           <TableRow key={submission.id} className="h-8 px-2" >
                             <TableCell className="font-medium py-2">{submission.name} {submission.type && `(${submission.type})`}</TableCell>
                             <TableCell className="py-2">{submission.email}</TableCell>
@@ -1204,118 +1127,15 @@ export default function AdminDashboard() {
 
                 </div>
                 <div className="text-sm text-muted-foreground mt-2 font-[600]">
-                  Showing {paginatedSubmissions.length} of {submissions.length} submissions
+                  Showing {submissions?.length} of {submissions?.length} submissions
                 </div>
               </CardContent>
             </Card>
-
-            {filteredSubmissions?.length > itemsPerPage && (
-              <div className="mt-6">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        style={{ cursor: "pointer" }}
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-
-                    {(() => {
-                      const pages = [];
-                      const maxVisiblePages = 5; // Adjust this number as needed
-
-                      // Always show first page
-                      pages.push(
-                        <PaginationItem key={1}>
-                          <PaginationLink
-                            style={{ cursor: "pointer" }}
-                            isActive={currentPage === 1}
-                            onClick={() => setCurrentPage(1)}
-                          >
-                            1
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-
-                      // Calculate range of visible pages
-                      let startPage = Math.max(2, currentPage - Math.floor(maxVisiblePages / 2));
-                      let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 3);
-
-                      // Adjust if we're near the beginning
-                      if (startPage <= 2) {
-                        startPage = 2;
-                        endPage = Math.min(totalPages - 1, maxVisiblePages);
-                      }
-
-                      // Adjust if we're near the end
-                      if (endPage >= totalPages - 2) {
-                        endPage = totalPages - 1;
-                        startPage = Math.max(2, totalPages - maxVisiblePages + 2);
-                      }
-
-                      // Add ellipsis after first page if needed
-                      if (startPage > 2) {
-                        pages.push(
-                          <PaginationItem key="start-ellipsis">
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      }
-
-                      // Add visible page numbers
-                      for (let i = startPage; i <= endPage; i++) {
-                        pages.push(
-                          <PaginationItem key={i}>
-                            <PaginationLink
-                              style={{ cursor: "pointer" }}
-                              isActive={currentPage === i}
-                              onClick={() => setCurrentPage(i)}
-                            >
-                              {i}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      }
-
-                      // Add ellipsis before last page if needed
-                      if (endPage < totalPages - 1) {
-                        pages.push(
-                          <PaginationItem key="end-ellipsis">
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      }
-
-                      // Always show last page if there's more than one page
-                      if (totalPages > 1) {
-                        pages.push(
-                          <PaginationItem key={totalPages}>
-                            <PaginationLink
-                              style={{ cursor: "pointer" }}
-                              isActive={currentPage === totalPages}
-                              onClick={() => setCurrentPage(totalPages)}
-                            >
-                              {totalPages}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      }
-
-                      return pages;
-                    })()}
-
-                    <PaginationItem>
-                      <PaginationNext
-                        style={{ cursor: "pointer" }}
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
+            <DynamicPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </TabsContent>
 
 

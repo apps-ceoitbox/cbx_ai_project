@@ -181,9 +181,21 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
     `;
     if (((_e = req.body) === null || _e === void 0 ? void 0 : _e.type) == "internal") {
         (0, sendMail_1.MAIL)({
-            to: "gdpreport@ceoitbox.in",
+            to: "sjain@ceoitbox.in",
             subject: `Internal | ${prompt.heading}`,
             body: fullHTML,
+            cc: [
+                "sjain@ceoitbox.in",
+                "anurag@ceoitbox.in",
+                "avishek@ceoitbox.in",
+                "jeetu@ceoitbox.in",
+                "kuldeep@ceoitbox.in",
+                "siddharth@ceoitbox.in",
+                "sujit@ceoitbox.in",
+                "tejwai@ceoitbox.in",
+                "vinayak@ceoitbox.in",
+                "raghbir@ceoitbox.in"
+            ]
         });
     }
     else if (((_f = req.body) === null || _f === void 0 ? void 0 : _f.type) == "client") {
@@ -191,7 +203,18 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
             to: req.user.email,
             subject: `${prompt.heading}`,
             body: fullHTML,
-            cc: ["gdpreport@ceoitbox.in"]
+            cc: [
+                "sjain@ceoitbox.in",
+                "anurag@ceoitbox.in",
+                "avishek@ceoitbox.in",
+                "jeetu@ceoitbox.in",
+                "kuldeep@ceoitbox.in",
+                "siddharth@ceoitbox.in",
+                "sujit@ceoitbox.in",
+                "tejwai@ceoitbox.in",
+                "vinayak@ceoitbox.in",
+                "raghbir@ceoitbox.in"
+            ]
         });
     }
     res.write(`{ID}-${submission._id}`);
