@@ -186,7 +186,7 @@ export default class PromptController {
         to: "sjain@ceoitbox.in",
         subject: `Internal | ${prompt.heading}`,
         body: fullHTML,
-        cc:[
+        bcc:[
           "sjain@ceoitbox.in",
           "anurag@ceoitbox.in",
           "avishek@ceoitbox.in",
@@ -205,7 +205,7 @@ export default class PromptController {
         to: req.user.email,
         subject: `${prompt.heading}`,
         body: fullHTML,
-        cc:[
+        bcc:[
           "sjain@ceoitbox.in",
           "anurag@ceoitbox.in",
           "avishek@ceoitbox.in",

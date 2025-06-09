@@ -184,7 +184,7 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
             to: "sjain@ceoitbox.in",
             subject: `Internal | ${prompt.heading}`,
             body: fullHTML,
-            cc: [
+            bcc: [
                 "sjain@ceoitbox.in",
                 "anurag@ceoitbox.in",
                 "avishek@ceoitbox.in",
@@ -203,7 +203,7 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
             to: req.user.email,
             subject: `${prompt.heading}`,
             body: fullHTML,
-            cc: [
+            bcc: [
                 "sjain@ceoitbox.in",
                 "anurag@ceoitbox.in",
                 "avishek@ceoitbox.in",

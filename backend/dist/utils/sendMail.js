@@ -1,63 +1,66 @@
-import nodemailer from 'nodemailer';
-import dotenv from "dotenv";
-dotenv.config();
-
-interface MailInterface {
-  to: string;
-  subject: string;
-  body: string;
-  cc?: string[];
-  bcc?: string[];
-  attachment?: string;
-  template?: string | null;
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MAIL = MAIL;
+const nodemailer_1 = __importDefault(require("nodemailer"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+function MAIL(_a) {
+    return __awaiter(this, arguments, void 0, function* ({ to, subject, body, attachment, cc = [], bcc = [], template = null }) {
+        let buffer = null;
+        if (attachment) {
+            buffer = Buffer.from(attachment, 'base64');
+        }
+        const transporter = nodemailer_1.default.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS
+            }
+        });
+        const mailOptions = {
+            from: 'CBX AI <apps@ceoitbox.com>',
+            to,
+            subject: subject,
+            html: template == "OTP" ? EmailTemplate(body) : body,
+            cc,
+            bcc,
+            attachments: []
+        };
+        if (buffer) {
+            mailOptions.attachments = [
+                {
+                    filename: subject,
+                    content: buffer,
+                    contentType: 'application/pdf'
+                }
+            ];
+        }
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            }
+            else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+    });
 }
-
-export async function MAIL({ to, subject, body, attachment, cc = [], bcc=[], template = null }: MailInterface) {
-  let buffer = null;
-  if (attachment) {
-    buffer = Buffer.from(attachment, 'base64');
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS
-    }
-  });
-  const mailOptions = {
-    from: 'CBX AI <apps@ceoitbox.com>',
-    to,
-    subject: subject,
-    html: template == "OTP" ? EmailTemplate(body) : body,
-    cc,
-    bcc,
-    attachments: []
-  };
-  if (buffer) {
-    mailOptions.attachments = [
-      {
-        filename: subject,
-        content: buffer,
-        contentType: 'application/pdf'
-      }
-    ]
-  }
-
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
-  });
-}
-
-
 function EmailTemplate(OTP) {
-  return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
     <html lang="en">
       <head>
         <meta charset="UTF-8" />
@@ -255,5 +258,5 @@ function EmailTemplate(OTP) {
         </div>
       </body>
     </html>    
-    `
+    `;
 }
