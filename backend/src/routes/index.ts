@@ -8,6 +8,8 @@ import promptRoutes from "./prompt.routes";
 import submissionRoutes from "./submission.routes";
 import astroRoutes from "./astro.routes";
 import documentRoutes from "./document.routes";
+import historyRoutes from "./history.routes";
+import aiAgentRoutes from "./aiAgentSettings.routes";
 
 const router = Router();
 
@@ -25,5 +27,7 @@ router.use("/prompt", promptRoutes);
 router.use("/submission", submissionRoutes);
 router.use("/astro", astroRoutes);
 router.use("/document", documentRoutes);
+router.use("/history", historyRoutes);
+router.use("/aiagentsettings", aiAgentRoutes);
 
 export default router;
