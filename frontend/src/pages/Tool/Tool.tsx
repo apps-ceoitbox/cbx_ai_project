@@ -177,7 +177,7 @@ export default function ToolQuestionsPage() {
           {/* Question card */}
           <Card className="border-2">
             <CardHeader>
-              <CardTitle>{currentQuestion}</CardTitle>
+              <CardTitle>{currentQuestion?.split('[D]-')[0]?.trim()}</CardTitle>
               <CardDescription>
                 Question {currentQuestionIndex + 1} of {tool?.questions.length}
               </CardDescription>
@@ -185,7 +185,7 @@ export default function ToolQuestionsPage() {
 
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor={currentQuestion}>{currentQuestion}</Label>
+                <Label htmlFor={currentQuestion}>{currentQuestion?.split('[D]-')[1]?.trim()}</Label>
                 <Textarea
                   id={currentQuestion}
                   value={answers[currentQuestion] || ""}

@@ -191,7 +191,10 @@ import {
     User,
     Shield,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Bot,
+    Settings,
+    History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -357,6 +360,19 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                         {!collapsed && "Document Reader"}
                                     </Button>
                                 </Link>
+                                <Link to="/ai-agents">
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start gap-2 hover:bg-red-100 text-black"
+                                        style={{
+                                            background: isMenuItemActive(["/ai-agents"]) ? "rgb(229 9 20)" : "",
+                                            color: isMenuItemActive(["/ai-agents"]) ? "#fff" : "black"
+                                        }}
+                                    >
+                                        <Bot size={16} />
+                                        {!collapsed && "AI Agents"}
+                                    </Button>
+                                </Link>
                             </CollapsibleContent>
                         </Collapsible>
 
@@ -420,6 +436,20 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                         {!collapsed && "Document Reader"}
                                     </Button>
                                 </Link>
+
+                                <Link to="/ai-agent-histories">
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
+                                        style={{
+                                            background: isMenuItemActive(["/ai-agent-histories"]) ? "rgb(229 9 20)" : "",
+                                            color: isMenuItemActive(["/ai-agent-histories"]) ? "#fff" : "black"
+                                        }}
+                                    >
+                                        <History size={18} />
+                                        {!collapsed && "AI Agents Dashboard"}
+                                    </Button>
+                                </Link>
                             </CollapsibleContent>
                         </Collapsible>
                     </>
@@ -469,6 +499,20 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                         {!collapsed && "Document Reader"}
                                     </Button>
                                 </Link>
+
+                                <Link to="/ai-agents">
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start gap-2 hover:bg-red-100 text-black"
+                                        style={{
+                                            background: isMenuItemActive(["/ai-agents"]) ? "rgb(229 9 20)" : "",
+                                            color: isMenuItemActive(["/ai-agents"]) ? "#fff" : "black"
+                                        }}
+                                    >
+                                        <Bot size={16} />
+                                        {!collapsed && "AI Agents"}
+                                    </Button>
+                                </Link>
                             </div>
                         )}
 
@@ -514,6 +558,21 @@ function AppSidebar({ collapsed, setCollapsed }) {
                                     >
                                         <FileText size={18} />
                                         {!collapsed && "Document Reader"}
+                                    </Button>
+                                </Link>
+
+
+                                <Link to="/ai-agent-histories">
+                                    <Button
+                                        variant="ghost"
+                                        className="w-full justify-start gap-2 hover:bg-red-100 text-black mt-1"
+                                        style={{
+                                            background: isMenuItemActive(["/ai-agent-histories"]) ? "rgb(229 9 20)" : "",
+                                            color: isMenuItemActive(["/ai-agent-histories"]) ? "#fff" : "black"
+                                        }}
+                                    >
+                                        <History size={18} />
+                                        {!collapsed && "AI Agents Dashboard"}
                                     </Button>
                                 </Link>
                             </div>

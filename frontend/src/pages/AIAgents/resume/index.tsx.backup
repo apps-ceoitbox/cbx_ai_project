@@ -1,0 +1,1587 @@
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { Upload, FileText, Briefcase, Brain, CheckCircle, XCircle, ListOrdered, ClipboardPaste, X, Loader2, AlertCircle } from "lucide-react";
+// History service removed
+import * as mammoth from 'mammoth';
+
+// Type declaration for PDF.js
+type PDFJSDocument = {
+  numPages: number;
+  getPage: (pageNumber: number) => Promise<{
+    getTextContent: () => Promise<{
+      items: Array<{ str?: string }>;
+    }>;
+  }>;
+};
+
+type PDFJS = {
+  getDocument: (options: { data: ArrayBuffer }) => {
+    promise: Promise<PDFJSDocument>;
+  };
+  GlobalWorkerOptions: {
+    workerSrc: string;
+  };
+};
+
+// Global variable for PDF.js
+let pdfjsLib: PDFJS;
+
+// Initialize PDF.js worker
+const initPDFJS = () => {
+  return new Promise<void>((resolve) => {
+    if (typeof window !== 'undefined') {
+      // @ts-ignore - PDF.js might be available globally
+      if (window.pdfjsLib) {
+        // @ts-ignore
+        pdfjsLib = window.pdfjsLib;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        console.log('PDF.js already loaded');
+        resolve();
+      } else {
+        console.log('Loading PDF.js dynamically');
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        script.onload = () => {
+          // @ts-ignore - PDF.js is now available globally
+          pdfjsLib = window.pdfjsLib;
+          if (pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            console.log('PDF.js loaded successfully');
+            resolve();
+          } else {
+            console.error('Failed to load PDF.js library');
+            resolve(); // Resolve anyway to continue execution
+          }
+        };
+        script.onerror = () => {
+          console.error('Error loading PDF.js script');
+          resolve(); // Resolve anyway to continue execution
+        };
+        document.head.appendChild(script);
+      }
+    } else {
+      resolve(); // Not in browser environment
+    }
+  });
+};
+
+// Initialize PDF.js on component mount
+if (typeof window !== 'undefined') {
+  initPDFJS().then(() => {
+    console.log('PDF.js initialization complete');
+  });
+}
+
+// AI Model types
+type AIModelType = "gemini" | "openai" | "anthropic" | "groq";
+
+interface AIModel {
+  id: AIModelType;
+  name: string;
+  description: string;
+}
+
+// Resume Analysis interfaces
+interface AnalysisResult {
+  resumeSummary: {
+    name: string;
+    skills: string[];
+    experience: string;
+    education: string;
+  };
+  jobSummary: {
+    title: string;
+    requiredSkills: string[];
+    responsibilities: string[];
+  };
+  comparison: {
+    matchScore: number;
+    matchedSkills: string[];
+    missingSkills: string[];
+    extraSkills: string[];
+    suggestions: string[];
+  };
+}
+
+interface ResumeAnalysis {
+  file: File;
+  isAnalyzing: boolean;
+  result?: AnalysisResult;
+  error?: string;
+  selected?: boolean;
+}
+
+const aiModels: AIModel[] = [
+  {
+    id: "gemini",
+    name: "Google Gemini 2.0 Flash",
+    description: "Fast and efficient resume analysis"
+  },
+  {
+    id: "openai",
+    name: "OpenAI GPT-4o-mini",
+    description: "Balanced performance and quality"
+  },
+  {
+    id: "anthropic",
+    name: "Anthropic Claude 3.7 Sonnet",
+    description: "High quality detailed analysis"
+  },
+  {
+    id: "groq",
+    name: "Groq Llama 4 Scout",
+    description: "Fast processing with good accuracy"
+  }
+];
+
+const ResumeAnalyzer = () => {
+  // UI state
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState<boolean>(false);
+  const [processingStep, setProcessingStep] = useState<string>("");
+  
+  // Input values
+  // Initialize API key from localStorage
+  const [apiKey, setApiKey] = useState<string>(() => {
+    return localStorage.getItem('resume_analyzer_api_key') || "";
+  });
+
+  // AI Model selection
+  const [selectedModel, setSelectedModel] = useState<AIModelType>(() => {
+    return (localStorage.getItem('resume_analyzer_model') as AIModelType) || "gemini";
+  });
+  
+  // Files
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [resumeFiles, setResumeFiles] = useState<ResumeAnalysis[]>([]);
+  const [jobDescFile, setJobDescFile] = useState<File | null>(null);
+  const [jobDescText, setJobDescText] = useState<string>('');
+  const [activeJobDescTab, setActiveJobDescTab] = useState<'upload' | 'paste'>('upload');
+
+  // Extract text from file (PDF, DOCX, or TXT)
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    try {
+      // Handle PDF files
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        try {
+          // Make sure PDF.js is properly initialized
+          if (typeof window !== 'undefined' && !pdfjsLib) {
+            console.log('PDF.js not yet loaded, initializing now...');
+            await initPDFJS();
+          }
+          
+          if (typeof window === 'undefined' || !pdfjsLib) {
+            console.warn('PDF.js could not be loaded, falling back to simple text extraction');
+            throw new Error('PDF.js not loaded');
+          }
+          
+          console.log('Processing PDF file:', file.name);
+          const arrayBuffer = await file.arrayBuffer();
+          console.log('PDF arrayBuffer size:', arrayBuffer.byteLength);
+          
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          console.log('PDF loading task created');
+          
+          const pdf = await loadingTask.promise;
+          console.log('PDF loaded successfully, pages:', pdf.numPages);
+          
+          let text = '';
+          
+          // Extract text from each page (up to 10 pages to prevent performance issues)
+          const maxPages = Math.min(pdf.numPages, 10);
+          for (let i = 1; i <= maxPages; i++) {
+            console.log(`Processing PDF page ${i} of ${maxPages}`);
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const strings = content.items.map((item: any) => item.str || '');
+            text += strings.join(' ').trim() + '\n\n';
+          }
+          
+          if (pdf.numPages > 10) {
+            text += '\n[Document truncated to first 10 pages]';
+          }
+          
+          console.log('PDF text extraction complete');
+          return text.trim();
+        } catch (error) {
+          console.error('Error extracting text from PDF:', error);
+          toast.error(`Failed to extract text from PDF: ${error instanceof Error ? error.message : 'Unknown error'}`); 
+          // Fallback to simple text extraction if PDF parsing fails
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              resolve(e.target?.result?.toString() || '');
+            };
+            reader.onerror = () => {
+              console.error('FileReader error');
+              resolve('');
+            };
+            reader.readAsText(file);
+          });
+        }
+      }
+      
+      // Handle DOCX files
+      if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+          file.name.toLowerCase().endsWith('.docx')) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          return result.value;
+        } catch (error) {
+          console.error('Error extracting text from DOCX:', error);
+          throw new Error('Failed to extract text from DOCX');
+        }
+      }
+      
+      // Handle DOC files (fallback to binary read)
+      if (file.type === 'application/msword' || file.name.toLowerCase().endsWith('.doc')) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              const arrayBuffer = e.target.result as ArrayBuffer;
+              mammoth.extractRawText({ arrayBuffer })
+                .then(result => resolve(result.value))
+                .catch(error => {
+                  console.error('Error extracting text from DOC:', error);
+                  reject(new Error('Failed to extract text from DOC file'));
+                });
+            } else {
+              reject(new Error('Failed to read DOC file'));
+            }
+          };
+          reader.onerror = () => reject(new Error('Error reading DOC file'));
+          reader.readAsArrayBuffer(file);
+        });
+      }
+      
+      // Handle plain text files
+      if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              resolve(e.target.result as string);
+            } else {
+              reject(new Error('Failed to read text file'));
+            }
+          };
+          reader.onerror = () => reject(new Error('Error reading text file'));
+          reader.readAsText(file);
+        });
+      }
+      
+      throw new Error('Unsupported file type');
+    } catch (error) {
+      console.error('Error in extractTextFromFile:', error);
+      throw error;
+    }
+  };
+
+  // Handle resume file selection
+  const handleResumeUpload = async (files: FileList) => {
+    const newResumes: ResumeAnalysis[] = [];
+    const supportedFormats = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'application/octet-stream' // For some .doc files
+    ];
+    
+    const supportedExtensions = ['.pdf', '.doc', '.docx', '.txt'];
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    
+    for (const file of Array.from(files)) {
+      try {
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+        const isSupported = supportedFormats.includes(file.type) || 
+                          supportedExtensions.includes('.' + fileExt);
+        
+        if (!isSupported) {
+          toast.error(`${file.name}: Unsupported file format. Please upload PDF, DOC, DOCX, or TXT.`);
+          continue;
+        }
+        
+        // Check file size
+        if (file.size > maxFileSize) {
+          toast.error(`${file.name} is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maximum file size is 5MB.`);
+          continue;
+        }
+        
+        // Check for duplicate files
+        const isDuplicate = resumeFiles.some(
+          (resume) => resume.file.name === file.name && resume.file.size === file.size
+        );
+        
+        if (isDuplicate) {
+          toast.warning(`Skipping duplicate file: ${file.name}`);
+          continue;
+        }
+        
+        newResumes.push({
+          file,
+          result: null,
+          isAnalyzing: false
+        });
+        
+      } catch (error) {
+        console.error(`Error processing file ${file.name}:`, error);
+        toast.error(`Error processing ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+    
+    if (newResumes.length > 0) {
+      setResumeFiles(prev => [...prev, ...newResumes]);
+      toast.success(`Added ${newResumes.length} resume${newResumes.length > 1 ? 's' : ''}`);
+    }
+  };
+
+  // Handle job description file selection
+  const handleJobDescUpload = (file: File) => {
+    const supportedFormats = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'application/octet-stream' // For some .doc files
+    ];
+    
+    const supportedExtensions = ['.pdf', '.doc', '.docx', '.txt'];
+    const maxFileSize = 5 * 1024 * 1024; // 5MB
+    
+    try {
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+      const isSupported = supportedFormats.includes(file.type) || 
+                        supportedExtensions.includes('.' + fileExt);
+      
+      if (!isSupported) {
+        toast.error("Unsupported file format. Please upload a PDF, DOC, DOCX, or TXT file.");
+        return;
+      }
+      
+      // Check file size
+      if (file.size > maxFileSize) {
+        toast.error(`File is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Maximum file size is 5MB.`);
+        return;
+      }
+      
+      // Check for duplicate file
+      if (jobDescFile && jobDescFile.name === file.name && jobDescFile.size === file.size) {
+        toast.warning(`The file "${file.name}" is already uploaded`);
+        return;
+      }
+
+      setJobDescFile(file);
+      setJobDescText(''); // Clear any pasted text when uploading a file
+      toast.success(`"${file.name}" has been uploaded`);
+      
+    } catch (error) {
+      console.error('Error processing job description file:', error);
+      toast.error(`Error processing file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle pasted job description
+  const handlePasteJobDesc = () => {
+    if (!jobDescText.trim()) {
+      toast.error("Please paste a job description");
+      return;
+    }
+    
+    // Create a text file from the pasted content
+    const blob = new Blob([jobDescText], { type: 'text/plain' });
+    const file = new File([blob], 'job-description.txt', { type: 'text/plain' });
+    setJobDescFile(file);
+    toast.success("Job description pasted successfully");
+  }; 
+  
+  // Clear job description
+  const clearJobDesc = () => {
+    setJobDescFile(null);
+    setJobDescText('');
+  };
+
+  // Remove a resume from the list
+  const removeResume = (index: number) => {
+    setResumeFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // Function to call OpenAI API
+  const analyzeWithOpenAI = async (resumeText: string, jobDescription: string): Promise<AnalysisResult> => {
+    try {
+      // OpenAI API endpoint
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an AI resume analyzer that helps match candidates to job descriptions. Extract key information from the resume, analyze fit against the job, and provide a comprehensive analysis with a match score.'
+            },
+            {
+              role: 'user',
+              content: `Analyze this resume against the job description. Resume: ${resumeText}\n\nJob Description: ${jobDescription}\n\nProvide a detailed analysis including:\n1. Resume summary (candidate name, skills, experience, education)\n2. Job summary (title, required skills, responsibilities)\n3. Comparison (match score as a percentage, matched skills, missing skills, extra skills the candidate has, and specific improvement suggestions)\n\nFormat the response as a JSON object with these exact keys: resumeSummary (with nested keys: name, skills as array, experience, education), jobSummary (with nested keys: title, requiredSkills as array, responsibilities as array), comparison (with nested keys: matchScore as number, matchedSkills as array, missingSkills as array, extraSkills as array, suggestions as array)`
+            }
+          ],
+          temperature: 0.5,
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return JSON.parse(data.choices[0].message.content);
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      throw new Error(`Failed to analyze with OpenAI: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Function to convert a File to a base64 string for Gemini API
+  const fileToBase64 = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          // Extract the base64 part after the comma
+          const base64Data = reader.result.split(',')[1];
+          resolve(base64Data);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Error reading file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Function to call Google Gemini API with text or direct PDF upload
+  const analyzeWithGemini = async (resumeTextOrFile: string | File, jobDescription: string): Promise<AnalysisResult> => {
+    try {
+      console.log('Making Gemini API request...');
+      
+      let requestBody;
+      
+      // Check if the resume is a File object (direct PDF upload) or text
+      if (typeof resumeTextOrFile !== 'string' && 
+          (resumeTextOrFile.type === 'application/pdf' || resumeTextOrFile.name.toLowerCase().endsWith('.pdf'))) {
+        
+        console.log('Using direct PDF upload with Gemini API');
+        
+        // Convert the PDF file to base64
+        const base64Data = await fileToBase64(resumeTextOrFile);
+        
+        requestBody = {
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Analyze this resume against the following job description and provide a detailed comparison. The resume is attached as a PDF file.\n\nJob Description:\n${jobDescription}\n\nProvide your analysis in the following JSON format exactly:\n{\n  "resumeSummary": {\n    "name": "candidate name",\n    "skills": ["skill1", "skill2"],\n    "experience": "brief experience summary",\n    "education": "education background"\n  },\n  "jobSummary": {\n    "title": "job title",\n    "requiredSkills": ["skill1", "skill2"],\n    "responsibilities": ["responsibility1", "responsibility2"]\n  },\n  "comparison": {\n    "matchScore": 75,\n    "matchedSkills": ["matching skills"],\n    "missingSkills": ["missing skills"],\n    "extraSkills": ["additional skills"],\n    "suggestions": ["improvement suggestions"]\n  }\n}`
+                },
+                {
+                  inlineData: {
+                    mimeType: "application/pdf",
+                    data: base64Data
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          }
+        };
+      } else {
+        // Use text-based analysis if it's not a PDF or text was already extracted
+        const resumeText = typeof resumeTextOrFile === 'string' ? resumeTextOrFile : 'Error: Resume text extraction failed';
+        
+        if (resumeText === 'Error: Resume text extraction failed') {
+          throw new Error('Failed to extract text from resume');
+        }
+        
+        const prompt = `
+        Please analyze the following resume and job description, then provide a detailed comparison:
+
+        RESUME:
+        ${resumeText}
+
+        JOB DESCRIPTION:
+        ${jobDescription}
+
+        Please respond in the following JSON format:
+        {
+          "resumeSummary": {
+            "name": "candidate name",
+            "skills": ["skill1", "skill2"],
+            "experience": "brief experience summary",
+            "education": "education background"
+          },
+          "jobSummary": {
+            "title": "job title",
+            "requiredSkills": ["skill1", "skill2"],
+            "responsibilities": ["responsibility1", "responsibility2"]
+          },
+          "comparison": {
+            "matchScore": 75,
+            "matchedSkills": ["matching skills"],
+            "missingSkills": ["missing skills"],
+            "extraSkills": ["additional skills"],
+            "suggestions": ["improvement suggestions"]
+          }
+        }
+        `;
+
+        requestBody = {
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          }
+        };
+      }
+      
+      // Make the API request
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+      
+      // Check if the response has the expected structure
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0]) {
+        console.error('Unexpected API response structure:', data);
+        throw new Error('Invalid response structure from Gemini API');
+      }
+
+      const generatedText = data.candidates[0].content.parts[0].text;
+      console.log('Generated text:', generatedText);
+      
+      // Extract JSON from the response
+      const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsedResult = JSON.parse(jsonMatch[0]);
+        console.log('Parsed result:', parsedResult);
+        return parsedResult;
+      }
+      
+      throw new Error('Could not parse AI response - no valid JSON found');
+    } catch (error) {
+      console.error('Error calling Gemini API:', error);
+      throw error;
+    }
+  };
+
+  // Function to call Anthropic API
+  const analyzeWithAnthropic = async (resumeText: string, jobDescription: string): Promise<AnalysisResult> => {
+    try {
+      // Anthropic API endpoint
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-opus-20240229',
+          max_tokens: 4000,
+          messages: [
+            {
+              role: 'user',
+              content: `Analyze this resume against the job description. Resume: ${resumeText}\n\nJob Description: ${jobDescription}\n\nProvide a detailed analysis including:\n1. Resume summary (candidate name, skills, experience, education)\n2. Job summary (title, required skills, responsibilities)\n3. Comparison (match score as a percentage, matched skills, missing skills, extra skills the candidate has, and specific improvement suggestions)\n\nFormat the response as a JSON object with these exact keys: resumeSummary (with nested keys: name, skills as array, experience, education), jobSummary (with nested keys: title, requiredSkills as array, responsibilities as array), comparison (with nested keys: matchScore as number, matchedSkills as array, missingSkills as array, extraSkills as array, suggestions as array)`
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Anthropic API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.content[0].text;
+      
+      // Extract JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/); 
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      throw new Error('Failed to parse Anthropic response');
+    } catch (error) {
+      console.error('Anthropic API error:', error);
+      throw new Error(`Failed to analyze with Anthropic: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Function to call Groq API
+  const analyzeWithGroq = async (resumeText: string, jobDescription: string): Promise<AnalysisResult> => {
+    try {
+      // Construct a prompt that will work well with the latest Llama 4 model
+      const prompt = `Analyze this resume against the job description thoroughly.
+
+RESUME:
+${resumeText}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+Provide a detailed analysis including:
+1. Resume summary (candidate name, skills, experience, education)
+2. Job summary (title, required skills, responsibilities)
+3. Comparison (match score as a percentage, matched skills, missing skills, extra skills the candidate has, and specific improvement suggestions)
+
+Your response MUST be a valid JSON object with these exact keys:
+- resumeSummary (with nested keys: name, skills as array, experience, education)
+- jobSummary (with nested keys: title, requiredSkills as array, responsibilities as array)
+- comparison (with nested keys: matchScore as number, matchedSkills as array, missingSkills as array, extraSkills as array, suggestions as array)`;
+
+      // Groq API endpoint with the latest Llama 4 model
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'llama-4-8b-moe', // Using the latest Llama 4 Mixture of Experts model
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an AI resume analyzer that helps match candidates to job descriptions. You extract key information from resumes, analyze fit against job requirements, and provide comprehensive analysis with a match score. Always respond with valid JSON only.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3, // Lower temperature for more consistent outputs
+          response_format: { type: "json_object" },
+          max_tokens: 4000
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Groq API error response:', errorData);
+        throw new Error(`Groq API error: ${response.status} - ${errorData}`);
+      }
+
+      const data = await response.json();
+      console.log('Groq API response:', JSON.stringify(data, null, 2));
+      
+      // Parse the JSON response
+      try {
+        return JSON.parse(data.choices[0].message.content);
+      } catch (parseError) {
+        console.error('Parse error:', parseError);
+        // If direct parsing fails, try to extract JSON from the text
+        const content = data.choices[0].message.content;
+        const jsonMatch = content.match(/\{[\s\S]*\}/); 
+        if (jsonMatch) {
+          try {
+            const result = JSON.parse(jsonMatch[0]);
+            if (!result.resumeSummary || !result.jobSummary || !result.comparison) {
+              throw new Error('Incomplete response structure');
+            }
+            return result;
+          } catch (extractError) {
+            throw new Error('Failed to parse Groq response: ' + (extractError instanceof Error ? extractError.message : 'Unknown error'));
+          }
+        }
+        throw new Error('No valid JSON found in Groq response');
+      }
+    } catch (error) {
+      console.error('Groq API error:', error);
+      throw new Error(`Failed to analyze with Groq: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Analyze resumes function
+  const analyzeResumes = async () => {
+    if (resumeFiles.length === 0 || !jobDescFile) {
+      toast.error("Please upload at least one resume and a job description");
+      return;
+    }
+    
+    if (!apiKey) {
+      toast.error("API key is required for analysis");
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      setProcessingStep("Extracting text from documents...");
+      
+      // Extract text from job description
+      let jobDescText;
+      try {
+        jobDescText = await extractTextFromFile(jobDescFile);
+        if (!jobDescText || jobDescText.trim() === '') {
+          throw new Error('Failed to extract text from job description');
+        }
+      } catch (error) {
+        console.error('Job description extraction error:', error);
+        toast.error(`Failed to extract text from job description: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Process each resume
+      for (let i = 0; i < resumeFiles.length; i++) {
+        // Set the current resume to analyzing state
+        setResumeFiles(prev => {
+          const updated = [...prev];
+          updated[i] = {
+            ...updated[i],
+            isAnalyzing: true
+          };
+          return updated;
+        });
+        
+        setProcessingStep(`Analyzing resume ${i + 1} of ${resumeFiles.length}...`);
+        
+        // Variable to hold resume text or file for direct upload
+        let resumeTextOrFile;
+        
+        // For Gemini model, we can send the PDF file directly if it's a PDF
+        const isPDF = resumeFiles[i].file.type === 'application/pdf' || resumeFiles[i].file.name.toLowerCase().endsWith('.pdf');
+        const isGemini = selectedModel === 'gemini';
+        
+        if (isGemini && isPDF) {
+          // For Gemini and PDF files, we'll use the file directly
+          resumeTextOrFile = resumeFiles[i].file;
+          console.log('Using direct PDF upload with Gemini');
+        } else {
+          // For other models or file types, extract text first
+          try {
+            resumeTextOrFile = await extractTextFromFile(resumeFiles[i].file);
+            if (!resumeTextOrFile || resumeTextOrFile.trim() === '') {
+              throw new Error(`Failed to extract text from resume: ${resumeFiles[i].file.name}`);
+            }
+          } catch (extractError) {
+            console.error('Resume text extraction error:', extractError);
+            toast.error(`Failed to extract text from resume ${resumeFiles[i].file.name}: ${extractError instanceof Error ? extractError.message : 'Unknown error'}`);
+            
+            // Update resume with error
+            setResumeFiles(prev => {
+              const updated = [...prev];
+              updated[i] = {
+                ...updated[i],
+                isAnalyzing: false,
+                error: extractError instanceof Error ? extractError.message : 'Unknown error'
+              };
+              return updated;
+            });
+            
+            // Continue to next resume
+            continue;
+          }
+        }
+        
+        // Make API call based on selected model
+        let result: AnalysisResult;
+        
+        try {
+          switch(selectedModel) {
+            case 'openai':
+              // For OpenAI, we must have text
+              if (typeof resumeTextOrFile !== 'string') {
+                throw new Error('OpenAI requires text extraction from PDF');
+              }
+              result = await analyzeWithOpenAI(resumeTextOrFile, jobDescText);
+              break;
+            case 'gemini':
+              // Gemini can handle both text and direct PDF upload
+              result = await analyzeWithGemini(resumeTextOrFile, jobDescText);
+              break;
+            case 'anthropic':
+              // For Anthropic, we must have text
+              if (typeof resumeTextOrFile !== 'string') {
+                throw new Error('Anthropic requires text extraction from PDF');
+              }
+              result = await analyzeWithAnthropic(resumeTextOrFile, jobDescText);
+              break;
+            case 'groq':
+              // For Groq, we must have text
+              if (typeof resumeTextOrFile !== 'string') {
+                throw new Error('Groq requires text extraction from PDF');
+              }
+              result = await analyzeWithGroq(resumeTextOrFile, jobDescText);
+              break;
+            default:
+              throw new Error(`Unsupported model: ${selectedModel}`);
+          }
+        } catch (apiError) {
+          console.error(`API error with ${selectedModel}:`, apiError);
+          toast.error(`Error with ${selectedModel} API: ${apiError instanceof Error ? apiError.message : 'Unknown error'}`);
+          
+          // Update resume with error
+          setResumeFiles(prev => {
+            const updated = [...prev];
+            updated[i] = {
+              ...updated[i],
+              isAnalyzing: false,
+              error: apiError instanceof Error ? apiError.message : 'Unknown error'
+            };
+            return updated;
+          });
+          
+          // Continue to next resume
+          continue;
+        }
+        
+        // Update resume with result
+        setResumeFiles(prev => {
+          const updated = [...prev];
+          updated[i] = {
+            ...updated[i],
+            isAnalyzing: false,
+            result: result
+          };
+          return updated;
+        });
+      }
+      
+      // Analysis history functionality removed
+      
+      setProcessingStep("Analysis complete");
+      setShowResult(true);
+      toast.success("Analysis complete!");
+      
+    } catch (err) {
+      console.error("Analysis error:", err);
+      setErrorMessage(err instanceof Error ? err.message : "Unknown error occurred");
+      toast.error("Failed to analyze resumes. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="container py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center">
+          <Link to="/ai-agents">
+            <Button variant="outline" className="mr-4 border-gray-300 hover:border-red-600 hover:text-red-600">← Back</Button>
+          </Link>
+          <h1 className="text-3xl font-bold">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-red-800 pb-1 inline-block">Resume Analyzer</span>
+          </h1>
+        </div>
+        
+        <Link to="/ai-agents/resume/history">
+          <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 flex items-center shadow-sm transition-all">
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Analysis History
+          </Button>
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 mb-8">
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Upload className="mr-2 h-5 w-5" />
+              Upload Documents
+            </CardTitle>
+            <CardDescription>
+              Upload multiple resumes and a job description to analyze and rank candidates
+            </CardDescription>
+          </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="resume" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="resume">Resumes</TabsTrigger>
+                  <TabsTrigger value="job">Job Description</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="resume" className="space-y-4 mt-4">
+                  <div 
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-red-300 transition-colors cursor-pointer group bg-red-50/30"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Click to upload resumes (PDF, TXT)"
+                  >
+                    <p className="text-sm text-gray-500 mb-3 group-hover:text-red-600">Supported formats: PDF, DOC, DOCX, TXT</p>
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept=".pdf,.doc,.docx,.txt"
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          handleResumeUpload(e.target.files);
+                        }
+                      }}
+                    />
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
+                        <Upload className="h-8 w-8 text-red-600 group-hover:text-red-700" />
+                      </div>
+                      <p className="text-base font-medium text-gray-700 group-hover:text-red-600 transition-colors">Click to upload resumes</p>
+                      <p className="text-xs text-gray-500 mt-1">or drag and drop files here</p>
+                    </div>
+                  </div>
+
+                  {resumeFiles.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-md font-medium mb-3 flex items-center">
+                        <FileText className="mr-2 h-4 w-4" /> 
+                        Uploaded Resumes ({resumeFiles.length})
+                      </h3>
+                      <div className="space-y-2">
+                        {resumeFiles.map((resume, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                                <FileText className="h-4 w-4 text-red-700" />
+                              </div>
+                              <div className="ml-3">
+                                <p className="text-sm font-medium text-gray-800">{resume.file.name}</p>
+                                <p className="text-xs text-gray-500">{(resume.file.size / 1024).toFixed(1)} KB</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center">
+                              {resume.isAnalyzing ? (
+                                <div className="text-xs text-blue-600 flex items-center">
+                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Analyzing...
+                                </div>
+                              ) : resume.error ? (
+                                <Badge variant="destructive" className="text-xs">Error</Badge>
+                              ) : resume.result ? (
+                                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">Analyzed</Badge>
+                              ) : null}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="ml-2 text-gray-500 hover:text-red-600"
+                                onClick={() => removeResume(index)}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="job" className="space-y-4 mt-4">
+                      <div 
+                        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-red-300 transition-colors cursor-pointer group bg-red-50/30"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Click to upload resumes (PDF, TXT)"
+                      >
+                        <p className="text-sm text-gray-500 mb-3 group-hover:text-red-600">Supported formats: PDF, DOC, DOCX, TXT</p>
+                        <input 
+                          type="file" 
+                          multiple 
+                          accept=".pdf,.doc,.docx,.txt"
+                          className="hidden"
+                          ref={fileInputRef}
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                              handleResumeUpload(e.target.files);
+                            }
+                          }}
+                        />
+                        <div className="flex flex-col items-center justify-center">
+                          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
+                            <Upload className="h-8 w-8 text-red-600 group-hover:text-red-700" />
+                          </div>
+                          <p className="text-base font-medium text-gray-700 group-hover:text-red-600 transition-colors">Click to upload resumes</p>
+                          <p className="text-xs text-gray-500 mt-1">or drag and drop files here</p>
+                        </div>
+                      </div>
+
+                      {resumeFiles.length > 0 && (
+                        <div className="mt-6">
+                          <h3 className="text-md font-medium mb-3 flex items-center">
+                            <FileText className="mr-2 h-4 w-4" /> 
+                            Uploaded Resumes ({resumeFiles.length})
+                          </h3>
+                          <div className="space-y-2">
+                            {resumeFiles.map((resume, index) => (
+                              <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                                    <FileText className="h-4 w-4 text-red-700" />
+                                  </div>
+                                  <div className="ml-3">
+                                    <p className="text-sm font-medium text-gray-800">{resume.file.name}</p>
+                                    <p className="text-xs text-gray-500">{(resume.file.size / 1024).toFixed(1)} KB</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center">
+                                  {resume.isAnalyzing ? (
+                                    <div className="text-xs text-blue-600 flex items-center">
+                                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Analyzing...
+                                    </div>
+                                  ) : resume.error ? (
+                                    <Badge variant="destructive" className="text-xs">Error</Badge>
+                                  ) : resume.result ? (
+                                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">Analyzed</Badge>
+                                  ) : null}
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="ml-2 text-gray-500 hover:text-red-600"
+                                    onClick={() => removeResume(index)}
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="job" className="space-y-4 mt-4">
+                      <Tabs defaultValue="upload" className="w-full">
+                        <TabsList className="w-full max-w-xs mx-auto grid grid-cols-2 mb-4">
+                          <TabsTrigger value="upload">Upload File</TabsTrigger>
+                          <TabsTrigger value="paste">Paste Text</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="upload" className="space-y-4">
+                          {jobDescFile ? (
+                            <div className="flex items-center justify-between border border-red-200 rounded-lg p-4 bg-red-50/30">
+                              <div className="flex items-center">
+                                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                                  <FileText className="h-5 w-5 text-red-600" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-800">{jobDescFile.name}</p>
+                                  <p className="text-sm text-gray-500">{(jobDescFile.size / 1024).toFixed(1)} KB</p>
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={clearJobDesc}
+                                className="h-8 w-8 rounded-full hover:bg-red-50 hover:text-red-600"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div
+                              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-red-300 transition-colors cursor-pointer bg-red-50/30 group"
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = '.pdf,.doc,.docx,.txt';
+                                input.onchange = (e) => {
+                                  const file = (e.target as HTMLInputElement).files?.[0];
+                                  if (file) handleJobDescUpload(file);
+                                };
+                                input.click();
+                              }}
+                            >
+                              <div className="flex flex-col items-center justify-center">
+                                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
+                                  <Upload className="h-8 w-8 text-red-600 group-hover:text-red-700" />
+                                </div>
+                                <p className="text-base font-medium text-gray-700 group-hover:text-red-600 transition-colors">Upload job description</p>
+                                <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, or TXT</p>
+                              </div>
+                            </div>
+                          )}
+                        </TabsContent>
+                        
+                        <TabsContent value="paste" className="space-y-4">
+                          <div className="space-y-3">
+                            <Textarea
+                              placeholder="Paste job description here..."
+                              className="min-h-[200px] resize-none focus:border-red-300 focus:ring-red-300 border-red-100 bg-red-50/20"
+                              value={jobDescText}
+                              onChange={(e) => setJobDescText(e.target.value)}
+                            />
+                            <Button 
+                              onClick={handlePasteJobDesc}
+                              className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-md transition-all duration-200"
+                              disabled={!jobDescText.trim()}
+                            >
+                              <ClipboardPaste className="mr-2 h-4 w-4" />
+                              Use Pasted Text
+                            </Button>
+                          </div>
+                          
+                          {jobDescFile && jobDescText && (
+                            <div className="rounded-lg p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm">
+                              <p>You have both a file and pasted text. The file will be used for analysis.</p>
+                              <Button
+                                variant="link"
+                                onClick={clearJobDesc}
+                                className="text-yellow-600 p-0 h-auto mt-1 hover:text-yellow-800"
+                              >
+                                Clear file to use pasted text
+                              </Button>
+                            </div>
+                          )}
+                        </TabsContent>
+                      </Tabs>
+                    </TabsContent>
+                    
+                    {jobDescFile && (
+                      <div className="mt-6">
+                        <h3 className="text-md font-medium mb-3 flex items-center">
+                          <Briefcase className="mr-2 h-4 w-4" /> 
+                          Job Description
+                        </h3>
+                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
+                              <Briefcase className="h-4 w-4 text-purple-700" />
+                            </div>
+                            <div className="ml-3">
+                              <p className="text-sm font-medium text-gray-800">
+                                {activeJobDescTab === 'paste' ? 'Pasted Job Description' : jobDescFile.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {activeJobDescTab === 'paste' 
+                                  ? `${jobDescText.split('\n').length} lines, ${jobDescText.length} characters` 
+                                  : `${(jobDescFile.size / 1024).toFixed(1)} KB`}
+                              </p>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-gray-500 hover:text-red-600"
+                            onClick={clearJobDesc}
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
+                            <Briefcase className="h-4 w-4 text-purple-700" />
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-800">
+                              {activeJobDescTab === 'paste' ? 'Pasted Job Description' : jobDescFile.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {activeJobDescTab === 'paste' 
+                                ? `${jobDescText.split('\n').length} lines, ${jobDescText.length} characters` 
+                                : `${(jobDescFile.size / 1024).toFixed(1)} KB`}
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-gray-500 hover:text-red-600"
+                          onClick={clearJobDesc}
+                        >
+                          <XCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+              
+              {errorMessage && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-4 w-4" />
+                    <p className="font-medium">Error occurred:</p>
+                  </div>
+                  <p className="ml-6">{errorMessage}</p>
+                </div>
+              )}
+              
+              <div className="mt-8">
+                <Button 
+                  className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                  disabled={isLoading || resumeFiles.length === 0 || !jobDescFile || !apiKey}
+                  onClick={analyzeResumes}
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Analyzing Resumes...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="h-5 w-5" />
+                      Analyze Resumes
+                    </>
+                  )}
+                </Button>
+                
+                {processingStep && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600">{processingStep}</span>
+                    </div>
+                    <Progress value={isLoading ? 66 : 0} className="h-2 bg-gray-200" />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Results will be shown here after analysis */}
+          {showResult && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <ListOrdered className="mr-2 h-5 w-5" />
+              Analysis Results
+            </CardTitle>
+            <CardDescription>
+              Candidate ranking and detailed analysis
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="lg:col-span-3">
+              {!showResult ? (
+                <div className="p-8 bg-gray-100 rounded-lg border border-gray-200 text-center">
+                  <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <Brain className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Resume Analysis Dashboard</h3>
+                  <p className="text-gray-600 mb-4">
+                    Upload resumes and a job description, then click "Analyze Resumes" to begin.
+                  </p>
+                  <div className="space-y-2 max-w-md mx-auto text-left">
+                    <div className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <p className="text-gray-600">Extract key information from resumes</p>
+                    </div>
+                    <div className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <p className="text-gray-600">Analyze candidate fit against job requirements</p>
+                    </div>
+                    <div className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <p className="text-gray-600">Rank candidates based on skill match</p>
+                    </div>
+                    <div className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5" />
+                      <p className="text-gray-600">Provide AI-powered improvement suggestions</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-xl font-bold flex items-center">
+                          <ListOrdered className="mr-2 h-5 w-5" />
+                          Candidate Rankings
+                        </CardTitle>
+                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                          {resumeFiles.length} Candidates
+                        </Badge>
+                      </div>
+                      <CardDescription>
+                        Candidates ranked by match score based on the job requirements
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50">
+                            <TableHead className="w-16 text-center">Rank</TableHead>
+                            <TableHead>Candidate</TableHead>
+                            <TableHead className="text-center">Match Score</TableHead>
+                            <TableHead className="text-center">Matched Skills</TableHead>
+                            <TableHead className="text-center">Missing Skills</TableHead>
+                            <TableHead className="text-center">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {[...resumeFiles]
+                            .filter(resume => resume.result)
+                            .sort((a, b) => {
+                              const scoreA = a.result?.comparison.matchScore || 0;
+                              const scoreB = b.result?.comparison.matchScore || 0;
+                              return scoreB - scoreA;
+                            })
+                            .map((resume, index) => (
+                              <TableRow key={index} className={resume.selected ? "bg-red-50" : ""}>
+                                <TableCell className="text-center font-medium">{index + 1}</TableCell>
+                                <TableCell>
+                                  <div className="font-medium">{resume.result?.resumeSummary.name || `Candidate ${index + 1}`}</div>
+                                  <div className="text-xs text-gray-500">{resume.file.name}</div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <span className={`font-bold ${resume.result?.comparison.matchScore || 0 >= 70 ? 'text-green-600' : resume.result?.comparison.matchScore || 0 >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                                    {resume.result?.comparison.matchScore}%
+                                  </span>
+                                </TableCell>
+                  
+                  {/* Resume Analysis Results */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {resumeFiles.map((resume, index) => (
+                      <Card key={index} className={`relative overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 ${resume.result?.comparison.matchScore >= 80 ? 'border-green-300' : 
+                        resume.result?.comparison.matchScore >= 60 ? 'border-yellow-300' : 
+                        resume.result ? 'border-red-300' : 'border-gray-200'}`}>
+                        {resume.result && (
+                          <div 
+                            className={`absolute top-0 right-0 w-16 h-16 flex items-center justify-center ${resume.result.comparison.matchScore >= 80 ? 'bg-green-500' : 
+                              resume.result.comparison.matchScore >= 60 ? 'bg-yellow-500' : 
+                              'bg-red-500'}`}
+                            style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
+                          >
+                            <span className="text-white font-bold text-xs rotate-45 translate-x-3 -translate-y-1">
+                              {resume.result.comparison.matchScore}%
+                            </span>
+                          </div>
+                        )}
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                            <div className="truncate max-w-[200px] text-gray-700 font-medium" title={resume.file.name}>
+                              {resume.file.name}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeResume(index)}
+                              className="h-6 w-6 rounded-full hover:bg-red-50 hover:text-red-600"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pb-4 pt-0">
+                          {resume.isAnalyzing ? (
+                            <div className="flex flex-col items-center justify-center h-48">
+                              <Loader2 className="h-8 w-8 text-red-600 animate-spin mb-4" />
+                              <p className="text-sm text-gray-500">Analyzing resume...</p>
+                            </div>
+                          ) : resume.error ? (
+                            <div className="flex flex-col items-center justify-center h-48">
+                              <AlertCircle className="h-8 w-8 text-red-600 mb-4" />
+                              <p className="text-sm text-red-600">{resume.error}</p>
+                            </div>
+                          ) : resume.result ? (
+                            <div className="space-y-4">
+                              <div className="flex justify-between items-center">
+                                <h3 className="font-semibold text-red-700">
+                                  {resume.result.resumeSummary.name || "Unnamed Candidate"}
+                                </h3>
+                              </div>
+                              
+                              <div className="text-sm space-y-3">
+                                <div>
+                                  <span className="font-medium text-gray-700">Experience:</span> 
+                                  <p className="text-gray-600 mt-1 text-xs line-clamp-2">{resume.result.resumeSummary.experience}</p>
+                                </div>
+                                
+                                <div>
+                                  <span className="font-medium text-gray-700">Skills:</span> 
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {resume.result.resumeSummary.skills.slice(0, 5).map((skill, idx) => (
+                                      <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                    {resume.result.resumeSummary.skills.length > 5 && (
+                                      <span className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs rounded-full">
+                                        +{resume.result.resumeSummary.skills.length - 5} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <span className="font-medium text-gray-700">Matched:</span> 
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {resume.result.comparison.matchedSkills.slice(0, 3).map((skill, idx) => (
+                                      <span key={idx} className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                    {resume.result.comparison.matchedSkills.length > 3 && (
+                                      <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                                        +{resume.result.comparison.matchedSkills.length - 3} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <span className="font-medium text-gray-700">Missing:</span> 
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {resume.result.comparison.missingSkills.slice(0, 3).map((skill, idx) => (
+                                      <span key={idx} className="px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                    {resume.result.comparison.missingSkills.length > 3 && (
+                                      <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">
+                                        +{resume.result.comparison.missingSkills.length - 3} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="pt-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 shadow-sm transition-all"
+                                  onClick={() => {
+                                    // Open a modal or show detailed view - to be implemented
+                                    toast.info("Detailed view coming soon");
+                                  }}
+                                >
+                                  View Full Analysis
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-48">
+                              <FileText className="h-8 w-8 text-gray-400 mb-4" />
+                              <p className="text-sm text-gray-500">Resume uploaded and ready for analysis</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {/* Job Description Summary */}
+                  {resumeFiles.some(r => r.result) && (
+                    <Card className="mt-6 border-red-200 shadow-md">
+                      <CardHeader className="pb-3 border-b border-red-100">
+                        <CardTitle className="text-xl text-red-700">Job Description Analysis</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        {/* Using the first successful result for job description summary */}
+                        {(() => {
+                          const resultWithJob = resumeFiles.find(r => r.result);
+                          if (!resultWithJob || !resultWithJob.result) return null;
+                          
+                          const { jobSummary } = resultWithJob.result;
+                          return (
+                            <div className="space-y-4">
+                              <div>
+                                <h3 className="font-medium text-xl text-red-700">{jobSummary.title || "Position"}</h3>
+                              </div>
+                              
+                              <div className="space-y-4">
+                                <div>
+                                  <span className="text-sm font-medium text-gray-700">Required Skills:</span>
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {jobSummary.requiredSkills.map((skill, idx) => (
+                                      <span key={idx} className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                                        {skill}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <span className="text-sm font-medium text-gray-700">Key Responsibilities:</span>
+                                  <ul className="text-sm text-gray-700 list-disc pl-5 mt-2 space-y-1">
+                                    {jobSummary.responsibilities.map((resp, idx) => (
+                                      <li key={idx}>{resp}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </CardContent>
+                    </Card>
+                  )}
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full mt-6"
+                    onClick={() => {
+                      setShowResult(false);
+                      setResumeFiles([]);
+                      setJobDescFile(null);
+                    }}
+                  >
+                    Start New Analysis
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default ResumeAnalyzer;

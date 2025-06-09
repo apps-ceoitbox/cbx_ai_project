@@ -1,5 +1,16 @@
 import AdminDashboard from '@/pages/Admin/Admin'
 import AdminLoginPage from '@/pages/Admin/AdminLogin'
+import AIAgentHistories from '@/pages/AIAgentHistories'
+import AIAgentsPage from '@/pages/AIAgents'
+import AttendanceMonitor from '@/pages/AIAgents/attendance'
+import CompanyProfileAI from '@/pages/AIAgents/hr'
+import { CompanyProfileHistory } from '@/pages/AIAgents/hr/CompanyProfileHistory'
+import AIMailSender from '@/pages/AIAgents/mail'
+import { MailSenderHistory } from '@/pages/AIAgents/mail/MailSenderHistory'
+import ResumeAnalyzer from '@/pages/AIAgents/resume'
+import ResumeHistory from '@/pages/AIAgents/resume/ResumeHistory'
+import ZoomaryAI from '@/pages/AIAgents/Zoomary'
+import { ZoomaryHistory } from '@/pages/AIAgents/Zoomary/ZoomaryHistory'
 import Index from '@/pages/AstroDISC/Index'
 import UserSubmissions from '@/pages/AstroDISC/UserSubmissions'
 import AstroAdminDashboard from '@/pages/AstroDISCAdmin/AstroAdminDashboard'
@@ -56,6 +67,24 @@ const AppRoutes = () => {
                 <Route path="/documents-dashboard" element={<ReportsDashboard />} />
                 <Route path="/document-reader-settings" element={<Settings />} />
 
+                {/* AI Agents */}
+                <Route path="/ai-agents" element={<AIAgentsPage />} />
+                <Route path="/ai-agents/zoomary" element={<ZoomaryAI />} />
+                <Route path="/ai-agents/zoomary/history" element={<ZoomaryHistory />} />
+                <Route path="/ai-agents/hr" element={<CompanyProfileAI />} />
+                <Route path="/ai-agents/company-profile/history" element={<CompanyProfileHistory />} />
+                <Route path="/ai-agents/resume" element={<ResumeAnalyzer />} />
+                <Route path="/ai-agents/resume/history" element={<ResumeHistory />} />
+                <Route path="/ai-agents/attendance" element={<AttendanceMonitor />} />
+                <Route path="/ai-agents/mail" element={<AIMailSender />} />
+                <Route path="/ai-agents/mail/history" element={<MailSenderHistory />} />
+                <Route path="/ai-agents/:categoryId" element={<AIAgentsPage />} />
+                <Route path="/ai-agent-histories" element={<AIAgentHistories />} />
+                <Route path="/admin/ai-agents" element={<AIAgentsPage />} />
+                <Route path="/admin/ai-agents/:categoryId" element={<AIAgentsPage />} />
+
+
+                {/* Default  */}
                 <Route path="*" element={<NotFound />} />
 
             </Routes>
@@ -64,4 +93,7 @@ const AppRoutes = () => {
     )
 }
 
-export default AppRoutes
+export default AppRoutes;
+
+
+

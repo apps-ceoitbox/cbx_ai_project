@@ -168,8 +168,8 @@ export default function AdminDashboard() {
 
   console.log({
     tools,
-categories,
-apis
+    categories,
+    apis
   })
 
   useEffect(() => {
@@ -243,7 +243,7 @@ apis
   const getFieldValues = async () => {
     try {
       setIsLoading(true);
-      const {data:res} = await axios.get(`/submission/fieldValues`);
+      const { data: res } = await axios.get(`/submission/fieldValues`);
       console.log(res)
       setTools(res?.data?.tool || []);
       setCategories(res?.data?.category || []);
@@ -324,12 +324,12 @@ apis
   }, [adminAuth.user])
 
   useEffect(() => {
-        getAllUsersSubmissionsData();
-  },[filters, currentPage])
+    getAllUsersSubmissionsData();
+  }, [filters, currentPage])
 
   useEffect(() => {
-        getFieldValues();
-  },[])
+    getFieldValues();
+  }, [])
 
   const handleSendEmail = async (submission) => {
     console.log(submission)
@@ -706,7 +706,7 @@ apis
       const { value, done: doneReading } = await reader.read();
       done = doneReading;
       const chunk = decoder.decode(value, { stream: true });
-       if (chunk.startsWith("{ID}-")) {
+      if (chunk.startsWith("{ID}-")) {
         setSubmissionID(chunk.split("{ID}-")[1].trim());
       }
       else {
@@ -775,6 +775,7 @@ apis
               <Users className="mr-2 h-4 w-4" />
               Submissions
             </TabsTrigger>
+
             <TabsTrigger
               value="ai-settings"
               className="flex items-center justify-center py-2 text-black bg-white border border-gray-200 
@@ -783,6 +784,7 @@ apis
               <Settings className="mr-2 h-4 w-4" />
               AI Platform Settings
             </TabsTrigger>
+
             <TabsTrigger
               value="manage-prompts"
               className="flex items-center justify-center py-2 text-black bg-white border border-gray-200 
@@ -791,6 +793,8 @@ apis
               <FileText className="mr-2 h-4 w-4" />
               Manage Templates
             </TabsTrigger>
+
+
           </TabsList>
 
 
@@ -1589,6 +1593,7 @@ apis
             </div>
           </TabsContent>
 
+
           <TabsContent value="create-prompt">
             <Card>
               <CardHeader>
@@ -1795,6 +1800,7 @@ apis
               </CardContent>
             </Card>
           </TabsContent>
+
 
           <TabsContent value="edit-prompt">
             <Card>
@@ -2039,6 +2045,9 @@ apis
               </CardContent>
             </Card>
           </TabsContent>
+
+
+
         </Tabs>
 
         {isLoading &&
