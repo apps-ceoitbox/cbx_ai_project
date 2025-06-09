@@ -23,7 +23,6 @@ export function ZoomaryHistory() {
   const [selectedItem, setSelectedItem] = useState<ZoomaryHistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [clearingHistory, setClearingHistory] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
 
   useEffect(() => {
@@ -180,13 +179,10 @@ export function ZoomaryHistory() {
       .catch(() => toast.error('Failed to download PDF'));
   };
 
-  const handleClearHistory = async () => {
-    setShowClearDialog(true);
-  };
 
   const confirmClearHistory = async () => {
     try {
-      setClearingHistory(true);
+
       const success = clearZoomaryHistory();
       if (success) {
         setHistory([]);
@@ -199,7 +195,7 @@ export function ZoomaryHistory() {
       console.error('Error clearing history:', err);
       toast.error('Failed to clear history');
     } finally {
-      setClearingHistory(false);
+
       setShowClearDialog(false);
     }
   };

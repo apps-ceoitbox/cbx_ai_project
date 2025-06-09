@@ -1732,7 +1732,6 @@ const CompanyProfileAI = () => {
   const [emailContent, setEmailContent] = useState<string>("");
   const [perplexityApiKey, setPerplexityApiKey] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<string>("");
-  const [selectedProvider, setSelectedProvider] = useState<string>("");
 
   // Fetch API settings from backend
   useEffect(() => {
@@ -1749,7 +1748,6 @@ const CompanyProfileAI = () => {
       }
 
       setPerplexityApiKey(companyProfileSetting?.apikey);
-      setSelectedProvider(companyProfileSetting?.aiProvider?.name);
       setSelectedModel(companyProfileSetting?.aiProvider?.model);
     }).catch(err => {
       console.error("Error fetching AI settings:", err);

@@ -209,9 +209,7 @@ ${selectedItem.response}
     toast.success('PDF download started');
   };
 
-  const handleClearHistory = () => {
-    setShowClearDialog(true);
-  };
+
 
   const confirmClearHistory = async () => {
     try {
