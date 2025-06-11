@@ -12,6 +12,7 @@ export interface ZoomaryHistoryItem {
   recordingLink?: string;
   createdAt: Date;
   updatedAt: Date;
+  companyName: string;
 }
 
 // Types for Resume Analyzer history
@@ -145,16 +146,6 @@ export const saveZoomaryHistory = async (data: {
     );
 
     return null;
-  }
-};
-
-export const clearZoomaryHistory = async (): Promise<boolean> => {
-  try {
-    // localStorage.removeItem('zoomaryHistory'); // Remove if you want to keep client-side clear as fallback
-    return true;
-  } catch (error) {
-    console.error("Error clearing Zoomary history:", error);
-    return false;
   }
 };
 

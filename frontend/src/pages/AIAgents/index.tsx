@@ -16,12 +16,12 @@ interface AgentCategory {
 const agentCategories: AgentCategory[] = [
   {
     id: "zoomary",
-    title: "Zoomary AI",
+    title: "AI Zoom Summary",
     icon: <Sparkles />,
     gradient: "bg-gradient-to-br from-red-500 to-red-800",
     color: "bg-red-600",
-    description: "Zoom meeting summariser agent",
-    bgImage: "url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070')"
+    description: "Enter a Zoom recording URL to generate a detailed meeting summary.",
+    bgImage: "url('https://t4.ftcdn.net/jpg/03/44/90/71/240_F_344907190_hpw23uwfISWQWCxxhvt0wuO3t86RHOSo.jpg')"
   },
   {
     id: "hr",

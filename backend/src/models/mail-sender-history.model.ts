@@ -11,10 +11,12 @@ export interface MailSenderHistoryInterface {
   response: string;
   createdAt: Date;
   updatedAt: Date;
+  agents: string;
 }
 
 const MailSenderHistorySchema: Schema = new Schema(
   {
+    agents: { type: String, default: "mail" },
     name: {
       type: String,
       required: true,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { History, Calendar, Eye, Search, Users, Settings } from 'lucide-react';
+import { History, Calendar, Eye, Search, Users, Settings, ArrowLeft, Download, Copy } from 'lucide-react';
 import {
   getAllZoomaryHistory,
   ZoomaryHistoryItem,
@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AIAgentSettingsPage from '../AIAgentSettings';
+import { toast } from 'sonner';
+import html2pdf from 'html2pdf.js';
 
 type HistoryType = 'zoomary' | 'company-profile' | 'mail-sender';
 
@@ -117,6 +119,60 @@ const AIAgentHistories: React.FC = () => {
     );
   });
 
+  const copySummaryToClipboard = async (element) => {
+    const contentElement = document.getElementById(element);
+    if (!contentElement) {
+      toast.error("Content not found");
+      return;
+    }
+
+    const fullHTML = `
+        <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.6;">
+          ${contentElement.innerHTML}
+        </div>
+      `;
+
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        const blob = new Blob([fullHTML], { type: "text/html" });
+        const clipboardItem = new ClipboardItem({ "text/html": blob });
+        await navigator.clipboard.write([clipboardItem]);
+        toast.success("Summary copied to clipboard!");
+      } catch (err) {
+        console.error("Copy failed:", err);
+        toast.error("Failed to copy.");
+      }
+    } else {
+      toast.error("Clipboard API not supported.");
+    }
+  };
+
+  const downloadAsPdf = (element) => {
+    if (!selectedItem) return;
+
+    const content = document.getElementById(element);
+    if (!content) return;
+
+    const rawName = selectedItem.title || selectedItem.companyName || "";
+    const sanitizedName = rawName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `${sanitizedName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf()
+      .from(content)
+      .set(opt)
+      .save()
+      .then(() => toast.success('PDF downloaded'))
+      .catch(() => toast.error('Failed to download PDF'));
+  };
+
+
   const renderHistoryContent = () => {
     if (loading && !selectedItem) {
       return (
@@ -141,12 +197,13 @@ const AIAgentHistories: React.FC = () => {
           <div className="bg-white rounded-lg p-6 border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-800">{zoomaryItem.title}</h2>
-              <Button
-                variant="outline"
-                className="border-gray-300 hover:border-red-600 hover:text-red-600"
-                onClick={() => setSelectedItem(null)}
-              >
-                Back to List
+
+              <Button onClick={() => setSelectedItem(null)}
+                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+                variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
               </Button>
             </div>
 
@@ -164,20 +221,40 @@ const AIAgentHistories: React.FC = () => {
             </div>
 
             <div className="border-t border-gray-200 pt-4">
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2 text-gray-700">User Information</h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p><strong>Name:</strong> {zoomaryItem.name}</p>
                   <p><strong>Email:</strong> {zoomaryItem.email}</p>
                 </div>
-              </div>
+              </div> */}
 
-              <h3 className="text-lg font-semibold mb-2 text-gray-700">Summary</h3>
+              {/* <h3 className="text-lg font-semibold mb-2 text-gray-700">Summary</h3> */}
               <div
                 id="summary-content"
                 className="bg-gray-50 p-4 rounded-lg prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: zoomaryItem.summary }}
               />
+            </div>
+            <div className="w-full flex items-center justify-center mt-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={() => copySummaryToClipboard("summary-content")}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </Button>
+
+                <Button variant="outline" className="flex items-center"
+                  onClick={() => downloadAsPdf("summary-content")}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+
+              </div>
             </div>
           </div>
         );
@@ -187,12 +264,13 @@ const AIAgentHistories: React.FC = () => {
           <div className="bg-white rounded-lg p-6 border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-800">{companyProfileItem.companyName}</h2>
-              <Button
-                variant="outline"
-                className="border-gray-300 hover:border-red-600 hover:text-red-600"
-                onClick={() => setSelectedItem(null)}
-              >
-                Back to List
+
+              <Button onClick={() => setSelectedItem(null)}
+                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+                variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
               </Button>
             </div>
 
@@ -201,15 +279,15 @@ const AIAgentHistories: React.FC = () => {
                 <Calendar className="w-4 h-4 mr-1" />
                 <span>Created: {formatDate(companyProfileItem.createdAt.toString())}</span>
               </div>
-              {companyProfileItem.sourcedFrom && (
+              {/* {companyProfileItem.sourcedFrom && (
                 <div className="flex items-center">
                   <span>Source: {companyProfileItem.sourcedFrom}</span>
                 </div>
-              )}
+              )} */}
             </div>
 
             <div className="border-t border-gray-200 pt-4">
-              {(companyProfileItem.name || companyProfileItem.email) && (
+              {/* {(companyProfileItem.name || companyProfileItem.email) && (
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold mb-2 text-gray-700">User Information</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -217,14 +295,34 @@ const AIAgentHistories: React.FC = () => {
                     {companyProfileItem.email && <p><strong>Email:</strong> {companyProfileItem.email}</p>}
                   </div>
                 </div>
-              )}
+              )} */}
 
-              <h3 className="text-lg font-semibold mb-2 text-gray-700">Company Report</h3>
+              {/* <h3 className="text-lg font-semibold mb-2 text-gray-700">Company Report</h3> */}
               <div
                 id="report-content"
                 className="bg-gray-50 p-4 rounded-lg prose max-w-none "
                 dangerouslySetInnerHTML={{ __html: companyProfileItem.report }}
               />
+            </div>
+            <div className="w-full flex items-center justify-center mt-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={() => copySummaryToClipboard("report-content")}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </Button>
+
+                <Button variant="outline" className="flex items-center"
+                  onClick={() => downloadAsPdf("report-content")}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+
+              </div>
             </div>
           </div>
         );
@@ -234,12 +332,12 @@ const AIAgentHistories: React.FC = () => {
           <div className="bg-white rounded-lg p-6 border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-800">{mailSenderItem.subject}</h2>
-              <Button
-                variant="outline"
-                className="border-gray-300 hover:border-red-600 hover:text-red-600"
-                onClick={() => setSelectedItem(null)}
-              >
-                Back to List
+              <Button onClick={() => setSelectedItem(null)}
+                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+                variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
               </Button>
             </div>
 
@@ -310,39 +408,39 @@ const AIAgentHistories: React.FC = () => {
               <thead className="bg-red-600">
                 <tr>
                   {historyType === 'zoomary' ? (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Title
                     </th>
                   ) : historyType === 'company-profile' ? (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Company Name
                     </th>
                   ) : (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Subject
                     </th>
                   )}
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                     {historyType === 'mail-sender' ? 'Recipient' : 'Name'}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                     {historyType === 'mail-sender' ? 'Name' : 'Email'}
                   </th>
                   {historyType === 'mail-sender' && (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Email
                     </th>
                   )}
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                     Date
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredHistory.map((item) => {
+                {filteredHistory?.map((item) => {
                   if (historyType === 'zoomary') {
                     const zoomaryItem = item as ZoomaryHistoryItem;
                     return (
@@ -457,7 +555,7 @@ const AIAgentHistories: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto py-8 px-10">
+    <div className="mx-auto py-8 px-10 min-h-screen">
 
       {/* Heading  */}
       <div className="flex items-center mb-6" >
@@ -529,3 +627,4 @@ const AIAgentHistories: React.FC = () => {
 };
 
 export default AIAgentHistories;
+

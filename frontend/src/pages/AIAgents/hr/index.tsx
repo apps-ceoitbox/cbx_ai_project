@@ -1303,6 +1303,7 @@ import html2pdf from "html2pdf.js";
 // Import history service for saving profiles
 import { saveCompanyProfileHistory } from "@/services/history.service";
 import { useAxios } from "@/context/AppContext";
+import { ArrowLeft, Copy, Download, Printer } from "lucide-react";
 
 // Function to convert markdown tables to HTML tables
 function convertTablesToHtml(markdown: string) {
@@ -2159,23 +2160,32 @@ Ensure your profile is detailed, accurate, and professionally structured with a 
   };
 
   // Handle copy to clipboard
-  const copyProfileToClipboard = () => {
-    // Create a div with the profile content
-    const profileDiv = document.createElement('div');
-    profileDiv.innerHTML = profileHtml;
+  const copySummaryToClipboard = async () => {
+    const contentElement = document.getElementById("profile-content");
+    if (!contentElement) {
+      toast.error("Content not found");
+      return;
+    }
 
-    // Extract text content from the HTML
-    const textContent = profileDiv.textContent || profileDiv.innerText || "";
+    const fullHTML = `
+        <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.6;">
+          ${contentElement.innerHTML}
+        </div>
+      `;
 
-    // Use the clipboard API to copy the text
-    navigator.clipboard.writeText(textContent)
-      .then(() => {
-        toast.success("Company profile copied to clipboard!");
-      })
-      .catch(err => {
-        console.error("Failed to copy: ", err);
-        toast.error("Failed to copy to clipboard");
-      });
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        const blob = new Blob([fullHTML], { type: "text/html" });
+        const clipboardItem = new ClipboardItem({ "text/html": blob });
+        await navigator.clipboard.write([clipboardItem]);
+        toast.success("Summary copied to clipboard!");
+      } catch (err) {
+        console.error("Copy failed:", err);
+        toast.error("Failed to copy.");
+      }
+    } else {
+      toast.error("Clipboard API not supported.");
+    }
   };
 
   // Handle print functionality
@@ -2352,11 +2362,11 @@ Ensure your profile is detailed, accurate, and professionally structured with a 
   return (
     <div className="container py-8 max-w-5xl mx-auto">
       <Link to="/ai-agents" className="mb-6 inline-block">
-        <Button variant="outline" className="mb-6 border-red-600 text-red-600 hover:bg-red-50 transition-colors">
-          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to AI Agents
+        <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+          className="bg-primary-red  hover:bg-red-700 transition-colors duration-200 mb-6"
+          variant="ghost">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
         </Button>
       </Link>
 
@@ -2548,58 +2558,22 @@ Ensure your profile is detailed, accurate, and professionally structured with a 
           {showResult && (
             <div className="mt-8 bg-white border border-red-100 rounded-xl p-6 shadow-lg">
               <div className="flex justify-between items-center mb-6 pb-4 border-b border-red-100">
-                <h3 className="text-2xl font-bold text-red-700 flex items-center">
-                  <svg className="w-6 h-6 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  Company Profile
-                </h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={enableEditMode}
-                    disabled={isEditing}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 flex items-center shadow-sm transition-all"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <h3 className="text-2xl font-bold text-red-700 flex items-center">
+                    <svg className="w-6 h-6 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={copyProfileToClipboard}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 flex items-center shadow-sm transition-all"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                    </svg>
-                    Copy
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={printProfile}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 flex items-center shadow-sm transition-all"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                    Print
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={downloadProfileAsPdf}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 flex items-center shadow-sm transition-all"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    PDF
-                  </Button>
+                    Company Profile
+                  </h3>
+                  <p className="text-[14px]">Generated on{" "}
+                    {new Date().toLocaleString("en-US", {
+                      month: "short",
+                      day: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}</p>
                 </div>
               </div>
 
@@ -2633,6 +2607,34 @@ Ensure your profile is detailed, accurate, and professionally structured with a 
                     className="prose max-w-none prose-headings:text-red-700 prose-a:text-red-600 prose-strong:text-red-700"
                     dangerouslySetInnerHTML={{ __html: profileHtml }}
                   />
+
+                  <div className="w-full flex items-center justify-center mt-6">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex items-center"
+                        onClick={copySummaryToClipboard}
+                      >
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="flex items-center"
+                        onClick={printProfile}
+                      >
+                        <Printer className="mr-2 h-4 w-4" />
+                        Print
+                      </Button>
+
+                      <Button variant="outline" className="flex items-center" onClick={downloadProfileAsPdf}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download PDF
+                      </Button>
+
+                    </div>
+                  </div>
                 </div>
               )}
 

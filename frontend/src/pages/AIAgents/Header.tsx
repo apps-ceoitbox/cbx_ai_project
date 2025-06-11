@@ -47,13 +47,22 @@ const Header = () => {
                 {!isMobile &&
                     <div>
                         {isSpecificAgentPage &&
-                            <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-                                onClick={() => {
-                                    nav("/ai-agents");
-                                }}
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                                Back to AI Agents
+                            // <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
+                            //     onClick={() => {
+                            //         nav("/ai-agents");
+                            //     }}
+                            // >
+                            //     <ArrowLeft className="w-5 h-5" />
+                            //     Back to AI Agents
+                            // </Button>
+                            <Button onClick={() => {
+                                nav("/ai-agents");
+                            }}
+                                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+                                variant="ghost">
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back
                             </Button>
                         }
                     </div>
@@ -65,12 +74,12 @@ const Header = () => {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white">
                                     <History className="w-5 h-5 mr-2" />
-                                    Generated Histories
+                                    Generated Agents
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem onClick={() => nav("/ai-agents/zoomary/history")}>
-                                    Zoomary AI History
+                                    Zoom AI History
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => nav("/ai-agents/company-profile/history")}>
                                     Company Profile History

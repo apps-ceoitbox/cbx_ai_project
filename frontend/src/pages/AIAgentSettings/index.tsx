@@ -1,5 +1,3 @@
-
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Settings, AlertCircle, Save } from "lucide-react";
@@ -38,7 +36,7 @@ const agentCategories: AgentCategory[] = [
     icon: "🤖",
     gradient: "bg-gradient-to-br from-red-500 to-red-800",
     color: "bg-red-600",
-    description: "Zoom meeting summariser agent"
+    description: "Enter a Zoom recording URL or upload a transcript file to generate a detailed meeting summary"
   },
   {
     id: "hr",
@@ -69,21 +67,17 @@ const agentCategories: AgentCategory[] = [
 // AI Model types for AI agents
 type AIModelType = "gemini" | "openai" | "anthropic" | "groq";
 
-
 // Zoomary Settings Component
 const ZoomarySettings = () => {
   const axios = useAxios("admin");
   const [apiProviders, setApiProviders] = useState([]);
   const [selectedProviderId, setSelectedProviderId] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const [selectedModel, setSelectedModel] = useState<AIModelType>(() => {
     const saved = localStorage.getItem('zoomary_model');
     return (saved as AIModelType) || "gemini";
   });
-
-
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-
 
   const saveSettings = async () => {
     if (!selectedProviderId || !selectedModel) {
@@ -595,7 +589,7 @@ const AIAgentSettingsPage = () => {
 
         <CardContent className="py-6">
           <Accordion type="single" collapsible className="w-full">
-            {agentCategories.map((agent) => (
+            {agentCategories?.map((agent) => (
               <AccordionItem key={agent.id} value={agent.id}>
                 <AccordionTrigger className="hover:bg-gray-50 px-4 rounded-md hover:no-underline">
                   <div className="flex items-center gap-3">

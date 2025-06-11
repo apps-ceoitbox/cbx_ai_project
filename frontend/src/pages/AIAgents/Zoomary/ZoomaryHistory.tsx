@@ -1,29 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { getZoomaryHistory, clearZoomaryHistory, ZoomaryHistoryItem, deleteZoomaryHistoryItem } from '@/services/history.service';
+import { getZoomaryHistory, ZoomaryHistoryItem, deleteZoomaryHistoryItem } from '@/services/history.service';
 import { ArrowLeft, Calendar, FileText, Copy, Printer, Download, XCircle, Clock, Video, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import html2pdf from 'html2pdf.js';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog';
 
 export function ZoomaryHistory() {
-
   const [history, setHistory] = useState<ZoomaryHistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<ZoomaryHistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showClearDialog, setShowClearDialog] = useState(false);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -47,7 +35,7 @@ export function ZoomaryHistory() {
     };
 
     fetchHistory();
-  }, []);  // Empty dependency array ensures this runs once on mount
+  }, []);
 
   const handleViewDetails = async (id: any) => {
     try {
@@ -71,16 +59,12 @@ export function ZoomaryHistory() {
 
   const handleDeleteHistoryItem = async (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    console.log(`Attempting to delete history item with ID: ${id}`); // Log attempt
     if (window.confirm('Are you sure you want to delete this history item?')) {
       try {
-        setLoading(true); // Optional: indicate loading state
-        // Call the service function to delete from backend
+        setLoading(true);
         const success = await deleteZoomaryHistoryItem(id);
 
         if (success) {
-          console.log(`Successfully deleted item ${id} from backend.`);
-          // Update state only if backend deletion was successful
           const updatedHistory = history.filter((item: ZoomaryHistoryItem) => item._id !== id);
           setHistory(updatedHistory);
           if (selectedItem && selectedItem._id === id) {
@@ -95,7 +79,7 @@ export function ZoomaryHistory() {
         console.error('Error during delete operation:', err);
         toast.error('An error occurred while deleting the history item.');
       } finally {
-        setLoading(false); // Optional: reset loading state
+        setLoading(false);
       }
     }
   };
@@ -180,57 +164,25 @@ export function ZoomaryHistory() {
   };
 
 
-  const confirmClearHistory = async () => {
-    try {
-
-      const success = clearZoomaryHistory();
-      if (success) {
-        setHistory([]);
-        setSelectedItem(null);
-        toast.success('History cleared successfully');
-      } else {
-        toast.error('Failed to clear history');
-      }
-    } catch (err) {
-      console.error('Error clearing history:', err);
-      toast.error('Failed to clear history');
-    } finally {
-
-      setShowClearDialog(false);
-    }
-  };
 
   return (
-    <div className="container py-8">
-      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear History</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to clear all Zoomary AI history? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmClearHistory} className="bg-red-600 hover:bg-red-700">
-              Clear History
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+    <div className="container py-8 min-h-screen">
 
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center">
           <Link to="/ai-agents/zoomary">
-            <Button variant="outline" className="mr-4 border-gray-300 hover:border-red-600 hover:text-red-600">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Zoomary
+            <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+              className="bg-primary-red  hover:bg-red-700 transition-colors duration-200 mr-4"
+              variant="ghost">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
           </Link>
           <h1 className="text-3xl font-bold text-gray-800">
             Zoomary AI History
           </h1>
         </div>
-        {/* Clear History button removed as requested */}
+
       </div>
 
       {loading && !selectedItem && (
@@ -256,12 +208,12 @@ export function ZoomaryHistory() {
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">{selectedItem.title}</h2>
-            <Button
-              variant="outline"
-              className="border-gray-300 hover:border-red-600 hover:text-red-600"
-              onClick={() => setSelectedItem(null)}
-            >
-              Back to List
+
+            <Button onClick={() => setSelectedItem(null)} style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+              className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+              variant="ghost">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
           </div>
 

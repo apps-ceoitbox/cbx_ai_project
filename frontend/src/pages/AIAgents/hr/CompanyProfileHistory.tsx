@@ -218,9 +218,15 @@ export function CompanyProfileHistory() {
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
           <Link to="/ai-agents/hr">
-            <Button variant="outline" className="mr-4 border-gray-300 hover:border-red-600 hover:text-red-600">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Company Profile
+
+            <Button onClick={() => setSelectedItem(null)}
+              style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+              className="bg-primary-red  hover:bg-red-700 transition-colors duration-200 mr-4"
+              variant="ghost">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
+
           </Link>
           <h1 className="text-3xl font-bold text-gray-800">
             Company Profile History
@@ -252,12 +258,13 @@ export function CompanyProfileHistory() {
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">{selectedItem.companyName}</h2>
-            <Button
-              variant="outline"
-              className="border-gray-300 hover:border-red-600 hover:text-red-600"
-              onClick={() => setSelectedItem(null)}
-            >
-              Back to List
+
+            <Button onClick={() => setSelectedItem(null)}
+              style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+              className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+              variant="ghost">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
           </div>
 
