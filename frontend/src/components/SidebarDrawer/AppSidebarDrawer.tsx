@@ -1,10 +1,10 @@
-
 import {
     LogOut,
     FilePlus,
     Rocket,
     X,
     FileText,
+    User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -191,10 +191,10 @@ function AppSidebarDrawer() {
 
                         {/* User Info + Logout */}
                         <div className="p-4 border-t">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 mb-4">
                                 <Avatar>
                                     <AvatarFallback className="bg-red-600 text-white">
-                                        {userAuth?.user?.userName.charAt(0) || adminAuth?.user?.userName.charAt(0)}
+                                        {userAuth?.user?.userName?.charAt(0) || adminAuth?.user?.userName?.charAt(0)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="text-sm">
@@ -202,10 +202,25 @@ function AppSidebarDrawer() {
                                     <div className="text-xs text-gray-500">{userAuth?.user?.email || adminAuth?.user?.email}</div>
                                 </div>
                             </div>
+
+                            <Link to="/profile" onClick={handleMenuItemClick}>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start gap-3 text-lg py-6 hover:bg-red-100 text-black mb-4"
+                                    style={{
+                                        background: location.pathname === "/profile" ? "rgb(229 9 20)" : "",
+                                        color: location.pathname === "/profile" ? "#fff" : "black"
+                                    }}
+                                >
+                                    <User size={22} />
+                                    Profile Settings
+                                </Button>
+                            </Link>
+
                             <Button
                                 onClick={userAuth?.token ? handleUserLogout : handleLogoutAdmin}
                                 variant="ghost"
-                                className="w-full justify-start gap-3 mt-4 py-6 text-lg text-red-600 hover:bg-red-100"
+                                className="w-full justify-start gap-3 text-lg py-6 text-red-600 hover:bg-red-100"
                             >
                                 <LogOut size={22} />
                                 Logout
@@ -219,4 +234,4 @@ function AppSidebarDrawer() {
 
 }
 
-export default AppSidebarDrawer;  
+export default AppSidebarDrawer;

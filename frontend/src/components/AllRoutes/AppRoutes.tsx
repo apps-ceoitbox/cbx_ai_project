@@ -31,6 +31,7 @@ import Result from '@/pages/Report/Result'
 import AuditTool from '@/pages/Tool/AuditTool'
 import ToolQuestionsPage from '@/pages/Tool/Tool'
 import { Route, Routes } from 'react-router-dom'
+import Profile from '@/pages/Profile';
 
 const AppRoutes = () => {
     return (
@@ -62,6 +63,9 @@ const AppRoutes = () => {
                 <Route path="/astro-reports" element={<UserSubmissions />} />
                 <Route path="/astro-disc-dashboard" element={<AstroAdminDashboard />} />
 
+                {/* Profile */}
+                <Route path="/profile" element={<Profile />} />
+
                 {/* DocumentReader */}
                 <Route path="/document-reader" element={<DocumentReader />} />
                 <Route path="/documents-dashboard" element={<ReportsDashboard />} />
@@ -82,6 +86,7 @@ const AppRoutes = () => {
                 <Route path="/ai-agent-histories" element={<AIAgentHistories />} />
                 <Route path="/admin/ai-agents" element={<AIAgentsPage />} />
                 <Route path="/admin/ai-agents/:categoryId" element={<AIAgentsPage />} />
+                <Route path="/profile" element={<Profile />} />
 
 
                 {/* Default  */}

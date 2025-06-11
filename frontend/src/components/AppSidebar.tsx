@@ -1,5 +1,3 @@
-
-
 import {
     LogOut,
     ChevronLeft,
@@ -401,11 +399,10 @@ function AppSidebar({ collapsed, setCollapsed }) {
 
             {/* Bottom Section: User Info + Logout */}
             <div className="p-4 border-t">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 mb-3">
                     <Avatar>
                         <AvatarFallback className="bg-red-600 text-white">
                             {adminAuth?.user?.userName?.charAt(0) || userAuth?.user?.userName?.charAt(0) ||
-
                                 'U'
                             }
                         </AvatarFallback>
@@ -417,35 +414,38 @@ function AppSidebar({ collapsed, setCollapsed }) {
                             <div className="text-xs text-gray-500">{adminAuth?.user?.email || userAuth?.user?.email}</div>
                         </div>
                     )}
-
                 </div>
+                
+                <Link to="/profile">
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-2 mb-3 text-black hover:bg-red-100"
+                        style={{
+                            background: isMenuItemActive(["/profile"]) ? "rgb(229 9 20)" : "",
+                            color: isMenuItemActive(["/profile"]) ? "#fff" : "black"
+                        }}
+                    >
+                        <User size={18} />
+                        {!collapsed && "Profile Settings"}
+                    </Button>
+                </Link>
 
                 {hasBothAuth ? (
-                    <div className="space-y-2 mt-3">
+                    <div className="space-y-2">
                         <Button
                             onClick={handleUserAndAdminLogout}
                             variant="ghost"
                             className="w-full justify-start gap-2 text-red-600 hover:bg-red-100"
                         >
                             <LogOut size={18} />
-
                             {!collapsed ? "Logout" : ""}
-                            {/* {!collapsed && "User Logout"} */}
                         </Button>
-                        {/* <Button
-                            onClick={handleLogoutAdmin}
-                            variant="ghost"
-                            className="w-full justify-start gap-2 text-red-600 hover:bg-red-100"
-                        >
-                            <LogOut size={18} />
-                            {!collapsed && "Admin Logout"}
-                        </Button> */}
                     </div>
                 ) : (
                     <Button
                         onClick={userAuth?.token ? handleUserLogout : handleLogoutAdmin}
                         variant="ghost"
-                        className="w-full justify-start gap-2 mt-3 text-red-600 hover:bg-red-100"
+                        className="w-full justify-start gap-2 text-red-600 hover:bg-red-100"
                     >
                         <LogOut size={18} />
                         {!collapsed && "Logout"}
