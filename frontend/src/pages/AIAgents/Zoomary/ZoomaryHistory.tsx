@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { getZoomaryHistory, ZoomaryHistoryItem, deleteZoomaryHistoryItem } from '@/services/history.service';
-import { ArrowLeft, Calendar, FileText, Copy, Printer, Download, XCircle, Clock, Video, Eye } from 'lucide-react';
+import { getZoomaryHistory, ZoomaryHistoryItem } from '@/services/history.service';
+import { ArrowLeft, Calendar, FileText, Copy, Printer, Download, Clock, Video, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import html2pdf from 'html2pdf.js';
 import { toast } from 'sonner';
@@ -57,32 +57,32 @@ export function ZoomaryHistory() {
     }
   };
 
-  const handleDeleteHistoryItem = async (id: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this history item?')) {
-      try {
-        setLoading(true);
-        const success = await deleteZoomaryHistoryItem(id);
+  // const handleDeleteHistoryItem = async (id: string, event: React.MouseEvent) => {
+  //   event.stopPropagation();
+  //   if (window.confirm('Are you sure you want to delete this history item?')) {
+  //     try {
+  //       setLoading(true);
+  //       const success = await deleteZoomaryHistoryItem(id);
 
-        if (success) {
-          const updatedHistory = history.filter((item: ZoomaryHistoryItem) => item._id !== id);
-          setHistory(updatedHistory);
-          if (selectedItem && selectedItem._id === id) {
-            setSelectedItem(null);
-          }
-          toast.success('History item deleted successfully.');
-        } else {
-          console.error(`Failed to delete item ${id} from backend.`);
-          toast.error('Failed to delete history item. Please try again.');
-        }
-      } catch (err) {
-        console.error('Error during delete operation:', err);
-        toast.error('An error occurred while deleting the history item.');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  //       if (success) {
+  //         const updatedHistory = history.filter((item: ZoomaryHistoryItem) => item._id !== id);
+  //         setHistory(updatedHistory);
+  //         if (selectedItem && selectedItem._id === id) {
+  //           setSelectedItem(null);
+  //         }
+  //         toast.success('History item deleted successfully.');
+  //       } else {
+  //         console.error(`Failed to delete item ${id} from backend.`);
+  //         toast.error('Failed to delete history item. Please try again.');
+  //       }
+  //     } catch (err) {
+  //       console.error('Error during delete operation:', err);
+  //       toast.error('An error occurred while deleting the history item.');
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
 
   const printHistory = () => {
     if (!selectedItem) return;
@@ -284,19 +284,19 @@ export function ZoomaryHistory() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-red-600">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Title
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Date
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {history.map((item) => (
+              {history?.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{item.title}</div>
@@ -309,21 +309,11 @@ export function ZoomaryHistory() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center space-x-3">
-                      <button
-                        className="flex items-center px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
-                        onClick={() => handleViewDetails(item)}
-                        aria-label="View details"
-                      >
-                        <Eye className="w-5 h-5 mr-1" />
-                        <span>View</span>
-                      </button>
-                      <button
-                        className="text-gray-400 hover:text-red-600 transition-colors"
-                        onClick={(e) => handleDeleteHistoryItem(item._id, e)}
-                        aria-label="Delete item"
-                      >
-                        <XCircle className="w-5 h-5" />
-                      </button>
+
+                      <Button onClick={() => handleViewDetails(item)} className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+
                     </div>
                   </td>
                 </tr>

@@ -1,5 +1,3 @@
-
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAxios } from '@/context/AppContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -75,47 +73,6 @@ const Result = () => {
                                 className="pt-6"
                                 style={{ padding: "0px" }}
                             />
-
-                            {/* <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">
-                                                        <Button
-                                                          variant="outline"
-                                                          className="flex items-center"
-                                                          onClick={() => handleDownloadPDF(submission)}
-                                                        >
-                                                          <Download className="mr-2 h-4 w-4" />
-                                                          Download PDF
-                                                        </Button>
-            
-                                                        <Button
-                                                          variant="outline"
-                                                          className="flex items-center"
-                                                          onClick={handleCopyContent}
-                                                        >
-                                                          <Copy className="mr-2 h-4 w-4" />
-                                                          Copy
-                                                        </Button>
-            
-                                                        <Button
-                                                          className="bg-primary-red hover:bg-red-700 flex items-center"
-                                                          onClick={() => handleSendEmail(submission)}
-                                                          disabled={isEmailSending}
-                                                        >
-                                                          {isEmailSending ? (
-                                                            <>
-                                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                              Sending...
-                                                            </>
-                                                          ) : (
-                                                            <>
-                                                              <Mail className="mr-2 h-4 w-4" />
-                                                              Send to Email
-                                                            </>
-                                                          )}
-                                                        </Button>
-            
-            
-                                                      </CardFooter> */}
-
                         </Card>
                     </TabsContent>
 

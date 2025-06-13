@@ -232,7 +232,8 @@ const ZoomaryAI = () => {
 
         // Auto-save the summary to history
         try {
-          const title = `Meeting Summary - ${new Date().toLocaleDateString()}`;
+          // const title = `Meeting Summary - ${new Date().toLocaleDateString()}`;
+          const title = "Meeting Summary";
 
           // Use the zoom URL as the recording link if it's available
           const recordingLink = activeTab === 'url' && zoomUrl ? zoomUrl : '';

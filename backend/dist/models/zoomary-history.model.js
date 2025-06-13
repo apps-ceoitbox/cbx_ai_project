@@ -37,6 +37,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const zoomaryHistorySchema = new mongoose_1.Schema({
     name: String,
     email: String,
+    agents: { type: String, default: "Zoom" },
     title: {
         type: String,
         required: true,

@@ -41,6 +41,30 @@ const userSchema = new mongoose_1.Schema({
     mobile: { type: Number, default: 0 },
     photo: { type: String, default: "" },
     googleRefreshToken: { type: String, default: "" },
+    companyWebsite: { type: String, default: "" },
+    businessDescription: { type: String, default: "" },
+    targetCustomer: { type: String, default: "" },
+    businessType: {
+        type: String,
+        enum: ['b2b', 'b2c', 'both'],
+        default: 'b2b'
+    },
+    uniqueSellingPoint: { type: String, default: "" },
+    socialLinks: {
+        type: {
+            linkedin: { type: String, default: "" },
+            facebook: { type: String, default: "" },
+            instagram: { type: String, default: "" },
+            twitter: { type: String, default: "" }
+        },
+        required: true,
+        default: {
+            linkedin: "",
+            facebook: "",
+            instagram: "",
+            twitter: ""
+        }
+    }
 }, { timestamps: true });
 const User = mongoose_1.default.model("user", userSchema);
 exports.default = User;

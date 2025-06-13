@@ -332,7 +332,6 @@ export default function AdminDashboard() {
   }, [])
 
   const handleSendEmail = async (submission) => {
-    console.log(submission)
     setIsEmailSending(true);
     try {
       const reportElement = document.getElementById('report-content');

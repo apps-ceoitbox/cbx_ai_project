@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { getCompanyProfileHistory, clearCompanyProfileHistory, deleteCompanyProfileHistoryItem, CompanyProfileHistoryItem } from '@/services/history.service';
-import { ArrowLeft, Clock, Building, FileText, Copy, Printer, Download, XCircle, Eye } from 'lucide-react';
+import { getCompanyProfileHistory, clearCompanyProfileHistory, CompanyProfileHistoryItem } from '@/services/history.service';
+import { ArrowLeft, Clock, Building, FileText, Copy, Printer, Download, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import html2pdf from 'html2pdf.js';
@@ -69,32 +69,32 @@ export function CompanyProfileHistory() {
     }
   };
 
-  const handleDeleteHistoryItem = async (id: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this history item?')) {
-      try {
-        setLoading(true);
-        // Call the service function to delete from backend
-        const success = await deleteCompanyProfileHistoryItem(id);
+  // cs
+  //   event.stopPropagation();
+  //   if (window.confirm('Are you sure you want to delete this history item?')) {
+  //     try {
+  //       setLoading(true);
+  //       // Call the service function to delete from backend
+  //       const success = await deleteCompanyProfileHistoryItem(id);
 
-        if (success) {
-          // Update state only if backend deletion was successful
-          setHistory(history.filter(item => item._id !== id));
-          if (selectedItem && selectedItem._id === id) {
-            setSelectedItem(null);
-          }
-          toast.success('History item deleted successfully');
-        } else {
-          toast.error('Failed to delete history item. Please try again.');
-        }
-      } catch (err) {
-        console.error('Error deleting history item:', err);
-        toast.error('Failed to delete history item');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  //       if (success) {
+  //         // Update state only if backend deletion was successful
+  //         setHistory(history.filter(item => item._id !== id));
+  //         if (selectedItem && selectedItem._id === id) {
+  //           setSelectedItem(null);
+  //         }
+  //         toast.success('History item deleted successfully');
+  //       } else {
+  //         toast.error('Failed to delete history item. Please try again.');
+  //       }
+  //     } catch (err) {
+  //       console.error('Error deleting history item:', err);
+  //       toast.error('Failed to delete history item');
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
 
   const printHistory = () => {
     if (!selectedItem) return;
@@ -320,16 +320,16 @@ export function CompanyProfileHistory() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-red-600">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Company Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Source
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Created Date
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -354,21 +354,11 @@ export function CompanyProfileHistory() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center space-x-3">
-                      <button
-                        className="flex items-center px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
-                        onClick={() => handleViewDetails(item)}
-                        aria-label="View details"
-                      >
-                        <Eye className="w-5 h-5 mr-1" />
-                        <span>View</span>
-                      </button>
-                      <button
-                        className="text-gray-400 hover:text-red-600 transition-colors"
-                        onClick={(e) => handleDeleteHistoryItem(item._id, e)}
-                        aria-label="Delete item"
-                      >
-                        <XCircle className="w-5 h-5" />
-                      </button>
+
+                      <Button onClick={() => handleViewDetails(item)} className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+
                     </div>
                   </td>
                 </tr>

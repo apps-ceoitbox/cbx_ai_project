@@ -32,6 +32,8 @@ import AuditTool from '@/pages/Tool/AuditTool'
 import ToolQuestionsPage from '@/pages/Tool/Tool'
 import { Route, Routes } from 'react-router-dom'
 import Profile from '@/pages/Profile';
+import CompanyProfileViewResult from '@/pages/AIAgents/ViewResultsById/CompanyProfileViewResult'
+import ZoomRecordingViewResult from '@/pages/AIAgents/ViewResultsById/ZoomRecordingViewResult'
 
 const AppRoutes = () => {
     return (
@@ -86,8 +88,10 @@ const AppRoutes = () => {
                 <Route path="/ai-agent-histories" element={<AIAgentHistories />} />
                 <Route path="/admin/ai-agents" element={<AIAgentsPage />} />
                 <Route path="/admin/ai-agents/:categoryId" element={<AIAgentsPage />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/view/company-profile/:id" element={<CompanyProfileViewResult />} />
+                <Route path="/view/zoom/:id" element={<ZoomRecordingViewResult />} />
 
+                <Route path="/profile" element={<Profile />} />
 
                 {/* Default  */}
                 <Route path="*" element={<NotFound />} />

@@ -1,6 +1,7 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { History, Calendar, Eye, Search, Users, Settings, ArrowLeft, Download, Copy } from 'lucide-react';
+import { History, Calendar, Eye, Search, Users, Settings, ArrowLeft, Download, Copy, Trash, Mail, Loader2 } from 'lucide-react';
 import {
   getAllZoomaryHistory,
   ZoomaryHistoryItem,
@@ -23,63 +24,70 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AIAgentSettingsPage from '../AIAgentSettings';
 import { toast } from 'sonner';
 import html2pdf from 'html2pdf.js';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useAxios } from '@/context/AppContext';
+import SendEmailDialog from '@/components/Custom/SendEmailDialog';
 
 type HistoryType = 'zoomary' | 'company-profile' | 'mail-sender';
 
 type HistoryItem = ZoomaryHistoryItem | CompanyProfileHistoryItem | MailSenderHistoryItem;
 
 const AIAgentHistories: React.FC = () => {
+  const axios = useAxios("admin");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [historyType, setHistoryType] = useState<HistoryType>('zoomary');
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState("");
+
+  const fetchHistory = async () => {
+    try {
+      setLoading(true);
+      if (historyType === 'zoomary') {
+        const response = await getAllZoomaryHistory();
+        if (Array.isArray(response)) {
+          setHistory(response);
+        } else {
+          console.error('Expected array but got:', response);
+          setHistory([]);
+          setError('Invalid data format received');
+        }
+      } else if (historyType === 'company-profile') {
+        const response = await getAllCompanyProfileHistory();
+        if (Array.isArray(response)) {
+          setHistory(response);
+        } else {
+          console.error('Expected array but got:', response);
+          setHistory([]);
+          setError('Invalid data format received');
+        }
+      } else if (historyType === 'mail-sender') {
+        const response = await getAllMailSenderHistory();
+        if (Array.isArray(response)) {
+          setHistory(response);
+        } else {
+          console.error('Expected array but got:', response);
+          setHistory([]);
+          setError('Invalid data format received');
+        }
+      }
+    } catch (err) {
+      setError('Failed to load history. Please try again later.');
+      console.error(`Error fetching ${historyType} history:`, err);
+      setHistory([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        setLoading(true);
-        if (historyType === 'zoomary') {
-          const response = await getAllZoomaryHistory();
-          if (Array.isArray(response)) {
-            setHistory(response);
-          } else {
-            console.error('Expected array but got:', response);
-            setHistory([]);
-            setError('Invalid data format received');
-          }
-        } else if (historyType === 'company-profile') {
-          const response = await getAllCompanyProfileHistory();
-          console.log(response, "res")
-          if (Array.isArray(response)) {
-            setHistory(response);
-          } else {
-            console.error('Expected array but got:', response);
-            setHistory([]);
-            setError('Invalid data format received');
-          }
-        } else if (historyType === 'mail-sender') {
-          const response = await getAllMailSenderHistory();
-          if (Array.isArray(response)) {
-            setHistory(response);
-          } else {
-            console.error('Expected array but got:', response);
-            setHistory([]);
-            setError('Invalid data format received');
-          }
-        }
-      } catch (err) {
-        setError('Failed to load history. Please try again later.');
-        console.error(`Error fetching ${historyType} history:`, err);
-        setHistory([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchHistory();
   }, [historyType]);
+
 
   const handleViewDetails = async (id: any) => {
     try {
@@ -172,6 +180,93 @@ const AIAgentHistories: React.FC = () => {
       .catch(() => toast.error('Failed to download PDF'));
   };
 
+  // Handle send email
+  const handleSendEmail = async (submission, path) => {
+    setIsEmailSending(true);
+    try {
+
+      const fullHTML = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body {
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+                font-family: 'Segoe UI', sans-serif;
+                color: #333;
+              }
+              .email-container {
+                max-width: 600px;
+                margin: 40px auto;
+                background-color: #ffffff;
+                border: 1px solid #e0e0e0;
+                border-radius: 10px;
+                padding: 32px;
+              }
+              h1 {
+                color: #d32f2f;
+                font-size: 24px;
+                margin-bottom: 16px;
+              }
+              p {
+                font-size: 16px;
+                line-height: 1.6;
+              }
+              .btn-container {
+                margin-top: 32px;
+                text-align: center;
+              }
+              .view-button {
+                background-color: #d32f2f;
+                color: #ffffff;
+                text-decoration: none;
+                padding: 14px 26px;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+                display: inline-block;
+              }
+              .view-button:hover {
+                background-color: #b71c1c;
+              }
+          
+            </style>
+          </head>
+          <body>
+            <div class="email-container">
+              <h1>Your Report is Ready</h1>
+              <p>Hi ${submission?.name},</p>
+              <p>We’ve prepared your ${submission?.companyName || 'Meeting Summary'} report. You can view it by clicking the button below.</p>
+              <div class="btn-container">
+                <a href="https://ai.ceoitbox.com/view/${path}/${submission?._id}" target="_blank" class="view-button" style="color: #ffffff">
+                  View Your Report
+                </a>
+              </div>
+            </div>
+          
+          </body>
+        </html>
+      `;
+
+      await axios.post("/users/email", {
+        to: submission?.email,
+        subject: submission?.companyName || "Meeting Summary",
+        body: fullHTML,
+      });
+
+      // Success
+      setSentToEmail(submission?.email);
+      setEmailSuccessOpen(true);
+    } catch (error) {
+      console.error("Email sending error:", error);
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      setIsEmailSending(false);
+    }
+  };
+
 
   const renderHistoryContent = () => {
     if (loading && !selectedItem) {
@@ -254,6 +349,24 @@ const AIAgentHistories: React.FC = () => {
                   Download PDF
                 </Button>
 
+                <Button
+                  className="bg-primary-red hover:bg-red-700 flex items-center"
+                  onClick={() => handleSendEmail(zoomaryItem, "zoom")}
+                  disabled={isEmailSending}
+                >
+                  {isEmailSending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send to Email
+                    </>
+                  )}
+                </Button>
+
               </div>
             </div>
           </div>
@@ -320,6 +433,24 @@ const AIAgentHistories: React.FC = () => {
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
+                </Button>
+
+                <Button
+                  className="bg-primary-red hover:bg-red-700 flex items-center"
+                  onClick={() => handleSendEmail(companyProfileItem, "company-profile")}
+                  disabled={isEmailSending}
+                >
+                  {isEmailSending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send to Email
+                    </>
+                  )}
                 </Button>
 
               </div>
@@ -462,14 +593,46 @@ const AIAgentHistories: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center space-x-3">
-                            <button
-                              className="flex items-center px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
-                              onClick={() => handleViewDetails(zoomaryItem)}
-                              aria-label="View details"
-                            >
-                              <Eye className="w-5 h-5 mr-1" />
-                              <span>View</span>
-                            </button>
+                            <Button onClick={() => handleViewDetails(zoomaryItem)} className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this Submission? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => {
+                                      axios.delete(`/history/zoomary/${zoomaryItem._id}`)
+                                        .then(() => {
+                                          toast.success("Submission deleted successfully");
+                                          fetchHistory();
+                                        })
+                                        .catch(error => {
+                                          console.error(error);
+                                          toast.error("Failed to delete template");
+                                        });
+                                    }}
+                                    className="bg-red-500 hover:bg-red-600"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+
+
                           </div>
                         </td>
                       </tr>
@@ -495,14 +658,45 @@ const AIAgentHistories: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center space-x-3">
-                            <button
-                              className="flex items-center px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
-                              onClick={() => handleViewDetails(companyProfileItem)}
-                              aria-label="View details"
-                            >
-                              <Eye className="w-5 h-5 mr-1" />
-                              <span>View</span>
-                            </button>
+
+                            <Button onClick={() => handleViewDetails(companyProfileItem)} className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this Submission? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => {
+                                      axios.delete(`/history/company-profile/${companyProfileItem._id}`)
+                                        .then(() => {
+                                          toast.success("Submission deleted successfully");
+                                          fetchHistory();
+                                        })
+                                        .catch(error => {
+                                          console.error(error);
+                                          toast.error("Failed to delete template");
+                                        });
+                                    }}
+                                    className="bg-red-500 hover:bg-red-600"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </td>
                       </tr>
@@ -622,6 +816,12 @@ const AIAgentHistories: React.FC = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Email send */}
+      <SendEmailDialog
+        emailSuccessOpen={emailSuccessOpen}
+        setEmailSuccessOpen={setEmailSuccessOpen}
+        sentToEmail={sentToEmail}
+      />
     </div>
   );
 };
