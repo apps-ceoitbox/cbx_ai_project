@@ -197,7 +197,7 @@ export function CompanyProfileHistory() {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 min-h-screen">
       <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -247,12 +247,7 @@ export function CompanyProfileHistory() {
         </div>
       )}
 
-      {!loading && history.length === 0 && !error && (
-        <div className="p-8 bg-gray-100 rounded-lg border border-gray-200 text-center">
-          <FileText className="mx-auto mb-2 text-gray-400 w-12 h-12" />
-          <p className="text-gray-600">No history found. Try creating some company profiles first.</p>
-        </div>
-      )}
+
 
       {selectedItem ? (
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
@@ -365,6 +360,13 @@ export function CompanyProfileHistory() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!loading && history.length === 0 && !error && (
+        <div className="p-8 bg-gray-100 rounded-lg border border-gray-200 text-center">
+          <FileText className="mx-auto mb-2 text-gray-400 w-12 h-12" />
+          <p className="text-gray-600">No history found. Try creating some company profiles first.</p>
         </div>
       )}
     </div>
