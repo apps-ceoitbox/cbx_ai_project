@@ -41,4 +41,13 @@ AiAgentSettingsController.saveSettings = (0, asyncHandler_1.asyncHandler)((req, 
         .status(errorCodes_1.HttpStatusCodes.OK)
         .json({ message: "AI Settings created successfully", data: result });
 }));
+AiAgentSettingsController.toggleAgentVisibility = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const prompt = yield aiAgentSettings_model_1.default.findById(req.params.id);
+    prompt.visibility = !prompt.visibility;
+    yield prompt.save();
+    res.status(errorCodes_1.HttpStatusCodes.OK).json({
+        message: "Agent visibility toggled successfully",
+        data: prompt,
+    });
+}));
 exports.default = AiAgentSettingsController;

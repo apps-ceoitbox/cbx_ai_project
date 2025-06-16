@@ -410,26 +410,12 @@ export default class HistoryController {
       res: Response,
       next: NextFunction
     ) => {
-      const userId = req.user?._id; // Changed from req.user?.id to req.user?._id
-
-      if (!userId) {
-        res.status(HttpStatusCodes.UNAUTHORIZED).json({
-          message: "User not authenticated or user ID missing",
-        });
-        return; // Ensure void return
-      }
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ message: "Invalid user ID format for query" });
-        return; // Ensure void return
-      }
+      const userId = req.user?.email;
 
       const history = await CompanyProfileHistory.find({
-        userId: new mongoose.Types.ObjectId(userId),
-      })
-        .sort({ createdAt: -1 })
-        .select("companyName sourcedFrom createdAt");
+        email: userId,
+      }).sort({ createdAt: -1 });
+      // .select("companyName sourcedFrom createdAt");
 
       res.status(HttpStatusCodes.OK).json({
         message: "Company profile history fetched successfully",

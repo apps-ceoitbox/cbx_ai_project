@@ -415,20 +415,23 @@ function AppSidebar({ collapsed, setCollapsed }) {
                         </div>
                     )}
                 </div>
-                
-                <Link to="/profile">
-                    <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-2 mb-3 text-black hover:bg-red-100"
-                        style={{
-                            background: isMenuItemActive(["/profile"]) ? "rgb(229 9 20)" : "",
-                            color: isMenuItemActive(["/profile"]) ? "#fff" : "black"
-                        }}
-                    >
-                        <User size={18} />
-                        {!collapsed && "Profile Settings"}
-                    </Button>
-                </Link>
+
+                {(hasBothAuth || userAuth?.token || adminAuth?.token) && (
+                    <Link to="/profile">
+                        <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-2 mb-3 text-black hover:bg-red-100"
+                            style={{
+                                background: isMenuItemActive(["/profile"]) ? "rgb(229 9 20)" : "",
+                                color: isMenuItemActive(["/profile"]) ? "#fff" : "black"
+                            }}
+                        >
+                            <User size={18} />
+                            {!collapsed && "Profile Settings"}
+                        </Button>
+                    </Link>
+                )}
+
 
                 {hasBothAuth ? (
                     <div className="space-y-2">

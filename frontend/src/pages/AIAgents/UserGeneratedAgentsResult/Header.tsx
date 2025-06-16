@@ -1,7 +1,7 @@
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext';
-import { ArrowLeft, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner';
@@ -41,14 +41,13 @@ const Header = () => {
 
                 {!isMobile &&
                     <div>
-                        {location.pathname === "/astro-reports" &&
+                        {location.pathname === "/generated-agents" &&
                             <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                                 onClick={() => {
                                     nav(-1);
                                 }}
                             >
                                 <ArrowLeft className="w-5 h-5 " />
-
                                 {isMobile ? "" : "Back"}
                             </Button>
                         }
@@ -60,7 +59,7 @@ const Header = () => {
 
                     {
                         isMobile &&
-                        location.pathname === "/astro-reports" &&
+                        location.pathname === "/generated-agents" &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
                                 nav(-1);
@@ -72,7 +71,7 @@ const Header = () => {
                     }
 
 
-                    {location.pathname !== "/astro-reports" &&
+                    {/* {location.pathname !== "/astro-reports" &&
                         <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
                             onClick={() => {
                                 nav("/astro-reports")
@@ -81,7 +80,7 @@ const Header = () => {
                             <LayoutDashboard className="w-5 h-5" />
                             {isMobile ? "" : "Dashboard"}
                         </Button>
-                    }
+                    } */}
 
 
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"

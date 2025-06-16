@@ -311,24 +311,11 @@ HistoryController.clearZoomaryHistory = (0, asyncHandler_1.asyncHandler)((req, r
 // CompanyProfile: Get all history
 HistoryController.getCompanyProfileHistory = (0, asyncHandler_1.asyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _b;
-    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id; // Changed from req.user?.id to req.user?._id
-    if (!userId) {
-        res.status(errorCodes_1.HttpStatusCodes.UNAUTHORIZED).json({
-            message: "User not authenticated or user ID missing",
-        });
-        return; // Ensure void return
-    }
-    if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
-        res
-            .status(errorCodes_1.HttpStatusCodes.BAD_REQUEST)
-            .json({ message: "Invalid user ID format for query" });
-        return; // Ensure void return
-    }
+    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b.email;
     const history = yield company_profile_history_model_1.default.find({
-        userId: new mongoose_1.default.Types.ObjectId(userId),
-    })
-        .sort({ createdAt: -1 })
-        .select("companyName sourcedFrom createdAt");
+        email: userId,
+    }).sort({ createdAt: -1 });
+    // .select("companyName sourcedFrom createdAt");
     res.status(errorCodes_1.HttpStatusCodes.OK).json({
         message: "Company profile history fetched successfully",
         data: history,

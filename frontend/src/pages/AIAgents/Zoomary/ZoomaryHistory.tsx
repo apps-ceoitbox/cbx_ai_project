@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { getZoomaryHistory, ZoomaryHistoryItem } from '@/services/history.service';
 import { ArrowLeft, Calendar, FileText, Copy, Printer, Download, Clock, Video, Eye } from 'lucide-react';
@@ -12,6 +11,7 @@ export function ZoomaryHistory() {
   const [selectedItem, setSelectedItem] = useState<ZoomaryHistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -57,32 +57,6 @@ export function ZoomaryHistory() {
     }
   };
 
-  // const handleDeleteHistoryItem = async (id: string, event: React.MouseEvent) => {
-  //   event.stopPropagation();
-  //   if (window.confirm('Are you sure you want to delete this history item?')) {
-  //     try {
-  //       setLoading(true);
-  //       const success = await deleteZoomaryHistoryItem(id);
-
-  //       if (success) {
-  //         const updatedHistory = history.filter((item: ZoomaryHistoryItem) => item._id !== id);
-  //         setHistory(updatedHistory);
-  //         if (selectedItem && selectedItem._id === id) {
-  //           setSelectedItem(null);
-  //         }
-  //         toast.success('History item deleted successfully.');
-  //       } else {
-  //         console.error(`Failed to delete item ${id} from backend.`);
-  //         toast.error('Failed to delete history item. Please try again.');
-  //       }
-  //     } catch (err) {
-  //       console.error('Error during delete operation:', err);
-  //       toast.error('An error occurred while deleting the history item.');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  // };
 
   const printHistory = () => {
     if (!selectedItem) return;
@@ -168,7 +142,7 @@ export function ZoomaryHistory() {
   return (
     <div className="container py-8 min-h-screen">
 
-      <div className="flex items-center justify-between mb-8">
+      {/* <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <Link to="/ai-agents/zoomary">
             <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
@@ -183,7 +157,7 @@ export function ZoomaryHistory() {
           </h1>
         </div>
 
-      </div>
+      </div> */}
 
       {loading && !selectedItem && (
         <div className="flex justify-center items-center h-64">
@@ -202,7 +176,7 @@ export function ZoomaryHistory() {
       {selectedItem ? (
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">{selectedItem.title}</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{selectedItem?.title}</h2>
 
             <Button onClick={() => setSelectedItem(null)} style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
               className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
@@ -282,6 +256,7 @@ export function ZoomaryHistory() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Title
                 </th>
+
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Date
                 </th>
@@ -290,6 +265,8 @@ export function ZoomaryHistory() {
                 </th>
               </tr>
             </thead>
+
+
             <tbody className="bg-white divide-y divide-gray-200">
               {history?.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50 transition-colors">
@@ -318,12 +295,14 @@ export function ZoomaryHistory() {
         </div>
       )}
 
+
       {!loading && history.length === 0 && !error && (
         <div className="p-8 bg-gray-100 rounded-lg border border-gray-200 text-center">
           <FileText className="mx-auto mb-2 text-gray-400 w-12 h-12" />
           <p className="text-gray-600">No history found. Try creating some Zoom summaries first.</p>
         </div>
       )}
+
     </div>
   );
 }

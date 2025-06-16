@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext';
 import { ArrowLeft, History, LogOut, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+// import {
+//     DropdownMenu,
+//     DropdownMenuContent,
+//     DropdownMenuItem,
+//     DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
     const nav = useNavigate();
@@ -47,14 +47,7 @@ const Header = () => {
                 {!isMobile &&
                     <div>
                         {isSpecificAgentPage &&
-                            // <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-                            //     onClick={() => {
-                            //         nav("/ai-agents");
-                            //     }}
-                            // >
-                            //     <ArrowLeft className="w-5 h-5" />
-                            //     Back to AI Agents
-                            // </Button>
+
                             <Button onClick={() => {
                                 nav("/ai-agents");
                             }}
@@ -69,27 +62,30 @@ const Header = () => {
                 }
 
                 <div className="flex items-center gap-4">
-                    {!isSpecificAgentPage &&
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white">
-                                    <History className="w-5 h-5 mr-2" />
-                                    Generated Agents
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+                    {/* {!isSpecificAgentPage && */}
+                    {/* // <DropdownMenu> */}
+                    {/* // <DropdownMenuTrigger asChild> */}
+
+                    <Link to="/generated-agents">
+                        <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white">
+                            <History className="w-5 h-5 mr-2" />
+                            Generated Agents
+                        </Button>
+                    </Link>
+
+                    {/* // </DropdownMenuTrigger> */}
+                    {/* <DropdownMenuContent>
                                 <DropdownMenuItem onClick={() => nav("/ai-agents/zoomary/history")}>
                                     Zoom AI History
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => nav("/ai-agents/company-profile/history")}>
                                     Company Profile History
                                 </DropdownMenuItem>
-                                {/* <DropdownMenuItem onClick={() => nav("/ai-agents/mail/history")}>
-                                    Mail History
-                                </DropdownMenuItem> */}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    }
+
+                            </DropdownMenuContent> */}
+                    {/* </DropdownMenu> */}
+
+                    {/* // } */}
 
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
                         onClick={() => {
@@ -110,7 +106,7 @@ const Header = () => {
                     {isMobile && <MobileMenuButton />}
                 </div>
             </div>
-        </header>
+        </header >
     );
 };
 
