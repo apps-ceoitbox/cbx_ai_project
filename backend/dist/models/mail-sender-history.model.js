@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const MailSenderHistorySchema = new mongoose_1.Schema({
+    agents: { type: String, default: "mail" },
     name: {
         type: String,
         required: true,

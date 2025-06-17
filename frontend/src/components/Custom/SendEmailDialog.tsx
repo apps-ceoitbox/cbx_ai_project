@@ -16,7 +16,7 @@ const SendEmailDialog = ({ emailSuccessOpen, setEmailSuccessOpen, sentToEmail })
 
                 <div className="py-6 bg-white">
                     <p className="text-center font-medium text-black">
-                        We have emailed the plan on{" "}
+                        We have emailed the report on{" "}
                         <span className="text-primary-red font-semibold">{sentToEmail}</span> ID
                     </p>
                 </div>

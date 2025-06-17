@@ -1,6 +1,7 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { History, Calendar, Eye, Search, Users, Settings } from 'lucide-react';
+import { History, Calendar, Eye, Search, Users, Settings, ArrowLeft, Download, Copy, Trash, Mail, Loader2 } from 'lucide-react';
 import {
   getAllZoomaryHistory,
   ZoomaryHistoryItem,
@@ -21,63 +22,72 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AIAgentSettingsPage from '../AIAgentSettings';
+import { toast } from 'sonner';
+import html2pdf from 'html2pdf.js';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useAxios } from '@/context/AppContext';
+import SendEmailDialog from '@/components/Custom/SendEmailDialog';
 
 type HistoryType = 'zoomary' | 'company-profile' | 'mail-sender';
 
 type HistoryItem = ZoomaryHistoryItem | CompanyProfileHistoryItem | MailSenderHistoryItem;
 
 const AIAgentHistories: React.FC = () => {
+  const axios = useAxios("admin");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [historyType, setHistoryType] = useState<HistoryType>('zoomary');
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState("");
+
+  const fetchHistory = async () => {
+    try {
+      setLoading(true);
+      if (historyType === 'zoomary') {
+        const response = await getAllZoomaryHistory();
+        if (Array.isArray(response)) {
+          setHistory(response);
+        } else {
+          console.error('Expected array but got:', response);
+          setHistory([]);
+          setError('Invalid data format received');
+        }
+      } else if (historyType === 'company-profile') {
+        const response = await getAllCompanyProfileHistory();
+        if (Array.isArray(response)) {
+          setHistory(response);
+        } else {
+          console.error('Expected array but got:', response);
+          setHistory([]);
+          setError('Invalid data format received');
+        }
+      } else if (historyType === 'mail-sender') {
+        const response = await getAllMailSenderHistory();
+        if (Array.isArray(response)) {
+          setHistory(response);
+        } else {
+          console.error('Expected array but got:', response);
+          setHistory([]);
+          setError('Invalid data format received');
+        }
+      }
+    } catch (err) {
+      setError('Failed to load history. Please try again later.');
+      console.error(`Error fetching ${historyType} history:`, err);
+      setHistory([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        setLoading(true);
-        if (historyType === 'zoomary') {
-          const response = await getAllZoomaryHistory();
-          if (Array.isArray(response)) {
-            setHistory(response);
-          } else {
-            console.error('Expected array but got:', response);
-            setHistory([]);
-            setError('Invalid data format received');
-          }
-        } else if (historyType === 'company-profile') {
-          const response = await getAllCompanyProfileHistory();
-          console.log(response, "res")
-          if (Array.isArray(response)) {
-            setHistory(response);
-          } else {
-            console.error('Expected array but got:', response);
-            setHistory([]);
-            setError('Invalid data format received');
-          }
-        } else if (historyType === 'mail-sender') {
-          const response = await getAllMailSenderHistory();
-          if (Array.isArray(response)) {
-            setHistory(response);
-          } else {
-            console.error('Expected array but got:', response);
-            setHistory([]);
-            setError('Invalid data format received');
-          }
-        }
-      } catch (err) {
-        setError('Failed to load history. Please try again later.');
-        console.error(`Error fetching ${historyType} history:`, err);
-        setHistory([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchHistory();
   }, [historyType]);
+
 
   const handleViewDetails = async (id: any) => {
     try {
@@ -117,6 +127,147 @@ const AIAgentHistories: React.FC = () => {
     );
   });
 
+  const copySummaryToClipboard = async (element) => {
+    const contentElement = document.getElementById(element);
+    if (!contentElement) {
+      toast.error("Content not found");
+      return;
+    }
+
+    const fullHTML = `
+        <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.6;">
+          ${contentElement.innerHTML}
+        </div>
+      `;
+
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        const blob = new Blob([fullHTML], { type: "text/html" });
+        const clipboardItem = new ClipboardItem({ "text/html": blob });
+        await navigator.clipboard.write([clipboardItem]);
+        toast.success("Summary copied to clipboard!");
+      } catch (err) {
+        console.error("Copy failed:", err);
+        toast.error("Failed to copy.");
+      }
+    } else {
+      toast.error("Clipboard API not supported.");
+    }
+  };
+
+  const downloadAsPdf = (element) => {
+    if (!selectedItem) return;
+
+    const content = document.getElementById(element);
+    if (!content) return;
+
+    const rawName = selectedItem.title || selectedItem.companyName || "";
+    const sanitizedName = rawName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `${sanitizedName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf()
+      .from(content)
+      .set(opt)
+      .save()
+      .then(() => toast.success('PDF downloaded'))
+      .catch(() => toast.error('Failed to download PDF'));
+  };
+
+  // Handle send email
+  const handleSendEmail = async (submission, path) => {
+    setIsEmailSending(true);
+    try {
+
+      const fullHTML = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body {
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+                font-family: 'Segoe UI', sans-serif;
+                color: #333;
+              }
+              .email-container {
+                max-width: 600px;
+                margin: 40px auto;
+                background-color: #ffffff;
+                border: 1px solid #e0e0e0;
+                border-radius: 10px;
+                padding: 32px;
+              }
+              h1 {
+                color: #d32f2f;
+                font-size: 24px;
+                margin-bottom: 16px;
+              }
+              p {
+                font-size: 16px;
+                line-height: 1.6;
+              }
+              .btn-container {
+                margin-top: 32px;
+                text-align: center;
+              }
+              .view-button {
+                background-color: #d32f2f;
+                color: #ffffff;
+                text-decoration: none;
+                padding: 14px 26px;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 16px;
+                display: inline-block;
+              }
+              .view-button:hover {
+                background-color: #b71c1c;
+              }
+          
+            </style>
+          </head>
+          <body>
+            <div class="email-container">
+              <h1>Your Report is Ready</h1>
+              <p>Hi ${submission?.name},</p>
+              <p>We’ve prepared your ${submission?.companyName || 'Meeting Summary'} report. You can view it by clicking the button below.</p>
+              <div class="btn-container">
+                <a href="https://ai.ceoitbox.com/view/${path}/${submission?._id}" target="_blank" class="view-button" style="color: #ffffff">
+                  View Your Report
+                </a>
+              </div>
+            </div>
+          
+          </body>
+        </html>
+      `;
+
+      await axios.post("/users/email", {
+        to: submission?.email,
+        subject: submission?.companyName || "Meeting Summary",
+        body: fullHTML,
+      });
+
+      // Success
+      setSentToEmail(submission?.email);
+      setEmailSuccessOpen(true);
+    } catch (error) {
+      console.error("Email sending error:", error);
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      setIsEmailSending(false);
+    }
+  };
+
+
   const renderHistoryContent = () => {
     if (loading && !selectedItem) {
       return (
@@ -141,12 +292,13 @@ const AIAgentHistories: React.FC = () => {
           <div className="bg-white rounded-lg p-6 border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-800">{zoomaryItem.title}</h2>
-              <Button
-                variant="outline"
-                className="border-gray-300 hover:border-red-600 hover:text-red-600"
-                onClick={() => setSelectedItem(null)}
-              >
-                Back to List
+
+              <Button onClick={() => setSelectedItem(null)}
+                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+                variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
               </Button>
             </div>
 
@@ -164,20 +316,58 @@ const AIAgentHistories: React.FC = () => {
             </div>
 
             <div className="border-t border-gray-200 pt-4">
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <h3 className="text-lg font-semibold mb-2 text-gray-700">User Information</h3>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p><strong>Name:</strong> {zoomaryItem.name}</p>
                   <p><strong>Email:</strong> {zoomaryItem.email}</p>
                 </div>
-              </div>
+              </div> */}
 
-              <h3 className="text-lg font-semibold mb-2 text-gray-700">Summary</h3>
+              {/* <h3 className="text-lg font-semibold mb-2 text-gray-700">Summary</h3> */}
               <div
                 id="summary-content"
                 className="bg-gray-50 p-4 rounded-lg prose max-w-none"
                 dangerouslySetInnerHTML={{ __html: zoomaryItem.summary }}
               />
+            </div>
+            <div className="w-full flex items-center justify-center mt-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={() => copySummaryToClipboard("summary-content")}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </Button>
+
+                <Button variant="outline" className="flex items-center"
+                  onClick={() => downloadAsPdf("summary-content")}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+
+                <Button
+                  className="bg-primary-red hover:bg-red-700 flex items-center"
+                  onClick={() => handleSendEmail(zoomaryItem, "zoom")}
+                  disabled={isEmailSending}
+                >
+                  {isEmailSending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send to Email
+                    </>
+                  )}
+                </Button>
+
+              </div>
             </div>
           </div>
         );
@@ -187,12 +377,13 @@ const AIAgentHistories: React.FC = () => {
           <div className="bg-white rounded-lg p-6 border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-800">{companyProfileItem.companyName}</h2>
-              <Button
-                variant="outline"
-                className="border-gray-300 hover:border-red-600 hover:text-red-600"
-                onClick={() => setSelectedItem(null)}
-              >
-                Back to List
+
+              <Button onClick={() => setSelectedItem(null)}
+                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+                variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
               </Button>
             </div>
 
@@ -201,15 +392,15 @@ const AIAgentHistories: React.FC = () => {
                 <Calendar className="w-4 h-4 mr-1" />
                 <span>Created: {formatDate(companyProfileItem.createdAt.toString())}</span>
               </div>
-              {companyProfileItem.sourcedFrom && (
+              {/* {companyProfileItem.sourcedFrom && (
                 <div className="flex items-center">
                   <span>Source: {companyProfileItem.sourcedFrom}</span>
                 </div>
-              )}
+              )} */}
             </div>
 
             <div className="border-t border-gray-200 pt-4">
-              {(companyProfileItem.name || companyProfileItem.email) && (
+              {/* {(companyProfileItem.name || companyProfileItem.email) && (
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold mb-2 text-gray-700">User Information</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
@@ -217,14 +408,52 @@ const AIAgentHistories: React.FC = () => {
                     {companyProfileItem.email && <p><strong>Email:</strong> {companyProfileItem.email}</p>}
                   </div>
                 </div>
-              )}
+              )} */}
 
-              <h3 className="text-lg font-semibold mb-2 text-gray-700">Company Report</h3>
+              {/* <h3 className="text-lg font-semibold mb-2 text-gray-700">Company Report</h3> */}
               <div
                 id="report-content"
                 className="bg-gray-50 p-4 rounded-lg prose max-w-none "
                 dangerouslySetInnerHTML={{ __html: companyProfileItem.report }}
               />
+            </div>
+            <div className="w-full flex items-center justify-center mt-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={() => copySummaryToClipboard("report-content")}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </Button>
+
+                <Button variant="outline" className="flex items-center"
+                  onClick={() => downloadAsPdf("report-content")}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+
+                <Button
+                  className="bg-primary-red hover:bg-red-700 flex items-center"
+                  onClick={() => handleSendEmail(companyProfileItem, "company-profile")}
+                  disabled={isEmailSending}
+                >
+                  {isEmailSending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send to Email
+                    </>
+                  )}
+                </Button>
+
+              </div>
             </div>
           </div>
         );
@@ -234,12 +463,12 @@ const AIAgentHistories: React.FC = () => {
           <div className="bg-white rounded-lg p-6 border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-gray-800">{mailSenderItem.subject}</h2>
-              <Button
-                variant="outline"
-                className="border-gray-300 hover:border-red-600 hover:text-red-600"
-                onClick={() => setSelectedItem(null)}
-              >
-                Back to List
+              <Button onClick={() => setSelectedItem(null)}
+                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+                variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
               </Button>
             </div>
 
@@ -310,39 +539,39 @@ const AIAgentHistories: React.FC = () => {
               <thead className="bg-red-600">
                 <tr>
                   {historyType === 'zoomary' ? (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Title
                     </th>
                   ) : historyType === 'company-profile' ? (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Company Name
                     </th>
                   ) : (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Subject
                     </th>
                   )}
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                     {historyType === 'mail-sender' ? 'Recipient' : 'Name'}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                     {historyType === 'mail-sender' ? 'Name' : 'Email'}
                   </th>
                   {historyType === 'mail-sender' && (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Email
                     </th>
                   )}
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                     Date
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredHistory.map((item) => {
+                {filteredHistory?.map((item) => {
                   if (historyType === 'zoomary') {
                     const zoomaryItem = item as ZoomaryHistoryItem;
                     return (
@@ -364,14 +593,46 @@ const AIAgentHistories: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center space-x-3">
-                            <button
-                              className="flex items-center px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
-                              onClick={() => handleViewDetails(zoomaryItem)}
-                              aria-label="View details"
-                            >
-                              <Eye className="w-5 h-5 mr-1" />
-                              <span>View</span>
-                            </button>
+                            <Button onClick={() => handleViewDetails(zoomaryItem)} className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this Submission? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => {
+                                      axios.delete(`/history/zoomary/${zoomaryItem._id}`)
+                                        .then(() => {
+                                          toast.success("Submission deleted successfully");
+                                          fetchHistory();
+                                        })
+                                        .catch(error => {
+                                          console.error(error);
+                                          toast.error("Failed to delete template");
+                                        });
+                                    }}
+                                    className="bg-red-500 hover:bg-red-600"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+
+
                           </div>
                         </td>
                       </tr>
@@ -397,14 +658,45 @@ const AIAgentHistories: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center space-x-3">
-                            <button
-                              className="flex items-center px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-md transition-colors"
-                              onClick={() => handleViewDetails(companyProfileItem)}
-                              aria-label="View details"
-                            >
-                              <Eye className="w-5 h-5 mr-1" />
-                              <span>View</span>
-                            </button>
+
+                            <Button onClick={() => handleViewDetails(companyProfileItem)} className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this Submission? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => {
+                                      axios.delete(`/history/company-profile/${companyProfileItem._id}`)
+                                        .then(() => {
+                                          toast.success("Submission deleted successfully");
+                                          fetchHistory();
+                                        })
+                                        .catch(error => {
+                                          console.error(error);
+                                          toast.error("Failed to delete template");
+                                        });
+                                    }}
+                                    className="bg-red-500 hover:bg-red-600"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </td>
                       </tr>
@@ -457,7 +749,7 @@ const AIAgentHistories: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto py-8 px-10">
+    <div className="mx-auto py-8 px-10 min-h-screen">
 
       {/* Heading  */}
       <div className="flex items-center mb-6" >
@@ -524,8 +816,15 @@ const AIAgentHistories: React.FC = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Email send */}
+      <SendEmailDialog
+        emailSuccessOpen={emailSuccessOpen}
+        setEmailSuccessOpen={setEmailSuccessOpen}
+        sentToEmail={sentToEmail}
+      />
     </div>
   );
 };
 
 export default AIAgentHistories;
+

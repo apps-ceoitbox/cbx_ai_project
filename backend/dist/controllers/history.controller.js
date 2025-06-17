@@ -259,15 +259,7 @@ HistoryController.saveZoomaryHistory = (0, asyncHandler_1.asyncHandler)((req, re
 }));
 // Zoomary: Delete history item
 HistoryController.deleteZoomaryHistoryItem = (0, asyncHandler_1.asyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b;
     const { id } = req.params;
-    const userEmail = (_b = req.user) === null || _b === void 0 ? void 0 : _b.email;
-    if (!userEmail) {
-        res.status(errorCodes_1.HttpStatusCodes.UNAUTHORIZED).json({
-            message: "User not authenticated or email missing",
-        });
-        return; // Ensure void return
-    }
     if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
         res
             .status(errorCodes_1.HttpStatusCodes.BAD_REQUEST)
@@ -277,7 +269,6 @@ HistoryController.deleteZoomaryHistoryItem = (0, asyncHandler_1.asyncHandler)((r
     try {
         const result = yield zoomary_history_model_1.default.findOneAndDelete({
             _id: id,
-            email: userEmail,
         });
         if (!result) {
             res.status(errorCodes_1.HttpStatusCodes.NOT_FOUND).json({
@@ -320,24 +311,11 @@ HistoryController.clearZoomaryHistory = (0, asyncHandler_1.asyncHandler)((req, r
 // CompanyProfile: Get all history
 HistoryController.getCompanyProfileHistory = (0, asyncHandler_1.asyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _b;
-    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id; // Changed from req.user?.id to req.user?._id
-    if (!userId) {
-        res.status(errorCodes_1.HttpStatusCodes.UNAUTHORIZED).json({
-            message: "User not authenticated or user ID missing",
-        });
-        return; // Ensure void return
-    }
-    if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
-        res
-            .status(errorCodes_1.HttpStatusCodes.BAD_REQUEST)
-            .json({ message: "Invalid user ID format for query" });
-        return; // Ensure void return
-    }
+    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b.email;
     const history = yield company_profile_history_model_1.default.find({
-        userId: new mongoose_1.default.Types.ObjectId(userId),
-    })
-        .sort({ createdAt: -1 })
-        .select("companyName sourcedFrom createdAt");
+        email: userId,
+    }).sort({ createdAt: -1 });
+    // .select("companyName sourcedFrom createdAt");
     res.status(errorCodes_1.HttpStatusCodes.OK).json({
         message: "Company profile history fetched successfully",
         data: history,
@@ -419,17 +397,8 @@ HistoryController.saveCompanyProfileHistory = (0, asyncHandler_1.asyncHandler)((
 }));
 // CompanyProfile: Delete history item
 HistoryController.deleteCompanyProfileHistoryItem = (0, asyncHandler_1.asyncHandler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b;
     const { id } = req.params;
-    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id; // Changed from req.user?.id to req.user?._id
-    if (!userId) {
-        res.status(errorCodes_1.HttpStatusCodes.UNAUTHORIZED).json({
-            message: "User not authenticated or user ID missing",
-        });
-        return; // Ensure void return
-    }
-    if (!mongoose_1.default.Types.ObjectId.isValid(id) ||
-        !mongoose_1.default.Types.ObjectId.isValid(userId)) {
+    if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
         res
             .status(errorCodes_1.HttpStatusCodes.BAD_REQUEST)
             .json({ message: "Invalid history item ID or user ID format" });
@@ -438,7 +407,6 @@ HistoryController.deleteCompanyProfileHistoryItem = (0, asyncHandler_1.asyncHand
     try {
         const result = yield company_profile_history_model_1.default.findOneAndDelete({
             _id: id,
-            userId: new mongoose_1.default.Types.ObjectId(userId),
         });
         if (!result) {
             res.status(errorCodes_1.HttpStatusCodes.NOT_FOUND).json({
@@ -448,7 +416,7 @@ HistoryController.deleteCompanyProfileHistoryItem = (0, asyncHandler_1.asyncHand
         }
         res.status(errorCodes_1.HttpStatusCodes.OK).json({
             message: "Company profile history item deleted successfully",
-            data: { id: result._id }, // Return the ID of the deleted item
+            data: { id: result._id },
         });
     }
     catch (error) {

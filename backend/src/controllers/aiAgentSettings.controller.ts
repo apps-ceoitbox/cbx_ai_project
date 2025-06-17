@@ -37,4 +37,14 @@ export default class AiAgentSettingsController {
       .status(HttpStatusCodes.OK)
       .json({ message: "AI Settings created successfully", data: result });
   });
+
+  static toggleAgentVisibility = asyncHandler(async (req, res) => {
+    const prompt = await AiAgentSettingsModel.findById(req.params.id);
+    prompt.visibility = !prompt.visibility;
+    await prompt.save();
+    res.status(HttpStatusCodes.OK).json({
+      message: "Agent visibility toggled successfully",
+      data: prompt,
+    });
+  });
 }

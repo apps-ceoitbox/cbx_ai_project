@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -14,7 +13,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Upload, FileText, Briefcase, Brain, CheckCircle, XCircle, ListOrdered, ClipboardPaste } from "lucide-react";
+import { Upload, FileText, Briefcase, Brain, CheckCircle, XCircle, ListOrdered, ClipboardPaste, ArrowLeft } from "lucide-react";
 // History service removed
 import * as mammoth from 'mammoth';
 import { useAxios } from "@/context/AppContext";
@@ -858,6 +857,7 @@ Your response MUST be a valid JSON object with these exact keys:
     }
   };
 
+  console.log(resumeFiles, "resData")
   // Analyze resumes function
   const analyzeResumes = async () => {
     if (resumeFiles.length === 0 || !jobDescFile) {
@@ -1044,7 +1044,13 @@ Your response MUST be a valid JSON object with these exact keys:
     <div className="container py-8">
       <div className="flex items-center mb-8">
         <Link to="/ai-agents">
-          <Button variant="outline" className="mr-4 border-gray-300 hover:border-red-600 hover:text-red-600">← Back</Button>
+          <Button
+            style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+            className="bg-primary-red  hover:bg-red-700 transition-colors duration-200 mr-4"
+            variant="ghost">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
         </Link>
         <h1 className="text-3xl font-bold text-gray-800">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-red-900 pb-1 inline-block">Resume Analyzer</span>
@@ -1065,84 +1071,14 @@ Your response MUST be a valid JSON object with these exact keys:
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="resume" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="resume">Resumes</TabsTrigger>
-                <TabsTrigger value="job">Job Description</TabsTrigger>
-              </TabsList>
+            <div className="space-y-8">
+              {/* Job Description Section First */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                  <Briefcase className="mr-2 h-5 w-5" />
+                  Job Description
+                </h3>
 
-              <TabsContent value="resume" className="space-y-4 mt-4">
-                <div
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-red-300 transition-colors cursor-pointer group"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Click to upload resumes (PDF, TXT)"
-                >
-                  <p className="text-sm text-gray-500 mb-2 group-hover:text-red-600">Supported formats: PDF, DOC, DOCX, TXT</p>
-                  <input
-                    type="file"
-                    multiple
-                    accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={(e) => e.target.files && handleResumeUpload(e.target.files)}
-                  />
-                  <div className="mx-auto w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
-                    <Upload className="h-6 w-6 text-red-600" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">Upload Resumes</h3>
-                  <p className="text-sm text-gray-500 mb-2">Drag and drop or click to upload PDF, DOC, DOCX, or TXT files</p>
-                  <p className="text-xs text-gray-400">You can upload multiple resumes for comparison</p>
-                </div>
-
-                {resumeFiles.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-md font-medium mb-3 flex items-center">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Uploaded Resumes ({resumeFiles.length})
-                    </h3>
-                    <div className="space-y-2">
-                      {resumeFiles.map((resume, index) => (
-                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                              <FileText className="h-4 w-4 text-red-700" />
-                            </div>
-                            <div className="ml-3">
-                              <p className="text-sm font-medium text-gray-800">{resume.file.name}</p>
-                              <p className="text-xs text-gray-500">{(resume.file.size / 1024).toFixed(1)} KB</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            {resume.isAnalyzing ? (
-                              <div className="text-xs text-blue-600 flex items-center">
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Analyzing...
-                              </div>
-                            ) : resume.error ? (
-                              <Badge variant="destructive" className="text-xs">Error</Badge>
-                            ) : resume.result ? (
-                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">Analyzed</Badge>
-                            ) : null}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="ml-2 text-gray-500 hover:text-red-600"
-                              onClick={() => removeResume(index)}
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="job" className="space-y-4 mt-4">
                 <div className="border rounded-lg overflow-hidden">
                   <div className="border-b">
                     <div className="flex">
@@ -1203,7 +1139,7 @@ Your response MUST be a valid JSON object with these exact keys:
                           <textarea
                             id="jobDescText"
                             rows={8}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm p-2"
                             placeholder="Paste the job description here..."
                             value={jobDescText}
                             onChange={(e) => setJobDescText(e.target.value)}
@@ -1224,7 +1160,7 @@ Your response MUST be a valid JSON object with these exact keys:
                 </div>
 
                 {jobDescFile && (
-                  <div className="mt-6">
+                  <div className="mt-4">
                     <h3 className="text-md font-medium mb-3 flex items-center">
                       <Briefcase className="mr-2 h-4 w-4" />
                       Job Description
@@ -1256,40 +1192,119 @@ Your response MUST be a valid JSON object with these exact keys:
                     </div>
                   </div>
                 )}
-              </TabsContent>
-            </Tabs>
-
-            {errorMessage && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-                <div className="flex items-center gap-2">
-                  <XCircle className="h-4 w-4" />
-                  <p className="font-medium">Error occurred:</p>
-                </div>
-                <p className="ml-6">{errorMessage}</p>
               </div>
-            )}
 
-            <div className="mt-8">
-              <Button
-                className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
-                disabled={isLoading || resumeFiles.length === 0 || !jobDescFile || !apiKey}
-                onClick={analyzeResumes}
-              >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Analyzing Resumes...
-                  </>
-                ) : (
-                  <>
-                    <Brain className="h-5 w-5" />
-                    Analyze Resumes
-                  </>
+              {/* Resumes Section Second */}
+              <div className="space-y-4 mt-8">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  Resumes
+                </h3>
+
+                <div
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-red-300 transition-colors cursor-pointer group"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Click to upload resumes (PDF, TXT)"
+                >
+                  <p className="text-sm text-gray-500 mb-2 group-hover:text-red-600">Supported formats: PDF, DOC, DOCX, TXT</p>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={(e) => e.target.files && handleResumeUpload(e.target.files)}
+                  />
+                  <div className="mx-auto w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                    <Upload className="h-6 w-6 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">Upload Resumes</h3>
+                  <p className="text-sm text-gray-500 mb-2">Drag and drop or click to upload PDF, DOC, DOCX, or TXT files</p>
+                  <p className="text-xs text-gray-400">You can upload multiple resumes for comparison</p>
+                </div>
+
+                {resumeFiles.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-md font-medium mb-3 flex items-center">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Uploaded Resumes ({resumeFiles.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {resumeFiles.map((resume, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+                              <FileText className="h-4 w-4 text-red-700" />
+                            </div>
+                            <div className="ml-3">
+                              <p className="text-sm font-medium text-gray-800">{resume.file.name}</p>
+                              <p className="text-xs text-gray-500">{(resume.file.size / 1024).toFixed(1)} KB</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center">
+                            {resume.isAnalyzing ? (
+                              <div className="text-xs text-blue-600 flex items-center">
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Analyzing...
+                              </div>
+                            ) : resume.error ? (
+                              <Badge variant="destructive" className="text-xs">Error</Badge>
+                            ) : resume.result ? (
+                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">Analyzed</Badge>
+                            ) : null}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-2 text-gray-500 hover:text-red-600"
+                              onClick={() => removeResume(index)}
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </Button>
+              </div>
+
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-4 w-4" />
+                    <p className="font-medium">Error occurred:</p>
+                  </div>
+                  <p className="ml-6">{errorMessage}</p>
+                </div>
+              )}
+
+              {/* Analyze Button at the Bottom */}
+              <div className="mt-8">
+                <Button
+                  className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2"
+                  disabled={isLoading || resumeFiles.length === 0 || !jobDescFile || !apiKey}
+                  onClick={analyzeResumes}
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Analyzing Resumes...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="h-5 w-5" />
+                      Analyze Resumes
+                    </>
+                  )}
+                </Button>
+              </div>
 
               {processingStep && (
                 <div className="mt-4">

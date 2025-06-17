@@ -25,6 +25,15 @@ _a = UserController;
 UserController.getUserDataWithToken = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(errorCodes_1.HttpStatusCodes.OK).send(req.user);
 }));
+UserController.updateProfile = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.user._id;
+    const profileData = req.body;
+    const profile = yield user_model_1.default.findOneAndUpdate({ _id: userId }, Object.assign({}, profileData), { new: true });
+    res.status(200).json({
+        success: true,
+        data: profile
+    });
+}));
 UserController.sendEmail = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { to, subject, body, attachment } = req.body;
     (0, sendMail_1.MAIL)({

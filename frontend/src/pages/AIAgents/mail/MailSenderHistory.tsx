@@ -240,13 +240,12 @@ ${selectedItem.response}
         {/* Clear History button removed as requested */}
 
         {selectedItem && (
-          <Button
-            variant="outline"
-            className="ml-auto border-gray-300 hover:border-red-600 hover:text-red-600"
-            onClick={() => setSelectedItem(null)}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to List
+          <Button onClick={() => setSelectedItem(null)}
+            style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+            className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+            variant="ghost">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
         )}
       </div>

@@ -11,38 +11,9 @@ import { parseVttContent } from "@/services/vttParser";
 import { saveZoomaryHistory } from "@/services/history.service";
 import { toast } from "sonner";
 import { useAxios } from "@/context/AppContext";
+import { ArrowLeft, Copy, Download } from "lucide-react";
 
-// AI Model types
-type AIModelType = "gemini" | "openai" | "anthropic" | "groq";
 
-interface AIModel {
-  id: AIModelType;
-  name: string;
-  description: string;
-}
-
-const aiModels: AIModel[] = [
-  {
-    id: "gemini",
-    name: "Google Gemini 2.0 Flash",
-    description: "Fast and efficient summarization"
-  },
-  {
-    id: "openai",
-    name: "OpenAI GPT-4o-mini",
-    description: "Balanced performance and quality"
-  },
-  {
-    id: "anthropic",
-    name: "Anthropic Claude 3.7 Sonnet",
-    description: "High quality detailed summaries"
-  },
-  {
-    id: "groq",
-    name: "Groq Llama 4 Scout",
-    description: "Fast processing with good accuracy"
-  }
-];
 
 const ZoomaryAI = () => {
   const axios = useAxios("user");
@@ -53,25 +24,14 @@ const ZoomaryAI = () => {
   const [processingStep, setProcessingStep] = useState<string>("");
   const [zoomUrl, setZoomUrl] = useState<string>("");
 
-  // Initialize API key from localStorage
-  // const [apiKey] = useState<string>(() => {
-  //   return localStorage.getItem('zoomary_api_key') || "";
-  // });
   const [apiKey, setApiKey] = useState("");
   const [selectedModel, setSelectedModel] = useState<any>('');
   const [aiModel, setAiModel] = useState<string>('');
-
-  // AI Model selection
-  // const [selectedModel] = useState<AIModelType>(() => {
-  //   return (localStorage.getItem('zoomary_model') as AIModelType) || "gemini";
-  // });
 
   // Summary result and editing
   const [summaryHtml, setSummaryHtml] = useState<string>("");
   const [editableSummary, setEditableSummary] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
-
-  // We don't need these dialog-related states as we're auto-saving summaries
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -89,15 +49,10 @@ const ZoomaryAI = () => {
       const settings = res?.data?.data;
       if (!Array.isArray(settings)) return;
       const zoomarySetting = settings?.find(item => item.name === "Zoomary");
-      console.log("zoomarySetting", zoomarySetting)
       setApiKey(zoomarySetting?.apikey);
       setSelectedModel(zoomarySetting?.aiProvider?.name);
       setAiModel(zoomarySetting?.aiProvider?.model)
     });
-  }, []);
-
-  useEffect(() => {
-    setZoomUrl("https://zoom.us/rec/play/example-recording-url");
   }, []);
 
   // Show processing step updates
@@ -263,9 +218,7 @@ const ZoomaryAI = () => {
       if (!transcript || transcript.length < 10) {
         throw new Error("The extracted transcript is too short or empty. Please check the VTT content and try again.");
       }
-
-      console.log("Generating summary with transcript of length:", transcript.length);
-      updateProcessingStep(`Generating summary with ${selectedModel}...`);
+      updateProcessingStep("Generating summary...");
 
       // Use the AI service
       try {
@@ -279,7 +232,8 @@ const ZoomaryAI = () => {
 
         // Auto-save the summary to history
         try {
-          const title = `Meeting Summary - ${new Date().toLocaleDateString()}`;
+          // const title = `Meeting Summary - ${new Date().toLocaleDateString()}`;
+          const title = "Meeting Summary";
 
           // Use the zoom URL as the recording link if it's available
           const recordingLink = activeTab === 'url' && zoomUrl ? zoomUrl : '';
@@ -312,11 +266,6 @@ const ZoomaryAI = () => {
   };
 
   // Handle editing summary
-  const enableEditMode = () => {
-    setEditableSummary(summaryHtml);
-    setIsEditing(true);
-  };
-
   const saveSummaryEdit = () => {
     setSummaryHtml(editableSummary);
     setIsEditing(false);
@@ -327,55 +276,40 @@ const ZoomaryAI = () => {
   };
 
   // Handle copy to clipboard
-  const copySummaryToClipboard = () => {
-    // Create a temporary div to handle HTML content
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = summaryHtml;
+  const copySummaryToClipboard = async () => {
+    const contentElement = document.getElementById("summary-content");
+    if (!contentElement) {
+      toast.error("Content not found");
+      return;
+    }
 
-    // Get text content from the HTML
-    const textToCopy = tempDiv.textContent || tempDiv.innerText || "";
+    const fullHTML = `
+        <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.6;">
+          ${contentElement.innerHTML}
+        </div>
+      `;
 
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      // Show a brief notification that text was copied
-      toast.success("Summary copied to clipboard!");
-    }).catch(err => {
-      console.error('Failed to copy summary: ', err);
-      toast.error("Failed to copy summary. Please try again.");
-    });
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        const blob = new Blob([fullHTML], { type: "text/html" });
+        const clipboardItem = new ClipboardItem({ "text/html": blob });
+        await navigator.clipboard.write([clipboardItem]);
+        toast.success("Summary copied to clipboard!");
+      } catch (err) {
+        console.error("Copy failed:", err);
+        toast.error("Failed to copy.");
+      }
+    } else {
+      toast.error("Clipboard API not supported.");
+    }
   };
 
   // Handle PDF download
   const downloadSummaryAsPdf = () => {
-    // Create PDF content
     const element = document.getElementById('summary-content');
     if (!element) {
       toast.error("Could not find summary content to download");
       return;
-    }
-
-    // Get the currently selected AI model name
-    const selectedModelName = aiModels.find(model => model.id === selectedModel)?.name || selectedModel;
-
-    // Define model icon based on selected model
-    let modelIcon = "";
-    if (selectedModel === "gemini") {
-      modelIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#DD5CE5">
-        <circle cx="12" cy="12" r="12" fill="#DD5CE5" fill-opacity="0.2"/>
-        <path d="M12 0A12 12 0 0 0 0 12h12V0Z" fill="#DD5CE5"/>
-      </svg>`;
-    } else if (selectedModel === "openai") {
-      modelIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.051 6.051 0 0 0 8.7496-1.6968 5.9894 5.9894 0 0 0 1.0343-4.0466c.0638-.0156.1267-.0329.1898-.0513a6.0557 6.0557 0 0 0 3.8803-2.8156 6.0557 6.0557 0 0 0-.7475-7.0729l-.0945-.0867zM13.2599 20.8966c.1484-.2531.2747-.5109.3766-.7777l.0309-.0842a9.0534 9.0534 0 0 0 .3105-.9626c.0646-.2531.1149-.5062.1516-.7592a11.1822 11.1822 0 0 0 .1975-1.4953c.0152-.6323.0167-1.2649.0043-1.8969a6.0462 6.0462 0 0 0-.0998-1.0834 9.0202 9.0202 0 0 0-.2006-.9229c-.055-.2004-.1202-.3982-.195-.5928-.098-.2576-.2186-.5067-.3589-.744a3.8393 3.8393 0 0 0-.241-.3766c-.1157-.174-.2336-.3409-.3611-.501a2.0816 2.0816 0 0 0-.1898-.2225v.2414c0 .2789-.0252.5573-.0754.832a5.9894 5.9894 0 0 1-.2414 1.0482 6.0557 6.0557 0 0 1-.4075.9979 6.115 6.115 0 0 1-.5678.958c-.0724.0998-.1461.1991-.2225.2947a6.0557 6.0557 0 0 1-5.0432 2.8156 6.0266 6.0266 0 0 1-1.6264-.223 5.9455 5.9455 0 0 0 4.9303 2.3579 5.9894 5.9894 0 0 0 4.2885-1.7174z" fill="#0078d4"/>
-      </svg>`;
-    } else if (selectedModel === "anthropic") {
-      modelIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10.5 21.5a9.5 9.5 0 1 1 9.5-9.5" stroke="#C73C27" stroke-width="3" stroke-linecap="round"/>
-      </svg>`;
-    } else {
-      modelIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="10" stroke="#0078d4" stroke-width="2" fill="none"/>
-        <path d="M8 12h8M12 8v8" stroke="#0078d4" stroke-width="2" stroke-linecap="round"/>
-      </svg>`;
     }
 
     // Get current date in format DD/MM/YYYY
@@ -452,10 +386,7 @@ const ZoomaryAI = () => {
                   <span class="zoomary-title">Zoomary AI</span>
                   <span class="summary-text">Summary</span>
                 </div>
-                <div class="model-badge">
-                  ${modelIcon}
-                  ${selectedModelName}
-                </div>
+                
               </div>
               <div class="date">Generated on ${formattedDate}</div>
             </div>
@@ -478,17 +409,17 @@ const ZoomaryAI = () => {
   return (
     <div className="container py-8 max-w-5xl mx-auto">
       <Link to="/ai-agents" className="mb-6 inline-block">
-        <Button variant="outline" className="mb-6 border-red-600 text-red-600 hover:bg-red-50 transition-colors">
-          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to AI Agents
+        <Button style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+          className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+          variant="ghost">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
         </Button>
       </Link>
 
       <Card className="bg-white shadow-xl border-none rounded-xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-red-600 to-red-700 text-white border-none pb-8">
-          <CardTitle className="text-4xl font-bold text-center">Zoomary AI</CardTitle>
+          <CardTitle className="text-4xl font-bold text-center">AI Zoom Summary</CardTitle>
           <CardDescription className="text-center text-white/80 mt-2">
             Enter a Zoom recording URL or upload a transcript file to generate a detailed meeting summary
           </CardDescription>
@@ -715,7 +646,7 @@ const ZoomaryAI = () => {
 
             <Button
               onClick={generateSummary}
-              disabled={isLoading}
+              disabled={isLoading || !zoomUrl}
               className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-3 rounded-lg font-medium text-base shadow-lg shadow-red-600/20 transition-all duration-200 border-0 mt-2"
             >
               {isLoading ? (
@@ -746,47 +677,22 @@ const ZoomaryAI = () => {
           {showResult && (
             <div className="mt-10">
               <div className="bg-red-800 text-white p-5 rounded-t-xl flex justify-between items-center">
-                <h3 className="text-xl font-bold flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Meeting Summary
-                </h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={enableEditMode}
-                    disabled={isEditing}
-                    className="bg-red-800 border-white/30 text-white hover:bg-red-700 transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <h3 className="text-xl font-bold flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={copySummaryToClipboard}
-                    className="bg-red-800 border-white/30 text-white hover:bg-red-700 transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                    Copy
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={downloadSummaryAsPdf}
-                    className="bg-red-800 border-white/30 text-white hover:bg-red-700 transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    PDF
-                  </Button>
+                    Meeting Summary
+                  </h3>
+                  <p className="text-[14px]">     Generated on{" "}
+                    {new Date().toLocaleString("en-US", {
+                      month: "short",
+                      day: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}</p>
                 </div>
               </div>
 
@@ -820,6 +726,25 @@ const ZoomaryAI = () => {
                   dangerouslySetInnerHTML={{ __html: summaryHtml }}
                 />
               )}
+
+              <div className="w-full flex items-center justify-center mt-6">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex items-center"
+                    onClick={copySummaryToClipboard}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy
+                  </Button>
+
+                  <Button variant="outline" className="flex items-center" onClick={downloadSummaryAsPdf}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </Button>
+
+                </div>
+              </div>
             </div>
           )}
         </CardContent>

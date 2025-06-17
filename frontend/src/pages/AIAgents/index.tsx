@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import Header from "./Header";
 import { ArrowRight, Sparkles, Search, FileText, } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAxios } from "@/context/AppContext";
 
 interface AgentCategory {
   id: string;
@@ -16,15 +18,15 @@ interface AgentCategory {
 const agentCategories: AgentCategory[] = [
   {
     id: "zoomary",
-    title: "Zoomary AI",
+    title: "AI Zoom Summary",
     icon: <Sparkles />,
     gradient: "bg-gradient-to-br from-red-500 to-red-800",
     color: "bg-red-600",
-    description: "Zoom meeting summariser agent",
-    bgImage: "url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070')"
+    description: "Enter a Zoom recording URL to generate a detailed meeting summary.",
+    bgImage: "url('https://t4.ftcdn.net/jpg/03/44/90/71/240_F_344907190_hpw23uwfISWQWCxxhvt0wuO3t86RHOSo.jpg')"
   },
   {
-    id: "hr",
+    id: "CompanyProfile",
     title: "Company Profile",
     icon: <Search />,
     gradient: "bg-gradient-to-br from-red-700 to-blue-900",
@@ -33,7 +35,7 @@ const agentCategories: AgentCategory[] = [
     bgImage: "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070')"
   },
   {
-    id: "resume",
+    id: "ResumeAnalyzer",
     title: "AI Resume Analyzer",
     icon: <FileText />,
     gradient: "bg-gradient-to-br from-red-700 to-blue-900",
@@ -63,21 +65,33 @@ const agentCategories: AgentCategory[] = [
 
 const AIAgentsPage = () => {
   const { categoryId } = useParams();
+  const axios = useAxios("user");
+  const [prompt, setPrompt] = useState([]);
+  console.log("prompt", prompt)
 
-  // If a specific category is selected, show only that category's agents
+  const fetchAiAgents = async () => {
+    try {
+      const res = await axios.get("/aiagentsettings");
+      const settings = res?.data?.data || [];
+      setPrompt(settings);
+    } catch (error) {
+      console.error("Failed to fetch AI agent settings:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAiAgents();
+  }, [])
+
   if (categoryId) {
-    // For "zoomary" and "hr" categories, we have implemented pages
     if (categoryId === "zoomary") {
-      // This is handled by the router directly through the Zoomary component
       return null;
     }
 
-    if (categoryId === "hr") {
-      // This is handled by the router directly through the CompanyProfile component
+    if (categoryId === "CompanyProfile") {
       return null;
     }
 
-    // For all other categories, show the coming soon message
     return (
       <>
         <Header />
@@ -112,8 +126,11 @@ const AIAgentsPage = () => {
         <p className="text-gray-600 mb-8">Advanced AI systems designed to assist with multiple tasks and workflows efficiently.</p>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {agentCategories.map((category) => (
-            <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` : `/ai-agents/${category.id}`} className="block">
+          {agentCategories?.filter((category) => {
+            const matchingPrompt = prompt.find((p) => p.name?.toLowerCase() === category.id?.toLowerCase());
+            return matchingPrompt?.visibility;
+          }).map((category) => (
+            <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` : `/ai-agents/${category.id === "CompanyProfile" ? "hr" : "resume"}`} className="block">
               <div
                 key={category.id}
                 className="group relative overflow-hidden rounded-lg border-2 transition-all duration-300 hover:shadow-xl hover:border-red-600 hover:translate-y-[-8px] border-gray-200 bg-white"
@@ -121,7 +138,7 @@ const AIAgentsPage = () => {
                   height: '220px',
                   backgroundImage: category.bgImage,
                   backgroundSize: 'cover',
-                  backgroundPosition: 'center'
+                  backgroundPosition: 'center',
                 }}
               >
                 {/* Semi-transparent overlay with gradient */}
@@ -142,7 +159,7 @@ const AIAgentsPage = () => {
                   <div className="mt-auto space-y-2">
                     {/* History buttons removed as requested */}
 
-                    <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` : `/ai-agents/${category.id}`} className="block">
+                    <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` : `/ai-agents/${category.id === "CompanyProfile" ? "hr" : "resume"}`} className="block">
                       <Button
                         variant="outline"
                         className="w-full py-2 rounded-md text-center font-medium transition-all duration-300 group-hover:bg-red-600 group-hover:text-white bg-white/90 text-red-600 border-0"

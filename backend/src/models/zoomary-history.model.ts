@@ -9,12 +9,14 @@ export interface ZoomaryHistoryInterface {
   meetingDate: Date;
   createdAt: Date;
   updatedAt: Date;
+  agents: string;
 }
 
 const zoomaryHistorySchema: Schema = new Schema(
   {
     name: String,
     email: String,
+    agents: { type: String, default: "Zoom" },
     title: {
       type: String,
       required: true,

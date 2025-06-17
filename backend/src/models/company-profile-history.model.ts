@@ -15,6 +15,7 @@ const companyProfileHistorySchema: Schema = new Schema(
   {
     name: String,
     email: String,
+    agents: { type: String, default: "company" },
     companyName: {
       type: String,
       required: true,

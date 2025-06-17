@@ -37,6 +37,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const companyProfileHistorySchema = new mongoose_1.Schema({
     name: String,
     email: String,
+    agents: { type: String, default: "company" },
     companyName: {
         type: String,
         required: true,

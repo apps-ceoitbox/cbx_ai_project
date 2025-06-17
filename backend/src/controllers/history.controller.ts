@@ -341,14 +341,6 @@ export default class HistoryController {
       next: NextFunction
     ) => {
       const { id } = req.params;
-      const userEmail = req.user?.email;
-
-      if (!userEmail) {
-        res.status(HttpStatusCodes.UNAUTHORIZED).json({
-          message: "User not authenticated or email missing",
-        });
-        return; // Ensure void return
-      }
 
       if (!mongoose.Types.ObjectId.isValid(id)) {
         res
@@ -360,7 +352,6 @@ export default class HistoryController {
       try {
         const result = await ZoomaryHistory.findOneAndDelete({
           _id: id,
-          email: userEmail,
         });
 
         if (!result) {
@@ -419,26 +410,12 @@ export default class HistoryController {
       res: Response,
       next: NextFunction
     ) => {
-      const userId = req.user?._id; // Changed from req.user?.id to req.user?._id
-
-      if (!userId) {
-        res.status(HttpStatusCodes.UNAUTHORIZED).json({
-          message: "User not authenticated or user ID missing",
-        });
-        return; // Ensure void return
-      }
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        res
-          .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ message: "Invalid user ID format for query" });
-        return; // Ensure void return
-      }
+      const userId = req.user?.email;
 
       const history = await CompanyProfileHistory.find({
-        userId: new mongoose.Types.ObjectId(userId),
-      })
-        .sort({ createdAt: -1 })
-        .select("companyName sourcedFrom createdAt");
+        email: userId,
+      }).sort({ createdAt: -1 });
+      // .select("companyName sourcedFrom createdAt");
 
       res.status(HttpStatusCodes.OK).json({
         message: "Company profile history fetched successfully",
@@ -554,19 +531,8 @@ export default class HistoryController {
       next: NextFunction
     ) => {
       const { id } = req.params;
-      const userId = req.user?._id; // Changed from req.user?.id to req.user?._id
 
-      if (!userId) {
-        res.status(HttpStatusCodes.UNAUTHORIZED).json({
-          message: "User not authenticated or user ID missing",
-        });
-        return; // Ensure void return
-      }
-
-      if (
-        !mongoose.Types.ObjectId.isValid(id) ||
-        !mongoose.Types.ObjectId.isValid(userId)
-      ) {
+      if (!mongoose.Types.ObjectId.isValid(id)) {
         res
           .status(HttpStatusCodes.BAD_REQUEST)
           .json({ message: "Invalid history item ID or user ID format" });
@@ -576,7 +542,6 @@ export default class HistoryController {
       try {
         const result = await CompanyProfileHistory.findOneAndDelete({
           _id: id,
-          userId: new mongoose.Types.ObjectId(userId),
         });
 
         if (!result) {
@@ -589,7 +554,7 @@ export default class HistoryController {
 
         res.status(HttpStatusCodes.OK).json({
           message: "Company profile history item deleted successfully",
-          data: { id: result._id }, // Return the ID of the deleted item
+          data: { id: result._id },
         });
       } catch (error) {
         next(error);
