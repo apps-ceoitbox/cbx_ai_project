@@ -13,6 +13,7 @@ export interface SubmissionInterface {
   questionsAndAnswers: Record<string, string>;
   generatedContent: string;
   type: string;
+  tokensUsed: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,6 +31,7 @@ const submissionSchema: Schema = new Schema(
     questionsAndAnswers: { type: Object, required: true, default: {} },
     generatedContent: { type: String, required: true },
     type: { type: String, required: false },
+    tokensUsed: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

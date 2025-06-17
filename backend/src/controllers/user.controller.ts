@@ -4,6 +4,7 @@ import { HttpStatusCodes } from "../utils/errorCodes";
 import User from "../models/user.model";
 import Task from "../models/ai.model";
 import { MAIL } from "../utils/sendMail";
+import axios from "axios";
 
 export default class UserController {
 
@@ -12,21 +13,21 @@ export default class UserController {
     res.status(HttpStatusCodes.OK).send(req.user);
   })
 
-  static updateProfile =  asyncHandler(async (req, res) => {
-        const userId = req.user._id;
-        const profileData = req.body;
+  static updateProfile = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const profileData = req.body;
 
-        const profile = await User.findOneAndUpdate(
-            { _id:userId },
-            { ...profileData },
-            { new: true }
-        );
+    const profile = await User.findOneAndUpdate(
+      { _id: userId },
+      { ...profileData },
+      { new: true }
+    );
 
-        res.status(200).json({
-            success: true,
-            data: profile
-        });
-    })
+    res.status(200).json({
+      success: true,
+      data: profile
+    });
+  })
 
   static sendEmail = asyncHandler(async (req, res) => {
     const { to, subject, body, attachment } = req.body;
