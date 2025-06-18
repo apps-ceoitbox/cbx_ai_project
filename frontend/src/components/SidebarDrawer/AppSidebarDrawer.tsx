@@ -4,6 +4,7 @@ import {
     Rocket,
     X,
     FileText,
+    Image,
     User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -137,6 +138,17 @@ function AppSidebarDrawer() {
                                             Document Reader
                                         </Button>
                                     </Link>
+
+                                    <Link to="/image-generation" onClick={handleMenuItemClick}>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start gap-3 text-lg py-6 hover:bg-red-100 text-black"
+                                            style={{ background: (location.pathname === "/image-generator" || location.pathname === "/image-generator") ? "rgb(229 9 20)" : "", color: (location.pathname === "/document-reader" || location.pathname === "/document-reader") ? "#fff" : "black" }}
+                                        >
+                                            <Image size={22} />
+                                            Image Generator
+                                        </Button>
+                                    </Link>
                                 </div>
                             )}
 
@@ -181,6 +193,19 @@ function AppSidebarDrawer() {
                                         >
                                             <FileText size={22} />
                                             Document Reader
+                                        </Button>
+                                    </Link>
+                                    <Link to="/image-genration-dashboard" onClick={handleMenuItemClick}>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start gap-3 text-lg py-6 hover:bg-red-100 text-black"
+                                            style={{
+                                                background: location.pathname === "/image-genration-dashboard" ? "rgb(229 9 20)" : "",
+                                                color: location.pathname === "/image-genration-dashboard" ? "#fff" : "black"
+                                            }}
+                                        >
+                                            <Image size={22} />
+                                            Image Generation Dashboard
                                         </Button>
                                     </Link>
 

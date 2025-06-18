@@ -34,6 +34,11 @@ import { Route, Routes } from 'react-router-dom'
 import Profile from '@/pages/Profile';
 import CompanyProfileViewResult from '@/pages/AIAgents/ViewResultsById/CompanyProfileViewResult'
 import ZoomRecordingViewResult from '@/pages/AIAgents/ViewResultsById/ZoomRecordingViewResult'
+import ImageGenerator from '../ImageGeneration/ImageGenerator'
+import ImageDashboard from '../ImageGeneration/ImageDashboard'
+import UserImageDashboard from '../ImageGeneration/UserImageDashboard'
+
+
 
 const AppRoutes = () => {
     return (
@@ -92,6 +97,9 @@ const AppRoutes = () => {
                 <Route path="/view/zoom/:id" element={<ZoomRecordingViewResult />} />
 
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/image-generation" element={<ImageGenerator />} />
+                <Route path="/image-generation-dashboard" element={<ImageDashboard />} />
+                <Route path="/image-generation-user-dashboard" element={<UserImageDashboard />} />
 
                 {/* Default  */}
                 <Route path="*" element={<NotFound />} />
