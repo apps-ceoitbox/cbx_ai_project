@@ -4,13 +4,11 @@ import AIAgentHistories from '@/pages/AIAgentHistories'
 import AIAgentsPage from '@/pages/AIAgents'
 import AttendanceMonitor from '@/pages/AIAgents/attendance'
 import CompanyProfileAI from '@/pages/AIAgents/hr'
-import { CompanyProfileHistory } from '@/pages/AIAgents/hr/CompanyProfileHistory'
 import AIMailSender from '@/pages/AIAgents/mail'
 import { MailSenderHistory } from '@/pages/AIAgents/mail/MailSenderHistory'
 import ResumeAnalyzer from '@/pages/AIAgents/resume'
 import ResumeHistory from '@/pages/AIAgents/resume/ResumeHistory'
 import ZoomaryAI from '@/pages/AIAgents/Zoomary'
-import { ZoomaryHistory } from '@/pages/AIAgents/Zoomary/ZoomaryHistory'
 import Index from '@/pages/AstroDISC/Index'
 import UserSubmissions from '@/pages/AstroDISC/UserSubmissions'
 import AstroAdminDashboard from '@/pages/AstroDISCAdmin/AstroAdminDashboard'
@@ -37,8 +35,7 @@ import ZoomRecordingViewResult from '@/pages/AIAgents/ViewResultsById/ZoomRecord
 import ImageGenerator from '../ImageGeneration/ImageGenerator'
 import ImageDashboard from '../ImageGeneration/ImageDashboard'
 import UserImageDashboard from '../ImageGeneration/UserImageDashboard'
-
-
+import UserGeneratedAgentsResult from '@/pages/AIAgents/UserGeneratedAgentsResult/UserGeneratedAgentsResult'
 
 const AppRoutes = () => {
     return (
@@ -81,9 +78,9 @@ const AppRoutes = () => {
                 {/* AI Agents */}
                 <Route path="/ai-agents" element={<AIAgentsPage />} />
                 <Route path="/ai-agents/zoomary" element={<ZoomaryAI />} />
-                <Route path="/ai-agents/zoomary/history" element={<ZoomaryHistory />} />
+                {/* <Route path="/ai-agents/zoomary/history" element={<ZoomaryHistory />} /> */}
                 <Route path="/ai-agents/hr" element={<CompanyProfileAI />} />
-                <Route path="/ai-agents/company-profile/history" element={<CompanyProfileHistory />} />
+                {/* <Route path="/ai-agents/company-profile/history" element={<CompanyProfileHistory />} /> */}
                 <Route path="/ai-agents/resume" element={<ResumeAnalyzer />} />
                 <Route path="/ai-agents/resume/history" element={<ResumeHistory />} />
                 <Route path="/ai-agents/attendance" element={<AttendanceMonitor />} />
@@ -95,6 +92,8 @@ const AppRoutes = () => {
                 <Route path="/admin/ai-agents/:categoryId" element={<AIAgentsPage />} />
                 <Route path="/view/company-profile/:id" element={<CompanyProfileViewResult />} />
                 <Route path="/view/zoom/:id" element={<ZoomRecordingViewResult />} />
+
+                <Route path="/generated-agents" element={<UserGeneratedAgentsResult />} />
 
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/image-generation" element={<ImageGenerator />} />

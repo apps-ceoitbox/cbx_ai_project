@@ -38,6 +38,8 @@ const AiAgentSettingsSchema = new mongoose_1.Schema({
     name: { type: String, default: "AI agents" },
     aiProvider: { type: { name: String, model: String } },
     apikey: { type: String },
+    promptContent: { type: String },
+    visibility: { type: Boolean, default: true },
 }, { timestamps: true });
 const AiAgentSettingsModel = mongoose_1.default.model("AiAgentSettings", AiAgentSettingsSchema);
 exports.default = AiAgentSettingsModel;

@@ -106,7 +106,6 @@ export default function Profile() {
                                 </div>
                             </div>
                         </div>
-
                         {/* Company Information */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold">Company Information</h3>

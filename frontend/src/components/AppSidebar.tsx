@@ -26,15 +26,18 @@ import { useData } from "@/context/AppContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useState } from "react";
+import LogoutConfirmationModal from "./Custom/LogoutConfirmationModal";
 
 function AppSidebar({ collapsed, setCollapsed }) {
-  const nav = useNavigate();
-  const location = useLocation();
-  const { userAuth, setUserAuth, adminAuth, setAdminAuth } = useData();
-  // const isToolsPage = location.pathname.startsWith("/tools/");
-  // const isReportPage = location.pathname.startsWith("/reports/");
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
+    const nav = useNavigate();
+    const location = useLocation();
+    const { userAuth, setUserAuth, adminAuth, setAdminAuth, } = useData();
+    // const isToolsPage = location.pathname.startsWith("/tools/");
+    // const isReportPage = location.pathname.startsWith("/reports/");
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
+    const [isAdminMenuOpen, setIsAdminMenuOpen] = useState<boolean>(false);
+    const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
+    const [logoutType, setLogoutType] = useState<"both" | "admin" | "user">();
 
   // Check if both auth types are present
   const hasBothAuth = userAuth?.token && adminAuth?.token;
@@ -78,6 +81,7 @@ function AppSidebar({ collapsed, setCollapsed }) {
     nav("/login");
   };
 
+
   // Check if a menu item is active
   const isMenuItemActive = (paths) => {
     if (!Array.isArray(paths)) paths = [paths];
@@ -87,6 +91,24 @@ function AppSidebar({ collapsed, setCollapsed }) {
         (path.endsWith("/") ? location.pathname.startsWith(path) : false)
     );
   };
+
+    const openLogoutModal = (type: "both" | "admin" | "user") => {
+        setLogoutType(type);
+        setShowLogoutModal(true);
+    };
+
+    const handleConfirmLogout = () => {
+        if (logoutType === "both") {
+            handleUserAndAdminLogout();
+        } else if (logoutType === "user") {
+            handleUserLogout();
+        } else {
+            handleLogoutAdmin();
+        }
+        setShowLogoutModal(false);
+    };
+
+
 
   return (
     <div
@@ -607,6 +629,62 @@ function AppSidebar({ collapsed, setCollapsed }) {
               </div>
             </div>
           )}
+
+                    {!collapsed && (
+                        <div className="text-sm">
+                            <div className="font-medium">{adminAuth?.user?.userName || userAuth?.user?.userName}</div>
+                            <div className="text-xs text-gray-500">{adminAuth?.user?.email || userAuth?.user?.email}</div>
+                        </div>
+                    )}
+                </div>
+
+                {(hasBothAuth || userAuth?.token || adminAuth?.token) && (
+                    <Link to="/profile">
+                        <Button
+                            variant="ghost"
+                            className="w-full justify-start gap-2 mb-3 text-black hover:bg-red-100"
+                            style={{
+                                background: isMenuItemActive(["/profile"]) ? "rgb(229 9 20)" : "",
+                                color: isMenuItemActive(["/profile"]) ? "#fff" : "black"
+                            }}
+                        >
+                            <User size={18} />
+                            {!collapsed && "Profile Settings"}
+                        </Button>
+                    </Link>
+                )}
+
+
+                {hasBothAuth ? (
+                    <div className="space-y-2">
+                        <Button
+                            onClick={() => openLogoutModal("both")}
+                            variant="ghost"
+                            className="w-full justify-start gap-2 text-red-600 hover:bg-red-100"
+                        >
+                            <LogOut size={18} />
+                            {!collapsed ? "Logout" : ""}
+                        </Button>
+                    </div>
+                ) : (
+                    <Button
+                        // onClick={userAuth?.token ? handleUserLogout : handleLogoutAdmin}
+                        onClick={() => openLogoutModal(userAuth?.token ? "user" : "admin")}
+                        variant="ghost"
+                        className="w-full justify-start gap-2 text-red-600 hover:bg-red-100"
+                    >
+                        <LogOut size={18} />
+                        {!collapsed && "Logout"}
+                    </Button>
+                )}
+            </div>
+
+            <LogoutConfirmationModal
+                open={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={handleConfirmLogout}
+            />
+
         </div>
 
         <Link to="/profile">

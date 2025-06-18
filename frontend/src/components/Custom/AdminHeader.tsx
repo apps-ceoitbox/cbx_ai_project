@@ -5,11 +5,13 @@ import { LogOut, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner';
+import LogoutConfirmationModal from './LogoutConfirmationModal';
 
 const AdminHeader = () => {
     const nav = useNavigate();
     const { setAdminAuth, mobileMenuOpen, setMobileMenuOpen } = useData();
     const [isMobile, setIsMobile] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     console.log(isMobile)
 
     useEffect(() => {
@@ -52,7 +54,7 @@ const AdminHeader = () => {
 
                 <div className="flex items-center gap-4">
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-                        onClick={handleLogoutAdmin}>
+                        onClick={() => setShowLogoutModal(true)}>
                         <LogOut className="w-5 h-5" />
                     </Button>
 
@@ -60,6 +62,12 @@ const AdminHeader = () => {
 
                 </div>
             </div>
+
+            <LogoutConfirmationModal
+                open={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={handleLogoutAdmin}
+            />
         </header >
     )
 }

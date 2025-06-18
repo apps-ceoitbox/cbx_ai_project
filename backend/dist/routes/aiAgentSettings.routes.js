@@ -9,4 +9,5 @@ const router = express_1.default.Router();
 // GET: Get AI Agent setting by ID
 router.get("/", aiAgentSettings_controller_1.default.getSettingsById);
 router.post("/addAiCredentials", aiAgentSettings_controller_1.default.saveSettings);
+router.post("/:id", aiAgentSettings_controller_1.default.toggleAgentVisibility);
 exports.default = router;

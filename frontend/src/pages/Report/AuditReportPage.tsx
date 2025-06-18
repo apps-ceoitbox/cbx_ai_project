@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { PromptInterface } from "../Admin/Admin"
+import LogoutConfirmationModal from "@/components/Custom/LogoutConfirmationModal"
 
 
 // Sample report data
@@ -52,7 +53,7 @@ export default function AuditReportPage() {
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
-
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
 
   useEffect(() => {
@@ -335,6 +336,17 @@ export default function AuditReportPage() {
     }
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("userToken")
+    localStorage.removeItem("adminToken")
+    localStorage.removeItem("auditToken")
+    setUserAuth(p => ({ ...p, user: null, token: null }))
+    setAdminAuth(p => ({ ...p, user: null, token: null }))
+    setAuditAuth(p => ({ ...p, user: null, token: null }))
+    toast.success("Logout successful")
+    nav("/login")
+  }
+
 
   if (!auditAuth?.user) {
     return <Navigate to="/audit-login" />
@@ -348,16 +360,7 @@ export default function AuditReportPage() {
           <div className="flex items-center gap-4">
 
             <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-              onClick={() => {
-                localStorage.removeItem("userToken")
-                localStorage.removeItem("adminToken")
-                localStorage.removeItem("auditToken")
-                setUserAuth(p => ({ ...p, user: null, token: null }))
-                setAdminAuth(p => ({ ...p, user: null, token: null }))
-                setAuditAuth(p => ({ ...p, user: null, token: null }))
-                toast.success("Logout successful")
-                nav("/login")
-              }}>
+              onClick={() => setShowLogoutModal(true)}>
               <LogOut className="w-5 h-5" />
               Logout
             </Button>
@@ -470,6 +473,13 @@ export default function AuditReportPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+
+      <LogoutConfirmationModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   )
 }

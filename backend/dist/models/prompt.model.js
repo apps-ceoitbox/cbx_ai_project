@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const promptSchema = new mongoose_1.Schema({
     heading: { type: String, required: true },
+    group: { type: [String], required: true, default: [] },
     category: { type: String, },
     visibility: { type: Boolean, default: true },
     objective: { type: String, default: "" },

@@ -2,9 +2,9 @@ import LogoutConfirmationModal from '@/components/Custom/LogoutConfirmationModal
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext';
-import { ArrowLeft, History, LogOut, Menu, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner';
 
 const Header = () => {
@@ -13,7 +13,6 @@ const Header = () => {
     const { setUserAuth, mobileMenuOpen, setMobileMenuOpen } = useData();
     const [isMobile, setIsMobile] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
-    const isSpecificAgentPage = location.pathname !== "/ai-agents";
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -36,56 +35,61 @@ const Header = () => {
     );
 
     const handleLogout = () => {
-        localStorage.removeItem("userToken");
-        setUserAuth({
-            user: null,
-            token: null,
-            isLoading: false
-        });
-        toast.success("Logout successful");
-        nav("/login");
+        localStorage.removeItem("userToken")
+        setUserAuth(p => ({ ...p, user: null, token: null }))
+        toast.success("Logout successful")
+        nav("/login")
     }
 
+
     return (
-        <header className="bg-black text-white p-4 lg:px-10 md:px-4 shadow-md">
+        <header className="bg-black text-white p-4  lg:px-10 md:px-4  shadow-md"
+        >
             <div className="mx-auto flex justify-between items-center">
                 {isMobile && <Logo size="sm" />}
 
                 {!isMobile &&
                     <div>
-                        {isSpecificAgentPage &&
-
-                            <Button onClick={() => {
-                                nav("/ai-agents");
-                            }}
-                                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
-                                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
-                                variant="ghost">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back
+                        {location.pathname === "/generated-agents" &&
+                            <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
+                                onClick={() => {
+                                    nav(-1);
+                                }}
+                            >
+                                <ArrowLeft className="w-5 h-5 " />
+                                {isMobile ? "" : "Back"}
                             </Button>
                         }
                     </div>
                 }
 
                 <div className="flex items-center gap-4">
-                    <Link to="/generated-agents">
-                        <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white">
-                            <History className="w-5 h-5 mr-2" />
-                            Generated Agents
+
+                    {
+                        isMobile &&
+                        location.pathname === "/generated-agents" &&
+                        <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
+                            onClick={() => {
+                                nav(-1);
+                            }}
+                        >
+                            <ArrowLeft className="w-5 h-5 " />
+                            {isMobile ? "" : "Back"}
                         </Button>
-                    </Link>
+                    }
 
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-                        onClick={() => setShowLogoutModal(true)}
-                    >
-                        <LogOut className="w-5 h-5 mr-2" />
-                        Logout
+                        onClick={() => setShowLogoutModal(true)}>
+                        <LogOut className="w-5 h-5" />
+                        {isMobile ? "" : "Logout"}
                     </Button>
 
-                    {isMobile && <MobileMenuButton />}
+                    {isMobile &&
+                        <MobileMenuButton />
+                    }
                 </div>
             </div>
+
 
             <LogoutConfirmationModal
                 open={showLogoutModal}
@@ -93,7 +97,7 @@ const Header = () => {
                 onConfirm={handleLogout}
             />
         </header >
-    );
-};
+    )
+}
 
-export default Header;
+export default Header

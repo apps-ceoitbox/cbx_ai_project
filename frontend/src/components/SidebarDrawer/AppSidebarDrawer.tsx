@@ -15,6 +15,7 @@ import { useData } from "@/context/AppContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import LogoutConfirmationModal from "../Custom/LogoutConfirmationModal";
 
 function AppSidebarDrawer() {
     const nav = useNavigate();
@@ -23,6 +24,7 @@ function AppSidebarDrawer() {
     const isToolsPage = location.pathname.startsWith("/tools/");
     const isReportPage = location.pathname.startsWith("/reports/");
     const [isMobile, setIsMobile] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
 
 
     useEffect(() => {
@@ -243,7 +245,8 @@ function AppSidebarDrawer() {
                             </Link>
 
                             <Button
-                                onClick={userAuth?.token ? handleUserLogout : handleLogoutAdmin}
+                                // onClick={userAuth?.token ? handleUserLogout : handleLogoutAdmin}
+                                onClick={() => setShowLogoutModal(true)}
                                 variant="ghost"
                                 className="w-full justify-start gap-3 text-lg py-6 text-red-600 hover:bg-red-100"
                             >
@@ -252,6 +255,13 @@ function AppSidebarDrawer() {
                             </Button>
                         </div>
                     </div>
+
+                    {/* Logout */}
+                    <LogoutConfirmationModal
+                        open={showLogoutModal}
+                        onClose={() => setShowLogoutModal(false)}
+                        onConfirm={userAuth?.token ? handleUserLogout : handleLogoutAdmin}
+                    />
                 </div>
             </>
         );

@@ -1,35 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { getCompanyProfileHistory, clearCompanyProfileHistory, CompanyProfileHistoryItem } from '@/services/history.service';
-import { ArrowLeft, Clock, Building, FileText, Copy, Printer, Download, Eye } from 'lucide-react';
+import { getCompanyProfileHistory, CompanyProfileHistoryItem } from '@/services/history.service';
+import { ArrowLeft, Clock, FileText, Copy, Printer, Download, Eye, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import html2pdf from 'html2pdf.js';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export function CompanyProfileHistory() {
+
+export function CompanyProfileHistory({ selectedAgent, setSelectedAgent }) {
   const [history, setHistory] = useState<CompanyProfileHistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<CompanyProfileHistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showClearDialog, setShowClearDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
         setLoading(true);
         const response = await getCompanyProfileHistory();
-        // Ensure data is an array before setting it
         if (Array.isArray(response)) {
           setHistory(response);
         } else {
@@ -68,33 +61,6 @@ export function CompanyProfileHistory() {
       return 'Invalid date';
     }
   };
-
-  // cs
-  //   event.stopPropagation();
-  //   if (window.confirm('Are you sure you want to delete this history item?')) {
-  //     try {
-  //       setLoading(true);
-  //       // Call the service function to delete from backend
-  //       const success = await deleteCompanyProfileHistoryItem(id);
-
-  //       if (success) {
-  //         // Update state only if backend deletion was successful
-  //         setHistory(history.filter(item => item._id !== id));
-  //         if (selectedItem && selectedItem._id === id) {
-  //           setSelectedItem(null);
-  //         }
-  //         toast.success('History item deleted successfully');
-  //       } else {
-  //         toast.error('Failed to delete history item. Please try again.');
-  //       }
-  //     } catch (err) {
-  //       console.error('Error deleting history item:', err);
-  //       toast.error('Failed to delete history item');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  // };
 
   const printHistory = () => {
     if (!selectedItem) return;
@@ -175,47 +141,16 @@ export function CompanyProfileHistory() {
       .catch(() => toast.error('Failed to download PDF'));
   };
 
+  const filteredHistory = history?.filter(item =>
+    item?.companyName?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const confirmClearHistory = async () => {
-    try {
-
-      const success = await clearCompanyProfileHistory();
-      if (success) {
-        setHistory([]);
-        setSelectedItem(null);
-        toast.success('Company profile history cleared successfully');
-      } else {
-        toast.error('Failed to clear history');
-      }
-    } catch (err) {
-      console.error('Error clearing history:', err);
-      toast.error('Failed to clear history');
-    } finally {
-
-      setShowClearDialog(false);
-    }
-  };
 
   return (
     <div className="container py-8 min-h-screen">
-      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear History</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to clear all company profile history? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmClearHistory} className="bg-red-600 hover:bg-red-700">
-              Clear History
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
-      <div className="flex justify-between items-center mb-8">
+
+      {/* <div className="flex justify-between items-center mb-8">
         <div className="flex items-center">
           <Link to="/ai-agents/hr">
 
@@ -232,8 +167,47 @@ export function CompanyProfileHistory() {
             Company Profile History
           </h1>
         </div>
-        {/* Clear History button removed as requested */}
-      </div>
+      </div> */}
+      {!selectedItem && (
+        <div className='flex items-center gap-6 mb-6'>
+          <div style={{ width: "20%" }}>
+            <Label htmlFor="tool-filter">Agents</Label>
+            <Select value={selectedAgent} onValueChange={(value) => setSelectedAgent(value)}>
+              <SelectTrigger id="tool-filter">
+                <SelectValue placeholder="All agents" />
+              </SelectTrigger>
+              <SelectContent>
+
+                <SelectItem value="zoom">
+                  Zoom AI History
+                </SelectItem>
+                <SelectItem value="companyProfile">
+                  Company Profile History
+                </SelectItem>
+
+              </SelectContent>
+            </Select>
+          </div>
+
+
+
+
+          <div>
+            <Label htmlFor="search">Search</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-[12px] h-4 w-4 text-muted-foreground" />
+              <Input
+                id="search"
+                placeholder="Search company name..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {loading && !selectedItem && (
         <div className="flex justify-center items-center h-64">
@@ -264,10 +238,10 @@ export function CompanyProfileHistory() {
           </div>
 
           <div className="flex items-center gap-6 mb-4 text-sm text-gray-500">
-            <div className="flex items-center">
+            {/* <div className="flex items-center">
               <Building className="w-4 h-4 mr-1" />
               <span>Source: {selectedItem.sourcedFrom}</span>
-            </div>
+            </div> */}
             <div className="flex items-center">
               <Clock className="w-4 h-4 mr-1" />
               <span>Created: {formatDate(selectedItem.createdAt.toString())}</span>
@@ -318,9 +292,9 @@ export function CompanyProfileHistory() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Company Name
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
+                {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Source
-                </th>
+                </th> */}
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white tracking-wider">
                   Created Date
                 </th>
@@ -330,17 +304,17 @@ export function CompanyProfileHistory() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {history.map((item) => (
+              {filteredHistory?.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{item.companyName}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  {/* <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-500">
                       <Building className="w-4 h-4 mr-1" />
                       <span>{item.sourcedFrom}</span>
                     </div>
-                  </td>
+                  </td> */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm text-gray-500">
                       <Clock className="w-4 h-4 mr-1" />

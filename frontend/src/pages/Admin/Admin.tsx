@@ -77,6 +77,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import DynamicPagination from "@/components/dynamicPagination"
+import MultiSelect from "@/components/MultipleSelect/MultipleSelect"
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
@@ -110,6 +111,7 @@ export interface AiSettingsInterface {
 export interface PromptInterface {
   _id: string;
   heading: string;
+  group: string[];
   category: string;
   visibility: boolean;
   objective: string;
@@ -166,12 +168,6 @@ export default function AdminDashboard() {
     group: "",
   })
 
-  console.log({
-    tools,
-    categories,
-    apis
-  })
-
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -205,6 +201,7 @@ export default function AdminDashboard() {
 
 
   const [currentPrompt, setCurrentPrompt] = useState<PromptInterface | null>(null);
+  const [groups, setGroups] = useState([]);
   const prevcurrentPrompt = useRef("");
 
   const handleInputChange = (index, field, value) => {
@@ -244,7 +241,6 @@ export default function AdminDashboard() {
     try {
       setIsLoading(true);
       const { data: res } = await axios.get(`/submission/fieldValues`);
-      console.log(res)
       setTools(res?.data?.tool || []);
       setCategories(res?.data?.category || []);
       setApis(res?.data?.apiUsed || []);
@@ -426,25 +422,6 @@ export default function AdminDashboard() {
     }
   };
 
-
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Admin Access Required</CardTitle>
-            <CardDescription>You need administrator privileges to access this page.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full bg-primary-red hover:bg-red-700" onClick={() => nav("/dashboard")}>
-              Return to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
 
   const filteredTemplates = promptsData?.filter((submission) => {
     // Filter by tool
@@ -754,6 +731,28 @@ export default function AdminDashboard() {
   const isCurrentPromptChanged = !(JSON.stringify(currentPrompt) == prevcurrentPrompt.current)
 
 
+  useEffect(() => {
+    fetch("https://auth.ceoitbox.com/getGroupNames").then(res => res.json()).then(res => setGroups([...new Set(res)]))
+  }, [])
+
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Admin Access Required</CardTitle>
+            <CardDescription>You need administrator privileges to access this page.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full bg-primary-red hover:bg-red-700" onClick={() => nav("/dashboard")}>
+              Return to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50" >
@@ -939,13 +938,14 @@ export default function AdminDashboard() {
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader className="bg-primary-red" >
-                      <TableRow className=" hover:bg-primary-red rounded-[10px]">
+                      <TableRow className="hover:bg-primary-red rounded-[10px]">
                         <TableHead className="text-white font-[700]">Name</TableHead>
                         <TableHead className="text-white font-[700]">Email</TableHead>
                         <TableHead className="text-white font-[700]">Company</TableHead>
                         <TableHead className="text-white font-[700]">Tool</TableHead>
                         <TableHead className="text-white font-[700]">Category</TableHead>
                         <TableHead className="text-white font-[700]">API Used</TableHead>
+                        <TableHead className="text-white font-[700]">Tokens Used</TableHead>
                         <TableHead className="text-white font-[700]">Date</TableHead>
                         <TableHead className="text-white font-[700]">Actions</TableHead>
                       </TableRow>
@@ -960,6 +960,7 @@ export default function AdminDashboard() {
                             <TableCell className="py-2">{submission.tool}</TableCell>
                             <TableCell className="py-2">{submission?.category || "--"}</TableCell>
                             <TableCell className="py-2">{submission.apiUsed}</TableCell>
+                            <TableCell className="py-2">{submission.tokensUsed}</TableCell>
                             <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
                             <TableCell className="py-2">
                               <div className="flex space-x-2" >
@@ -1304,6 +1305,7 @@ export default function AdminDashboard() {
                       onClick={() => {
                         setCurrentPrompt({
                           heading: "",
+                          group: [],
                           objective: "",
                           initialGreetingsMessage: "",
                           questions: [""],
@@ -1618,7 +1620,7 @@ export default function AdminDashboard() {
 
               <CardContent>
                 <div className="space-y-6">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="prompt-heading">Template Heading</Label>
                       <Input
@@ -1654,6 +1656,30 @@ export default function AdminDashboard() {
                           <SelectItem value={"0"}>Hide</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="group">Group</Label>
+                      <MultiSelect
+                        options={groups.map(item => {
+                          return { value: item, label: item }
+                        })}
+                        value={currentPrompt?.group || []}
+                        onChange={(val) => handleChangePrompt("group", val)}
+                        placeholder="Groups"
+                        searchPlaceholder="Search Groups..."
+                      />
+                      {/* <Select value={currentPrompt?.group || ""} onValueChange={(val) => handleChangePrompt("group", val)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {
+                            groups.map((item) => {
+                              return <SelectItem value={item}>{item}</SelectItem>
+                            })
+                          }
+                        </SelectContent>
+                      </Select> */}
                     </div>
                   </div>
 
@@ -1825,7 +1851,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="prompt-heading">Template Heading</Label>
                       <Input
@@ -1861,6 +1887,30 @@ export default function AdminDashboard() {
                           <SelectItem value={"0"}>Hide</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="group">Group</Label>
+                      <MultiSelect
+                        options={groups.map(item => {
+                          return { value: item, label: item }
+                        })}
+                        value={currentPrompt?.group || []}
+                        onChange={(val) => handleChangePrompt("group", val)}
+                        placeholder="Groups"
+                        searchPlaceholder="Search Groups..."
+                      />
+                      {/* <Select value={currentPrompt?.group || ""} onValueChange={(val) => handleChangePrompt("group", val)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {
+                            groups.map((item) => {
+                              return <SelectItem value={item}>{item}</SelectItem>
+                            })
+                          }
+                        </SelectContent>
+                      </Select> */}
                     </div>
                   </div>
 

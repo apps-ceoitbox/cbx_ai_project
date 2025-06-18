@@ -1,3 +1,4 @@
+import LogoutConfirmationModal from '@/components/Custom/LogoutConfirmationModal'
 import { Logo } from '@/components/logo'
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext'
@@ -13,6 +14,7 @@ const Header = () => {
     const [isMobile, setIsMobile] = useState(false);
     const isToolsPage = location.pathname.startsWith("/tools/");
     const isAuditToolsPage = location.pathname.startsWith("/audit-tools/");
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
 
     useEffect(() => {
@@ -36,6 +38,14 @@ const Header = () => {
         </Button>
     );
 
+    const handleLogout = () => {
+        localStorage.removeItem("userToken");
+        localStorage.removeItem("auditToken");
+        setUserAuth(p => ({ ...p, user: null, token: null }))
+        setAuditAuth(p => ({ ...p, user: null, token: null }))
+        toast.success("Logout successful")
+        nav("/login")
+    }
 
     return (
         <header className="bg-black text-white p-4  lg:px-10 md:px-4 shadow-md"
@@ -70,14 +80,7 @@ const Header = () => {
                     }
 
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-                        onClick={() => {
-                            localStorage.removeItem("userToken");
-                            localStorage.removeItem("auditToken");
-                            setUserAuth(p => ({ ...p, user: null, token: null }))
-                            setAuditAuth(p => ({ ...p, user: null, token: null }))
-                            toast.success("Logout successful")
-                            nav("/login")
-                        }}>
+                        onClick={() => setShowLogoutModal(true)}>
                         <LogOut className="w-5 h-5" />
 
                         {isMobile ? "" : "Logout"}
@@ -88,6 +91,12 @@ const Header = () => {
                     }
                 </div>
             </div>
+
+            <LogoutConfirmationModal
+                open={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={handleLogout}
+            />
         </header >
     )
 }

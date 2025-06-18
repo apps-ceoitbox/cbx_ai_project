@@ -47,6 +47,7 @@ const submissionSchema = new mongoose_1.Schema({
     questionsAndAnswers: { type: Object, required: true, default: {} },
     generatedContent: { type: String, required: true },
     type: { type: String, required: false },
+    tokensUsed: { type: Number, default: 0 },
 }, { timestamps: true });
 const Submission = mongoose_1.default.model("submission", submissionSchema);
 exports.default = Submission;

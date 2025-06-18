@@ -20,7 +20,6 @@ import {
     FileText,
     Mail,
     LayoutDashboard,
-    LogOut,
     Loader2,
     CheckCircle,
     Copy,
