@@ -1,3 +1,4 @@
+import LogoutConfirmationModal from '@/components/Custom/LogoutConfirmationModal';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button'
 import { useData } from '@/context/AppContext';
@@ -11,6 +12,7 @@ const Header = () => {
     const location = useLocation();
     const { setUserAuth, mobileMenuOpen, setMobileMenuOpen } = useData();
     const [isMobile, setIsMobile] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     useEffect(() => {
         const checkScreenSize = () => {
@@ -31,6 +33,13 @@ const Header = () => {
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </Button>
     );
+
+    const handleLogout = () => {
+        localStorage.removeItem("userToken")
+        setUserAuth(p => ({ ...p, user: null, token: null }))
+        toast.success("Logout successful")
+        nav("/login")
+    }
 
 
     return (
@@ -56,7 +65,6 @@ const Header = () => {
 
                 <div className="flex items-center gap-4">
 
-
                     {
                         isMobile &&
                         location.pathname === "/generated-agents" &&
@@ -70,26 +78,8 @@ const Header = () => {
                         </Button>
                     }
 
-
-                    {/* {location.pathname !== "/astro-reports" &&
-                        <Button variant="outline" className=" text-black border-white hover:bg-primary-red hover:text-white"
-                            onClick={() => {
-                                nav("/astro-reports")
-                            }}
-                        >
-                            <LayoutDashboard className="w-5 h-5" />
-                            {isMobile ? "" : "Dashboard"}
-                        </Button>
-                    } */}
-
-
                     <Button variant="outline" className="text-black border-white hover:bg-primary-red hover:text-white"
-                        onClick={() => {
-                            localStorage.removeItem("userToken")
-                            setUserAuth(p => ({ ...p, user: null, token: null }))
-                            toast.success("Logout successful")
-                            nav("/login")
-                        }}>
+                        onClick={() => setShowLogoutModal(true)}>
                         <LogOut className="w-5 h-5" />
                         {isMobile ? "" : "Logout"}
                     </Button>
@@ -99,6 +89,13 @@ const Header = () => {
                     }
                 </div>
             </div>
+
+
+            <LogoutConfirmationModal
+                open={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={handleLogout}
+            />
         </header >
     )
 }

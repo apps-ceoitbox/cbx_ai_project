@@ -21,6 +21,7 @@ const ai_model_1 = __importDefault(require("../models/ai.model"));
 const AI_1 = require("../utils/AI");
 const submission_model_1 = __importDefault(require("../models/submission.model"));
 const sendMail_1 = require("../utils/sendMail");
+const axios_1 = __importDefault(require("axios"));
 dotenv_1.default.config();
 class PromptController {
 }
@@ -48,10 +49,21 @@ PromptController.toggleVisibility = (0, asyncHandler_1.asyncHandler)((req, res) 
         .json({ message: "Prompt visibility toggled successfully", data: prompt });
 }));
 PromptController.getAllPrompts = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const prompts = yield prompt_model_1.default.find().sort({ createdAt: -1 });
-    res
-        .status(errorCodes_1.HttpStatusCodes.OK)
-        .json({ message: "Prompts fetched successfully", data: prompts });
+    if (req.user.access == "user") {
+        const url = `https://auth.ceoitbox.com/checkauth/AI_TEMPLATE_GENERATOR/${req.user.email}/AI_TEMPLATE_GENERATOR/NA/NA`;
+        const response = yield axios_1.default.get(url);
+        const data = response.data;
+        const prompts = yield prompt_model_1.default.find({ group: { $in: data.sheet_detail.groupNames || [] } }).sort({ createdAt: -1 });
+        res
+            .status(errorCodes_1.HttpStatusCodes.OK)
+            .json({ message: "Prompts fetched successfully", data: prompts });
+    }
+    else {
+        const prompts = yield prompt_model_1.default.find().sort({ createdAt: -1 });
+        res
+            .status(errorCodes_1.HttpStatusCodes.OK)
+            .json({ message: "Prompts fetched successfully", data: prompts });
+    }
 }));
 PromptController.getPromptById = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const prompt = yield prompt_model_1.default.findById(req.params.id);
@@ -102,6 +114,8 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         finalText += text;
         res.write(text);
     });
+    const estimatedTokensUsed = estimateTokens(genPrompt, finalText).totalTokens;
+    console.log("Estimated Tokens Used:", estimatedTokensUsed);
     const submission = yield submission_model_1.default.create({
         name: req.user.userName,
         email: req.user.email,
@@ -113,7 +127,8 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
         apiUsed: apiProvider.name,
         questionsAndAnswers: questions,
         generatedContent: finalText,
-        type: ((_c = req.body) === null || _c === void 0 ? void 0 : _c.type) || ""
+        type: ((_c = req.body) === null || _c === void 0 ? void 0 : _c.type) || "",
+        tokensUsed: estimatedTokensUsed,
     });
     const fullHTML = `
       <!DOCTYPE html>
@@ -236,19 +251,27 @@ function generatePrompt(userAnswers, promptData, user = {}, type = "") {
         `)
         .join("\n");
     const prompt = `
-  ${promptData.initialGreetingsMessage}
+  ${promptData === null || promptData === void 0 ? void 0 : promptData.initialGreetingsMessage}
 
-  User Name: ${user.userName}
-  User Email: ${user.email}
-  ${user.companyName ? `User Company: ${user.companyName}` : ""}
+  User & Company Information:
+
+    User Name: ${user === null || user === void 0 ? void 0 : user.userName}
+    User Email: ${user === null || user === void 0 ? void 0 : user.email}
+    ${(user === null || user === void 0 ? void 0 : user.companyName) ? `User Company: ${user === null || user === void 0 ? void 0 : user.companyName}` : ""}
+    companyWebsite: ${(user === null || user === void 0 ? void 0 : user.companyWebsite) || "N/A"}
+    businessDescription: ${(promptData === null || promptData === void 0 ? void 0 : promptData.businessDescription) || "N/A"}
+    targetCustomer: ${(promptData === null || promptData === void 0 ? void 0 : promptData.targetCustomer) || "N/A"}
+    businessType: ${(promptData === null || promptData === void 0 ? void 0 : promptData.businessType) || "N/A"}
+    uniqueSellingPoint: ${(promptData === null || promptData === void 0 ? void 0 : promptData.uniqueSellingPoint) || "N/A"}
   
-  Objective: ${promptData.objective}
+  
+  Objective: ${promptData === null || promptData === void 0 ? void 0 : promptData.objective}
   
   User Responses:
   ${formattedAnswers}
   
   Additional Knowledge Base:
-  ${promptData.knowledgeBase}
+  ${promptData === null || promptData === void 0 ? void 0 : promptData.knowledgeBase}
   
   Additional Details:
   ${tempPromptData}
@@ -286,79 +309,105 @@ function generatePrompt(userAnswers, promptData, user = {}, type = "") {
     // - If the chart is generated, make sure to give it scroll auto if it is too long.
     return prompt;
 }
-// function generatePrompt(userAnswers, promptData) {
-//   const formattedAnswers = Object.entries(userAnswers)
-//     .map(
-//       ([question, answer]) =>
-//         `<div style="margin-bottom: 10px;">
-//             <strong style="color: #c0392b; font-weight: bold;">${question}:</strong>
-//             <span style="color: #2c3e50;"> ${answer}</span>
-//           </div>`
-//     )
-//     .join("\n");
-//   const prompt = `
-//   ${promptData.initialGreetingsMessage}
-//   Objective: ${promptData.objective}
-//   <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">User Responses:</h3>
-//   <div style="margin-bottom: 20px;">
-//   ${formattedAnswers}
-//   </div>
-//   <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">Additional Knowledge Base:</h3>
-//   <div style="color: #2c3e50; margin-bottom: 20px; font-size: 16px; line-height: 1.6;">${promptData.knowledgeBase}</div>
-//   <h3 style="color: #c0392b; font-size: 20px; font-weight: 600; margin-bottom: 10px;">Additional Details:</h3>
-//   <div style="color: #2c3e50; margin-bottom: 20px; font-size: 16px; line-height: 1.6;">${promptData.promptTemplate}</div>
-//   Based on the information above, generate a clean and modern HTML layout using the following structure and rules:
-//   🔧 STRUCTURE:
-//   - Wrap everything inside:
-//   <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-size: 16px; line-height: 1.6;">
-//     ...content...
-//   </div>
-//   📌 SECTIONS TO INCLUDE:
-//   1. <h1 style="color: #c0392b; font-size: 28px; font-weight: bold; margin-bottom: 16px;">${promptData.heading}</h1>
-//   2. Use multiple <section style="margin-bottom: 30px;"> elements with:
-//      - <h2 style="color: #c0392b; font-size: 22px; font-weight: 600; margin-bottom: 12px;">Section Title</h2>
-//      - <p style="font-size: 16px; color: #2c3e50; margin-bottom: 12px;">Insight or supporting explanation</p>
-//      - <ul style="padding-left: 20px; margin-bottom: 16px;">
-//          <li style="margin-bottom: 6px;">Bullet item</li>
-//        </ul>
-//      - <ol style="padding-left: 20px; margin-bottom: 16px;">
-//          <li style="margin-bottom: 6px;">Ordered item</li>
-//        </ol>
-//      - <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-//          <thead>
-//            <tr>
-//              <th style="border: 1px solid #ddd; padding: 8px; background: #fef4f3; color: #c0392b;">Header</th>
-//            </tr>
-//          </thead>
-//          <tbody>
-//            <tr style="background-color: #f9f9f9;">
-//              <td style="border: 1px solid #ddd; padding: 8px;">Cell</td>
-//            </tr>
-//            <tr style="background-color: #fff;">
-//              <td style="border: 1px solid #ddd; padding: 8px;">Cell</td>
-//            </tr>
-//          </tbody>
-//        </table>
-//      - <div class="chart" style="border: 2px dashed #c0392b; padding: 20px; background: #fef4f3; border-radius: 6px; color: #c0392b; text-align: center; margin-bottom: 20px;">
-//          Chart Placeholder: [Title or Label]
-//        </div>
-//      - Charts should be generated using Svg.
-//   💡 STYLE RULES:
-//   - All text should use #2c3e50
-//   - Accent color is #c0392b (red)
-//   - Font: 'Segoe UI', sans-serif
-//   - Add spacing (20px+), clean font sizes, and soft box shadows
-//   - Table rows should alternate background colors (#f9f9f9, #fff)
-//   🚫 DO NOT include:
-//   - Markdown
-//   - JavaScript
-//   - External styles
-//   - Comments
-//   🎯 GOAL:
-//   - Final HTML should look clean, readable, modern, and styled with inline CSS only.
-//   - Include a graph/chart as a chart using Svg, where needed.
-//   - Make sure that the html you generate is long and detailed.
-//   - Content must begin with the <div> container as mentioned.
-//   `;
-//   return prompt;
+/**
+ * Estimates the number of tokens that will be used for AI API calls
+ * @param {string} prompt - The input prompt text
+ * @param {string} generatedContent - The generated/expected output content
+ * @param {Object} options - Configuration options
+ * @param {number} options.charsPerToken - Average characters per token (default: 4)
+ * @param {number} options.overhead - Additional tokens for API overhead (default: 10)
+ * @param {boolean} options.includeSystemTokens - Whether to include system message overhead (default: true)
+ * @returns {Object} Token usage breakdown
+ */
+function estimateTokens(prompt, generatedContent = '', options = {}) {
+    const { charsPerToken = 4, overhead = 10, includeSystemTokens = true } = options;
+    // Calculate input tokens (prompt)
+    const inputTokens = Math.ceil(prompt.length / charsPerToken);
+    // Calculate output tokens (generated content)
+    const outputTokens = Math.ceil(generatedContent.length / charsPerToken);
+    // System tokens (typical overhead for API calls)
+    const systemTokens = includeSystemTokens ? 20 : 0;
+    // Additional overhead for formatting, special tokens, etc.
+    const overheadTokens = overhead;
+    // Total tokens
+    const totalTokens = inputTokens + outputTokens + systemTokens + overheadTokens;
+    return {
+        inputTokens,
+        outputTokens,
+        systemTokens,
+        overheadTokens,
+        totalTokens,
+        breakdown: {
+            prompt: inputTokens,
+            generated: outputTokens,
+            system: systemTokens,
+            overhead: overheadTokens
+        }
+    };
+}
+/**
+ * More accurate token estimation using word-based calculation
+ * @param {string} prompt - The input prompt text
+ * @param {string} generatedContent - The generated/expected output content
+ * @param {Object} options - Configuration options
+ * @returns {Object} Token usage breakdown
+ */
+// function estimateTokensWordBased(prompt, generatedContent = '', options:any = {}) {
+//   const {
+//     wordsPerToken = 0.75,
+//     overhead = 10,
+//     includeSystemTokens = true
+//   } = options;
+//   // Count words (more accurate for English text)
+//   const countWords = (text) => {
+//     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+//   };
+//   const promptWords = countWords(prompt);
+//   const generatedWords = countWords(generatedContent);
+//   // Calculate tokens based on word count
+//   const inputTokens = Math.ceil(promptWords / wordsPerToken);
+//   const outputTokens = Math.ceil(generatedWords / wordsPerToken);
+//   // System and overhead tokens
+//   const systemTokens = includeSystemTokens ? 20 : 0;
+//   const overheadTokens = overhead;
+//   const totalTokens = inputTokens + outputTokens + systemTokens + overheadTokens;
+//   return {
+//     inputTokens,
+//     outputTokens,
+//     systemTokens,
+//     overheadTokens,
+//     totalTokens,
+//     breakdown: {
+//       prompt: inputTokens,
+//       generated: outputTokens,
+//       system: systemTokens,
+//       overhead: overheadTokens
+//     },
+//     wordCount: {
+//       prompt: promptWords,
+//       generated: generatedWords
+//     }
+//   };
+// }
+/**
+ * Estimate cost based on token usage
+ * @param {number} inputTokens - Number of input tokens
+ * @param {number} outputTokens - Number of output tokens
+ * @param {Object} pricing - Pricing configuration
+ * @returns {Object} Cost breakdown
+ */
+// function estimateCost(inputTokens, outputTokens, pricing:any = {}) {
+//   const {
+//     inputCostPer1000 = 0.01,  // Default: $0.01 per 1000 input tokens
+//     outputCostPer1000 = 0.03  // Default: $0.03 per 1000 output tokens
+//   } = pricing;
+//   const inputCost = (inputTokens / 1000) * inputCostPer1000;
+//   const outputCost = (outputTokens / 1000) * outputCostPer1000;
+//   const totalCost = inputCost + outputCost;
+//   return {
+//     inputCost: Number(inputCost.toFixed(6)),
+//     outputCost: Number(outputCost.toFixed(6)),
+//     totalCost: Number(totalCost.toFixed(6)),
+//     currency: 'USD'
+//   };
 // }
