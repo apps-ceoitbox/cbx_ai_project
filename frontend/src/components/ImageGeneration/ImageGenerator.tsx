@@ -20,18 +20,20 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAxios } from "@/context/AppContext";
+import { useAxios, useData } from "@/context/AppContext";
 import { toast } from "sonner";
 import Loader from "@/components/Custom/Loader.tsx";
 import { useNavigate } from "react-router-dom";
+import LogoutConfirmationModal from "../Custom/LogoutConfirmationModal";
 
 const ImageGenerator = () => {
   const axios = useAxios("user");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { setUserAuth, mobileMenuOpen, setMobileMenuOpen } = useData();
   const [isMobile, setIsMobile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [enhancing, setEnhancing] = useState(false);
   const [imageUrls, setImageUrls] = useState([]); // State for generated image URLs
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -107,7 +109,7 @@ const ImageGenerator = () => {
         console.error("Response headers:", err.response.headers);
         toast.error(
           err.response.data.message ||
-            "An error occurred from the server. Please try again."
+          "An error occurred from the server. Please try again."
         );
       } else if (err.request) {
         console.error("Request data:", err.request);
@@ -210,6 +212,13 @@ const ImageGenerator = () => {
 
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem("userToken")
+    setUserAuth(p => ({ ...p, user: null, token: null }))
+    toast.success("Logout successful")
+    navigate("/login")
+  }
+
   return (
     <div className="min-h-screen">
       {(loading || enhancing) && <Loader />}
@@ -229,12 +238,7 @@ const ImageGenerator = () => {
         <Button
           variant="outline"
           className="text-black border-white hover:bg-red-600 mr-4 hover:text-white"
-          onClick={() => {
-            console.log("Logout clicked");
-            // Add your logout logic here, e.g.:
-            // signOutUser(); // Call a logout function
-            // navigate("/login"); // Redirect to login page after logout
-          }}
+          onClick={() => setShowLogoutModal(true)}
         >
           <LogOut className="w-5 h-5" />
           {isMobile ? "" : "Logout"}
@@ -503,6 +507,12 @@ const ImageGenerator = () => {
           )}
         </div>
       </div>
+
+      <LogoutConfirmationModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 };

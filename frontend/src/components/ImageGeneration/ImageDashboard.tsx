@@ -394,20 +394,18 @@ const ImageDashboard = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <button
-                          className="text-blue-500 hover:text-blue-700 transition-colors"
-                          onClick={() =>
-                            openImageModal(submission.images, submission.prompt)
-                          }
-                        >
-                          <Eye className="w-5 h-5" />
-                        </button>
-                        <button
-                          className="text-red-500 hover:text-red-700 transition-colors"
+
+                        <Button onClick={() =>
+                          openImageModal(submission.images, submission.prompt)
+                        } className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View"
                           onClick={() => setSubmissionToDelete(submission)}
                         >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>

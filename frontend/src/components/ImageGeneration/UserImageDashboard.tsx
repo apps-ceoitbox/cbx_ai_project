@@ -6,6 +6,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
 import DynamicPagination from "@/components/dynamicPagination.tsx";
@@ -19,6 +20,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 interface ImageSubmission {
   _id: string;
@@ -37,6 +39,7 @@ interface ModalImageState {
 }
 
 const UserImageDashboard = () => {
+  const nav = useNavigate();
   const [modalImages, setModalImages] = useState<ModalImageState | null>(null); // State for the full-screen image modal
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -187,13 +190,24 @@ const UserImageDashboard = () => {
       <Toaster richColors position="top-right" />
       <div className="bg-white border-b border-gray-200">
         <div className="px-4 py-5 flex flex-col lg:flex-row justify-between gap-4 lg:items-center">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-red-500 mb-1">
-              Your Generated Images
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              View and manage the AI-generated images you've created.
-            </p>
+          <div className="flex items-center justify-between w-full">
+
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-red-500 mb-1">
+                Your Generated Images
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                View and manage the AI-generated images you've created.
+              </p>
+            </div>
+            <Button
+              onClick={() => nav(-1)}
+              style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+              className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+              variant="ghost">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
           </div>
         </div>
       </div>
@@ -278,25 +292,23 @@ const UserImageDashboard = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <button
-                          className="text-blue-500 hover:text-blue-700 transition-colors"
-                          onClick={
-                            () =>
-                              openImageModal(
-                                submission.images,
-                                submission.prompt,
-                                0
-                              ) // Open from first image by default
-                          }
-                        >
-                          <Eye className="w-5 h-5" />
-                        </button>
-                        <button
-                          className="text-red-500 hover:text-red-700 transition-colors"
+
+                        <Button onClick={
+                          () =>
+                            openImageModal(
+                              submission.images,
+                              submission.prompt,
+                              0
+                            ) // Open from first image by default
+                        } className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View"
                           onClick={() => setSubmissionToDelete(submission)}
                         >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
