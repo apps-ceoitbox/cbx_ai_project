@@ -15,13 +15,11 @@ const astro_routes_1 = __importDefault(require("./astro.routes"));
 const document_routes_1 = __importDefault(require("./document.routes"));
 const history_routes_1 = __importDefault(require("./history.routes"));
 const aiAgentSettings_routes_1 = __importDefault(require("./aiAgentSettings.routes"));
+const imageGeneration_routes_1 = __importDefault(require("./imageGeneration.routes"));
 const router = (0, express_1.Router)();
-// Routes that don't require authentication
-router.use("/auth", auth_routes_1.default); // Register and login routes
+router.use("/auth", auth_routes_1.default);
 router.use("/view", view_routes_1.default);
-// Middleware that checks for a valid token (authentication)
 router.use(authMiddleware_1.authenticateToken);
-// Routes that require authentication
 router.use("/users", user_routes_1.default);
 router.use("/aiSettings", aiSettings_routes_1.default);
 router.use("/prompt", prompt_routes_1.default);
@@ -30,4 +28,5 @@ router.use("/astro", astro_routes_1.default);
 router.use("/document", document_routes_1.default);
 router.use("/history", history_routes_1.default);
 router.use("/aiagentsettings", aiAgentSettings_routes_1.default);
+router.use("/generateImage", imageGeneration_routes_1.default);
 exports.default = router;
