@@ -74,7 +74,7 @@ DocumentController.processDocument = (0, asyncHandler_1.asyncHandler)((req, res)
         name: req.user.userName,
         result
     };
-    documentSubmission_model_1.default.create(submissionData);
+    // DocumentSubmission.create(submissionData);
     res.send(result);
 }));
 exports.default = DocumentController;

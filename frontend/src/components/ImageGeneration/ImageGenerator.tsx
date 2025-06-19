@@ -333,15 +333,15 @@ const ImageGenerator = () => {
                       <SelectValue placeholder="Select style" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="realistic">🎨 Realistic</SelectItem>
                       <SelectItem value="anime">🌸 Anime</SelectItem>
                       <SelectItem value="cartoon">🎭 Cartoon</SelectItem>
                       <SelectItem value="oil-painting">
                         🖼️ Oil Painting
                       </SelectItem>
-                      <SelectItem value="watercolor">💧 Watercolor</SelectItem>
-                      <SelectItem value="sketch">✏️ Sketch</SelectItem>
                       <SelectItem value="pixel-art">🎮 Pixel Art</SelectItem>
+                      <SelectItem value="realistic">🎨 Realistic</SelectItem>
+                      <SelectItem value="sketch">✏️ Sketch</SelectItem>
+                      <SelectItem value="watercolor">💧 Watercolor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -359,13 +359,13 @@ const ImageGenerator = () => {
                       <SelectValue placeholder="Select orientation" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="square">⬜ Square (1:1)</SelectItem>
-                      <SelectItem value="portrait">
-                        📱 Portrait (3:4)
-                      </SelectItem>
                       <SelectItem value="landscape">
                         🖥️ Landscape (4:3)
                       </SelectItem>
+                      <SelectItem value="portrait">
+                        📱 Portrait (3:4)
+                      </SelectItem>
+                      <SelectItem value="square">⬜ Square (1:1)</SelectItem>
                       <SelectItem value="wide">📺 Wide (16:9)</SelectItem>
                     </SelectContent>
                   </Select>

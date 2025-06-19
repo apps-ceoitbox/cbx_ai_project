@@ -197,6 +197,7 @@ function AppSidebarDrawer() {
                                             Document Reader
                                         </Button>
                                     </Link>
+                                    
                                     <Link to="/image-generation-dashboard" onClick={handleMenuItemClick}>
                                         <Button
                                             variant="ghost"
