@@ -296,24 +296,35 @@ export class AI {
                                 
                     Please extract or generate relevant content based on the user's intent. The final output must be structured and returned in valid **HTML** format. Avoid adding explanations or commentary outside the HTML.
                                 
-                    Use appropriate HTML elements like <h1>, <h2>, <p>, <ul>, <li>, etc., based on the content type. Preserve headings, lists, tables, and any structured data wherever applicable.
+                    Based on the information above, generate a clean and modern HTML layout using the following structure and rules:
+  
+                    🔧 STRUCTURE:
+                    - Wrap everything inside:
+                    <div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-size: 16px; line-height: 1.6;">
+                        ...content...
+                    </div>
                     
-                    STYLE RULES:
-                    - If using any tag like h1, or ul, ol, etc. give its style of h1 explicitly, as the global styles can interfere with the output
+                    💡 STYLE RULES:
                     - All text should use #2c3e50
                     - Accent color is #c0392b (red)
                     - Font: 'Segoe UI', sans-serif
                     - Add spacing (20px+), clean font sizes, and soft box shadows
                     - Table rows should alternate background colors (#f9f9f9, #fff)
-                    DO NOT include:
+                    - Any HTML tag used (like h1, p, table, etc.) must have its CSS explicitly defined inline, including font size, font weight, colors, padding, margins, etc. — do not rely on browser defaults.
+
+                    🚫 DO NOT include:
                     - Markdown
                     - JavaScript
                     - External styles
                     - Comments
-                    GOAL:
+                    
+                    🎯 GOAL:
                     - Final HTML should look clean, readable, modern, and styled with inline CSS only.
-                    - Content must begin with the <div>, and it should not have any margin or padding as mentioned.
-                
+                    - Include a graph/chart as a chart using Svg, where needed.
+                    - There charts should not have extra white space around them.
+                    - Make sure the charts should always take 100% width, not more than that.
+                    - Make sure that the html you generate is long and detailed.
+                    - Content must begin with the <div> container as mentioned.
                     `
 
 
@@ -380,12 +391,23 @@ export class AI {
                         text: newPrompt
                     }
                 ];
+
                 const response = await this.ai.messages.create({
                     model: this.apiProvider.model,
                     max_tokens: this.apiProvider.maxTokens,
-                    messages: [{ role: "user", content: contentParts }]
+                    messages: [{ role: "user", content: contentParts }],
+                    stream: true,
                 });
-                return this.parseResponse(response.content[0].text);
+                let finalText = "";
+                for await (const chunk of response) {
+                    console.dir(chunk.delta, { depth: 4 });
+                    const content = chunk.delta?.text;
+                    if (content) {
+                        // streamCallback(content);
+                        finalText += content;
+                    }
+                }
+                return this.parseResponse(finalText);
             }
         }
     }

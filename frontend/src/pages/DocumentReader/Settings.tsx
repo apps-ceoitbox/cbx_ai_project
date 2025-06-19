@@ -338,7 +338,7 @@ const Settings = () => {
                                     },
                                 })
                             }}>
-                                <SelectTrigger className="w-[250px]" disabled>
+                                <SelectTrigger className="w-[250px]">
                                     <SelectValue placeholder="Select an AI Provider" />
                                 </SelectTrigger>
                                 <SelectContent >

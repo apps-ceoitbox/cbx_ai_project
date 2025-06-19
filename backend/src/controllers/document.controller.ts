@@ -70,7 +70,7 @@ export default class DocumentController {
       name: req.user.userName,
       result
     }
-    DocumentSubmission.create(submissionData);
+    // DocumentSubmission.create(submissionData);
 
     res.send(result);
   })
