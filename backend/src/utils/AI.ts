@@ -571,9 +571,16 @@ export class AI {
                 const response = await this.ai.messages.create({
                     model: this.apiProvider.model,
                     max_tokens: this.apiProvider.maxTokens,
-                    messages: [{ role: "user", content: contentParts }]
+                    messages: [{ role: "user", content: contentParts }],
+                    stream: true
                 });
-                return this.parseResponse(response.content[0].text);
+                let finalText = "";
+                for await (const message of response) {
+                    if (message.type === "content_block_delta") {
+                        finalText += message.delta.text;
+                    }
+                }
+                return this.parseResponse(finalText);
             }
         }
     }
@@ -678,9 +685,16 @@ export class AI {
                 const response = await this.ai.messages.create({
                     model: this.apiProvider.model,
                     max_tokens: this.apiProvider.maxTokens,
-                    messages: [{ role: "user", content: contentParts }]
+                    messages: [{ role: "user", content: contentParts }],
+                    stream: true
                 });
-                return this.parseResponse(response.content[0].text);
+                let finalText = "";
+                for await (const message of response) {
+                    if (message.type === "content_block_delta") {
+                        finalText += message.delta.text;
+                    }
+                }
+                return this.parseResponse(finalText);
             }
         }
     }
