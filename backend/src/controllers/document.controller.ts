@@ -37,7 +37,7 @@ export default class DocumentController {
   });
 
   static getDocumentUserSubmission = asyncHandler(async (req, res) => {
-    const data = await DocumentSubmission.find({ email: req.user.email });
+    const data = await DocumentSubmission.find({ email: req.user.email }).sort({createdAt:-1});
     res.send({ message: "Document Submission fetched successfully", data: data });
   });
 
@@ -74,6 +74,40 @@ export default class DocumentController {
 
     res.send(result);
   })
+  static processDocumentWithContext = asyncHandler(async (req, res) => {
+    const files: any[] = req.body.files;
+    const processingOption: string = req.body.processingOption;
+    const documentType: string = req.body.documentType;
+    const goal: string = req.body.goal;
+    const context: { role: 'user' | 'system', content: string }[] = req.body.context || [];
+    const documentSettings = await DocumentSettings.findOne({ name: "Document" });
+    const apiProvider = await AiSettings.findOne({ name: documentSettings?.aiProvider.name });
+
+    const ai = new AI({
+      name: apiProvider?.name as ApiProvider["name"],
+      model: documentSettings?.aiProvider?.model,
+      apiKey: apiProvider?.apiKey,
+      temperature: apiProvider?.temperature,
+      maxTokens: apiProvider?.maxTokens,
+    });
+    const result = await ai.processDocument(files, processingOption, documentType, goal, documentSettings.promptContent);
+
+    const submissionData = {
+      processingOption,
+      files: files.map(file => file.type),
+      documentType,
+      goal,
+      promptContent: documentSettings?.promptContent,
+      aiProvider: documentSettings?.aiProvider.name,
+      model: documentSettings?.aiProvider?.model,
+      email: req.user.email,
+      name: req.user.userName,
+      result,
+      results: context
+    }
+    let entry = await DocumentSubmission.create(submissionData);
+
+    res.send({result, entry});
+  })
 
 }
-

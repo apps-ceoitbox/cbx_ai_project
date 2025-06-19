@@ -22,6 +22,10 @@ function fileToBase64(file: File): Promise<string> {
     });
 }
 
+interface ChatMessage {
+    role: 'system' | 'user';
+    content: string;
+}
 
 const DocumentReader = () => {
     const axios = useAxios("user")
@@ -33,6 +37,8 @@ const DocumentReader = () => {
     const [progress, setProgress] = useState(0);
     const [results, setResults] = useState<any>(null);
     const [error, setError] = useState<string | undefined>();
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [currentQuery, setCurrentQuery] = useState("");
 
     const handleFilesSelected = (selectedFiles: File[]) => {
         setFiles(selectedFiles);
@@ -66,7 +72,6 @@ const DocumentReader = () => {
         try {
             setStatus("processing");
             setProgress(0);
-            // setError(undefined);
 
             let tempFiles: any[] = files.map((file) => fileToBase64(file));
             tempFiles = await Promise.all(tempFiles);
@@ -81,7 +86,8 @@ const DocumentReader = () => {
                 files: tempFiles,
                 processingOption: processingOption,
                 documentType: documentType,
-                goal: goal
+                goal: goal,
+                context: chatMessages
             }
             
             let progressValue = 0;
@@ -92,24 +98,13 @@ const DocumentReader = () => {
                     clearInterval(intervalID);
                 }
             }, 500)
-            const response = await axios.post("/document/process", temp);
+            const response = await axios.post("/document/process-with-context", temp);
             setResults({
                 processingOption,
-                result: response.data
+                result: response.data.result,
+                entry: response.data.entry
             })
 
-            console.log(response);
-            // const result = await processDocument(
-            //     files,
-            //     processingOption,
-            //     documentType,
-            //     goal,
-            //     (progressValue) => {
-            //         setProgress(progressValue);
-            //     }
-            // );
-
-            // setResults(result);
             setStatus("complete");
             toast.success("Document processed successfully");
         } catch (err) {
@@ -131,6 +126,48 @@ const DocumentReader = () => {
     };
 
     const isReadyToProcess = files.length > 0 && processingOption !== null;
+
+    const handleSendQuery = async () => {
+        if (!currentQuery.trim()) return;
+
+        const newUserMessage: ChatMessage = {
+            role: 'user',
+            content: currentQuery
+        };
+
+        // Keep only the last 4 messages plus the new one (total 5)
+        const updatedMessages = [...chatMessages, newUserMessage].slice(-4);
+        setChatMessages(updatedMessages);
+        setCurrentQuery("");
+
+        try {
+            const response = await axios.post("/document/process-with-context", {
+                files: [], // No new files needed for chat
+                processingOption: "chat",
+                documentType: "chat",
+                goal: "chat",
+                context: updatedMessages,
+                documentResults: results
+            });
+
+            const systemMessage: ChatMessage = {
+                role: 'system',
+                content: response.data.result
+            };
+
+            // Update messages with the new system response
+            setChatMessages(prev => [...prev, systemMessage].slice(-5));
+            
+            // Update the results with the new entry
+            setResults(prev => ({
+                ...prev,
+                entry: response.data.entry
+            }));
+        } catch (err) {
+            toast.error("Failed to get response from AI");
+            console.error("Error in chat:", err);
+        }
+    };
 
     return (
         <div>
@@ -233,10 +270,50 @@ const DocumentReader = () => {
                         )}
                     </>
                 ) : (
-                    <ResultsDisplay
-                        results={results}
-                        onReset={handleReset}
-                    />
+                    <>
+                        <ResultsDisplay
+                            results={results}
+                            onReset={handleReset}
+                        />
+                        <div className="mt-8 border rounded-lg p-4">
+                            <div className="h-[400px] overflow-y-auto mb-4 space-y-4">
+                                {chatMessages.map((message, index) => (
+                                    <div
+                                        key={index}
+                                        className={`p-3 rounded-lg ${
+                                            message.role === 'user' 
+                                                ? 'bg-blue-100 ml-auto' 
+                                                : 'bg-gray-100'
+                                        } max-w-[80%]`}
+                                    >
+                                        <p className="text-sm font-medium mb-1">
+                                            {message.role === 'user' ? 'You' : 'AI Assistant'}
+                                        </p>
+                                        <p>{message.content}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    value={currentQuery}
+                                    onChange={(e) => setCurrentQuery(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSendQuery()}
+                                    placeholder="Ask a question about the document..."
+                                    className="flex-1 p-2 border rounded"
+                                />
+                                <Button
+                                    onClick={handleSendQuery}
+                                    className="bg-appRed hover:bg-appRed/90 text-white"
+                                    disabled={!currentQuery.trim()}
+                                >
+                                    Send
+                                </Button>
+                            </div>
+                            <p className="text-sm text-gray-500 mt-2">
+                                Chat context is limited to the last 5 messages
+                            </p>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
