@@ -6,6 +6,7 @@ const router = Router();
 router.get("/", DocumentController.getSettings);
 router.post("/", DocumentController.saveSettings);
 router.post("/process", DocumentController.processDocument);
+router.post("/process-with-context", DocumentController.processDocumentWithContext);
 router.get("/submissions", DocumentController.getDocumentSubmission);
 router.get("/user-submissions", DocumentController.getDocumentUserSubmission);
 
