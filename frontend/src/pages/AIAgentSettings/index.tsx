@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Settings, AlertCircle, Save, Sparkles, Search, FileText, Eye, EyeOff } from "lucide-react";
-// import { Input } from "@/components/ui/input";
+import { Settings, AlertCircle, Save, Sparkles, Search, FileText, Eye, EyeOff, BarChart3 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -54,7 +53,15 @@ const agentCategories: AgentCategory[] = [
     color: "bg-red-600",
     description: "Analyzes and ranks candidate resumes against job requirements"
   },
-  // {
+  {
+    id: "ReportAgent",
+    title: "Report Agent AI",
+    icon: <BarChart3 />,
+    gradient: "bg-gradient-to-br from-red-700 to-blue-900",
+    color: "bg-red-600",
+    description: "Upload CSV or PDF or Google Sheet link to get analysis."
+  },
+  // {  
   //   id: "mail",
   //   title: "AI Mail Sender",
   //   icon: "✉️",
@@ -671,6 +678,263 @@ const ResumeAnalyzerSettings = () => {
   );
 };
 
+// Report Agent AI Settings Component
+const ReportAgentSettings = () => {
+  const axios = useAxios("admin");
+  const [apiProviders, setApiProviders] = useState([]);
+  const [selectedProviderId, setSelectedProviderId] = useState<string>("");
+  const [promptContent, setPromptContent] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    const saved = localStorage.getItem('ai-api-model');
+    return saved || "claude-sonnet-4";
+  });
+
+  // Default prompt content to use if none is saved
+  const defaultPromptContent = `Analyze the following financial data and create a comprehensive report with visualizations:
+
+{fileContent}
+
+Analysis Requirements (REQUIRED):
+- Provide detailed written analysis of:
+  1. Overall financial health and key observations
+  2. Spending patterns and anomalies
+  3. Income trends and projections
+  4. Recommendations based on the data
+  5. Areas of concern or opportunity
+
+Display Requirements:
+- IMPORTANT: All charts and visualizations MUST be created using inline SVG format only
+- SVG charts must include proper viewBox, width, and height attributes
+- Use vector-based elements (path, rect, circle, etc.) for all chart components
+- Include tooltips in SVG elements using title tags for better interactivity
+- Ensure SVG charts have clear labels, legends, and axes when applicable
+- Style all HTML and SVG elements using inline CSS
+- Ensure responsive and scrollable layout
+- Include a detailed executive summary section
+- Organize content in logical sections
+
+Reference Rules (if applicable):
+- Indian Financial Year: April to March
+- GST: 18% (CGST 9% + SGST 9%)
+- Currency: Indian Rupees (₹) formatted with commas (e.g., ₹1,00,000)
+
+HTML Structure:
+Start with:
+<div style="background-color: #fff; padding: 24px; color: #2c3e50; font-family: 'Segoe UI', sans-serif; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-size: 16px; line-height: 1.6;">
+  ...content and charts...
+</div>
+
+Style Rules:
+- Text color: #2c3e50
+- Accent color: #c0392b
+- Font: 'Segoe UI', sans-serif
+- Charts must be 100% width with overflow-x: auto if needed
+- Use a consistent color palette across all visualizations
+
+🚫 Do Not:
+- Use JavaScript, markdown, or external stylesheets
+- Use canvas, img tags, or any non-SVG visualization methods
+- Include comments or skip over any part of the data
+- Truncate the report - ensure it is complete
+- MOST IMPORTANTLY: DO NOT recreate tables that already exist in the data
+
+✅ Goal:
+Generate a complete, styled, printable HTML report focused on visualizations, insights, and analysis that provides actionable intelligence based on the uploaded data. The report should be comprehensive, detailed, and visually appealing.`;
+
+  // Initialize promptContent with default if empty
+  useEffect(() => {
+    if (!promptContent) {
+      setPromptContent(defaultPromptContent);
+    }
+  }, []);
+
+
+
+  const saveSettings = async () => {
+    if (!selectedProviderId || !selectedModel) {
+      toast.error("Please select a provider and model");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const provider = apiProviders?.find((p) => p._id === selectedProviderId);
+
+      if (!provider) {
+        toast.error("Selected provider not found");
+        setIsSaving(false);
+        return;
+      }
+
+      const payload = {
+        name: "ReportAgent",
+        aiProvider: {
+          name: provider.name,
+          model: selectedModel,
+        },
+        apikey: provider.apiKey,
+        promptContent: promptContent,
+      };
+
+      // Save to backend
+      await axios.post("/aiagentsettings/addAiCredentials", payload);
+
+      // Also save to localStorage for backward compatibility
+      localStorage.setItem('ai-api-model', selectedModel);
+      localStorage.setItem('ai-api-key', provider.apiKey);
+
+      toast.success("Report Agent AI settings saved successfully");
+    } catch (error: any) {
+      console.error("Save error:", error);
+      toast.error(error?.response?.data?.message || "Failed to save settings");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    axios.get("/aiSettings").then(res => {
+      setApiProviders(res?.data?.data.filter(item => {
+        return item.apiKey && item.models.length > 0
+      }))
+    })
+  }, [])
+
+  useEffect(() => {
+    if (apiProviders.length === 0) return;
+
+    axios.get("/aiagentsettings").then((res) => {
+      const settings = res?.data?.data;
+
+      if (!Array.isArray(settings)) return;
+
+      const reportAgentSetting = settings?.find(item => item.name === "ReportAgent");
+
+      if (!reportAgentSetting) return;
+
+      setSelectedModel(reportAgentSetting.aiProvider?.model || "claude-sonnet-4");
+
+      // Set prompt content if it exists in the settings
+      if (reportAgentSetting.promptContent) {
+        setPromptContent(reportAgentSetting.promptContent);
+      } else {
+        setPromptContent(defaultPromptContent);
+      }
+
+      const provider = apiProviders?.find(
+        (p) => p.name === reportAgentSetting.aiProvider?.name
+      );
+
+      if (provider?._id) {
+        setSelectedProviderId(provider._id);
+      }
+    });
+  }, [apiProviders]);
+
+  const selectedProvider = apiProviders?.find((p) => p._id === selectedProviderId);
+
+  const resetToDefault = () => {
+    setPromptContent(defaultPromptContent);
+    toast.success("Prompt reset to default");
+  };
+
+  return (
+    <div className="ml-12 mt-2 space-y-6">
+      <div className="flex items-center gap-8">
+        <div className="min-w-[40%]">
+          <Select
+            value={selectedProviderId}
+            onValueChange={(value) => {
+              setSelectedProviderId(value);
+              // Default to Claude Sonnet 4 if available, otherwise use first model
+              const provider = apiProviders?.find((p) => p._id === value);
+              const defaultModel = provider?.models.includes("claude-sonnet-4")
+                ? "claude-sonnet-4"
+                : provider?.models[0] || "";
+              setSelectedModel(defaultModel);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select AI Provider" />
+            </SelectTrigger>
+            <SelectContent>
+              {apiProviders.map((provider) => (
+                <SelectItem key={provider._id} value={provider._id}>
+                  {provider.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Model Select */}
+        <div className="min-w-[40%]">
+          <Select
+            value={selectedModel}
+            onValueChange={(value) => setSelectedModel(value)}
+            disabled={!selectedProvider}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select AI Model" />
+            </SelectTrigger>
+            <SelectContent>
+              {selectedProvider?.models.map((model) => (
+                <SelectItem key={model} value={model}>
+                  {model === "claude-sonnet-4" ? "Claude 4 Sonnet" :
+                    model === "claude-opus-4" ? "Claude 4 Opus" : model}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* System Prompt Configuration */}
+      <div className="bg-white border border-red-100 rounded-lg p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="font-semibold text-lg text-gray-900">System Prompt</h4>
+          <Button
+            variant="outline"
+            onClick={resetToDefault}
+            className="text-red-600 border-red-200 hover:bg-red-50"
+          >
+            Reset to Default
+          </Button>
+        </div>
+        <textarea
+          value={promptContent}
+          onChange={(e) => setPromptContent(e.target.value)}
+          className="w-full h-64 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+          placeholder="Enter system prompt for Report Agent AI"
+        />
+        <p className="text-sm text-gray-500 mt-2">
+          This prompt will be used to guide the AI in generating financial reports. Customize it to match your specific requirements.
+        </p>
+      </div>
+
+      <div className="bg-red-50 p-4 rounded-lg border border-red-100 mb-4">
+        <p className="text-sm text-red-700">
+          <strong>Note:</strong> The Report Agent AI uses Claude models to generate detailed financial reports with visualizations.
+          Select a provider with Claude models for best results.
+        </p>
+      </div>
+
+      <div className="ml-0">
+        <Button
+          onClick={saveSettings}
+          className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+          disabled={isSaving}
+        >
+          <Save size={16} />
+          {isSaving ? "Saving..." : "Save Report Agent Settings"}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // AI Mail Sender Settings Component
 // const AIMailSenderSettings = () => {
 //   // Initialize webhook URL from localStorage if available
@@ -809,7 +1073,7 @@ const AIAgentSettingsPage = () => {
                 <AccordionItem key={agent.id} value={agent.id}>
                   <AccordionTrigger className="hover:bg-gray-50 px-4 rounded-md hover:no-underline">
                     <div className="flex items-center gap-3">
-                      {matchingPrompt && (
+                      {matchingPrompt ? (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -823,6 +1087,17 @@ const AIAgentSettingsPage = () => {
                           ) : (
                             <EyeOff className="text-gray-500" />
                           )}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toast.info("Database entry not found. Please run the script to add this agent to the database.");
+                          }}
+                        >
+                          <EyeOff className="text-gray-500" />
                         </Button>
                       )}
 
@@ -846,6 +1121,8 @@ const AIAgentSettingsPage = () => {
                       <CompanyProfileSettings />
                     ) : agent.id === "ResumeAnalyzer" ? (
                       <ResumeAnalyzerSettings />
+                    ) : agent.id === "ReportAgent" ? (
+                      <ReportAgentSettings />
                     ) : (
                       <div className="ml-12 mt-2 bg-red-50 border border-red-100 rounded-lg p-6">
                         <div className="flex items-start gap-3">

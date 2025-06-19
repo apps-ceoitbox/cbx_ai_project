@@ -10,16 +10,14 @@ import astroRoutes from "./astro.routes";
 import documentRoutes from "./document.routes";
 import historyRoutes from "./history.routes";
 import aiAgentRoutes from "./aiAgentSettings.routes";
+import imageGenerationRoutes from "./imageGeneration.routes";
 
 const router = Router();
 
-// Routes that don't require authentication
-router.use("/auth", authRoutes); // Register and login routes
+router.use("/auth", authRoutes);
 router.use("/view", viewRoutes);
-// Middleware that checks for a valid token (authentication)
 router.use(authenticateToken);
 
-// Routes that require authentication
 
 router.use("/users", userRoutes);
 router.use("/aiSettings", aiSettingsRoutes);
@@ -29,5 +27,6 @@ router.use("/astro", astroRoutes);
 router.use("/document", documentRoutes);
 router.use("/history", historyRoutes);
 router.use("/aiagentsettings", aiAgentRoutes);
+router.use("/generateImage", imageGenerationRoutes);
 
 export default router;

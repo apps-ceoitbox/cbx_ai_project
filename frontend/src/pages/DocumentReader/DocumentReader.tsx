@@ -8,7 +8,7 @@ import { ProcessingStatus } from "@/components/DocumentReader/ProcessingStatus";
 import { ProcessingOptions, ProcessingOptionType } from "@/components/DocumentReader/ProcessingOptions";
 // import { processDocument } from "../services/documentProcessingService";
 import Header from "./Header";
-import { useAxios } from "@/context/AppContext";
+import { useAxios, useData } from "@/context/AppContext";
 
 function fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -23,12 +23,14 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 interface ChatMessage {
-    role: 'system' | 'user';
+    role: 'system' | 'user' | 'assistant';
     content: string;
+    timestamp: number;
 }
 
 const DocumentReader = () => {
-    const axios = useAxios("user")
+    const axios = useAxios("user");
+    const { userAuth } = useData();
     const [files, setFiles] = useState<File[]>([]);
     const [processingOption, setProcessingOption] = useState<ProcessingOptionType>(null);
     const [documentType, setDocumentType] = useState("");
@@ -39,6 +41,8 @@ const DocumentReader = () => {
     const [error, setError] = useState<string | undefined>();
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [currentQuery, setCurrentQuery] = useState("");
+    const [chatStarted, setChatStarted] = useState(false);
+    const [showChatInput, setShowChatInput] = useState(false);
 
     const handleFilesSelected = (selectedFiles: File[]) => {
         setFiles(selectedFiles);
@@ -56,6 +60,7 @@ const DocumentReader = () => {
         setProgress(0);
         setResults(null);
         setError(undefined);
+        setChatMessages([]);
     };
 
     const handleProcessDocument = async () => {
@@ -87,26 +92,48 @@ const DocumentReader = () => {
                 processingOption: processingOption,
                 documentType: documentType,
                 goal: goal,
-                context: chatMessages
+                context: []
             }
-            
-            let progressValue = 0;
-            let intervalID = setInterval(() => {
-                progressValue += 10;
-                setProgress(progressValue);
-                if (progressValue >= 100) {
-                    clearInterval(intervalID);
-                }
-            }, 500)
-            const response = await axios.post("/document/process-with-context", temp);
-            setResults({
-                processingOption,
-                result: response.data.result,
-                entry: response.data.entry
-            })
+
+            // Add initial empty message before starting the stream
+            setChatMessages([{
+                role: 'assistant',
+                content: "",
+                timestamp: Date.now()
+            }]);
+            setShowChatInput(false);
+
+            const res = await fetch(`${axios.defaults.baseURL}/document/process-with-context`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userAuth?.token}`
+                },
+                body: JSON.stringify(temp)
+            });
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let streamedContent = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                streamedContent += chunk;
+                
+                // Update the message with the streamed content
+                setChatMessages([{
+                    role: 'assistant',
+                    content: streamedContent,
+                    timestamp: Date.now()
+                }]);
+            }
 
             setStatus("complete");
             toast.success("Document processed successfully");
+            setShowChatInput(false);
         } catch (err) {
             console.error("Error processing document:", err);
             setStatus("error");
@@ -118,6 +145,7 @@ const DocumentReader = () => {
     const handleReset = () => {
         setFiles([]);
         resetStates();
+        setShowChatInput(false);
     };
 
     const handleCancel = () => {
@@ -127,42 +155,85 @@ const DocumentReader = () => {
 
     const isReadyToProcess = files.length > 0 && processingOption !== null;
 
+    const handleStartChat = () => {
+        if (results && results.result) {
+            setChatMessages([{ role: 'assistant', content: results.result, timestamp: Date.now() }]);
+            setChatStarted(true);
+            setShowChatInput(false);
+        }
+    };
+
     const handleSendQuery = async () => {
         if (!currentQuery.trim()) return;
 
         const newUserMessage: ChatMessage = {
             role: 'user',
-            content: currentQuery
+            content: currentQuery,
+            timestamp: Date.now()
         };
 
-        // Keep only the last 4 messages plus the new one (total 5)
-        const updatedMessages = [...chatMessages, newUserMessage].slice(-4);
-        setChatMessages(updatedMessages);
+        // Add user message to chat
+        setChatMessages(prev => [...prev, newUserMessage]);
         setCurrentQuery("");
+        setShowChatInput(true);
 
         try {
-            const response = await axios.post("/document/process-with-context", {
-                files: [], // No new files needed for chat
-                processingOption: "chat",
-                documentType: "chat",
-                goal: "chat",
-                context: updatedMessages,
-                documentResults: results
+            // Format context as [{ role: 'user'|'system', response: string }]
+            const messageContext = chatMessages.map(msg => ({
+                role: msg.role,
+                content: msg.content
+            }));
+
+            // Add the new user message to context
+            messageContext.push({
+                role: 'user',
+                content: currentQuery
             });
 
-            const systemMessage: ChatMessage = {
-                role: 'system',
-                content: response.data.result
-            };
+            const res = await fetch(`${axios.defaults.baseURL}/document/process-with-context`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userAuth?.token}`
+                },
+                body: JSON.stringify({
+                    files: [], // No new files needed for chat
+                    processingOption: "chat",
+                    documentType: "chat",
+                    goal: "chat",
+                    context: messageContext
+                })
+            });
 
-            // Update messages with the new system response
-            setChatMessages(prev => [...prev, systemMessage].slice(-5));
-            
-            // Update the results with the new entry
-            setResults(prev => ({
-                ...prev,
-                entry: response.data.entry
-            }));
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let streamedContent = "";
+
+            // Add initial empty AI message
+            setChatMessages(prev => [...prev, {
+                role: 'assistant',
+                content: "",
+                timestamp: Date.now()
+            }]);
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                streamedContent += chunk;
+                
+                // Update the last message with the streamed content
+                setChatMessages(prev => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = {
+                        role: 'assistant',
+                        content: streamedContent,
+                        timestamp: newMessages[newMessages.length - 1].timestamp
+                    };
+                    return newMessages;
+                });
+            }
         } catch (err) {
             toast.error("Failed to get response from AI");
             console.error("Error in chat:", err);
@@ -173,8 +244,6 @@ const DocumentReader = () => {
         <div>
             <Header />
             <div className="max-w-5xl mx-auto min-h-screen p-5">
-
-
                 <header className="mb-8">
                     <h1 className="text-3xl font-bold text-primary-red mb-2">Smart Document Reader</h1>
                     <p className="text-appGray-700">
@@ -182,7 +251,85 @@ const DocumentReader = () => {
                     </p>
                 </header>
 
-                {status !== "complete" ? (
+                {status === "complete" ? (
+                    <div className="space-y-8">
+                        <div className="flex justify-end">
+                            <Button
+                                variant="default"
+                                onClick={handleReset}
+                                className="bg-appRed hover:bg-appRed/90 text-white"
+                            >
+                                Analyze Another Document
+                            </Button>
+                        </div>
+
+                        <div className="space-y-6">
+                            {chatMessages.map((message, index) => (
+                                <div 
+                                    key={message.timestamp} 
+                                    className={`w-full ${message.role === 'user' ? 'flex justify-end' : ''}`}
+                                >
+                                    {message.role === 'user' ? (
+                                        <div className="max-w-[80%] bg-appRed/10 rounded-lg p-4">
+                                            <p className="text-sm font-medium mb-1 text-appRed">You</p>
+                                            <p>{message.content}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="max-w-[90%]">
+                                            <ResultsDisplay
+                                                results={{
+                                                    processingOption: processingOption,
+                                                    result: message.content
+                                                }}
+                                                onReset={handleReset}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Show Continue button after first AI response, then show chat input after clicking Continue */}
+                        {!showChatInput ? (
+                            <div className="sticky bottom-0 bg-white p-4 border-t flex justify-center">
+                                <Button
+                                    onClick={() => setShowChatInput(true)}
+                                    className="bg-appRed hover:bg-appRed/90 text-white"
+                                >
+                                    Continue
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="sticky bottom-0 bg-white p-4 border-t">
+                                <div className="flex flex-col gap-2 max-w-5xl mx-auto">
+                                    <div className="flex gap-2">
+                                        <input
+                                            value={currentQuery}
+                                            onChange={(e) => setCurrentQuery(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && handleSendQuery()}
+                                            placeholder="Ask a follow-up question... (last 5 chats are used as context)"
+                                            className="flex-1 p-2 border rounded"
+                                            disabled={chatMessages.filter(m => m.role === 'user').length >= 5}
+                                        />
+                                        <Button
+                                            onClick={handleSendQuery}
+                                            className="bg-appRed hover:bg-appRed/90 text-white"
+                                            disabled={!currentQuery.trim() || chatMessages.filter(m => m.role === 'user').length >= 5}
+                                        >
+                                            Send
+                                        </Button>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Only the last 5 messages are used as context. You can ask up to 5 follow-up questions.
+                                    </p>
+                                    {chatMessages.filter(m => m.role === 'user').length >= 5 && (
+                                        <p className="text-xs text-appRed mt-1">You have reached the maximum of 5 follow-up questions.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ) : (
                     <>
                         <section className="mb-8">
                             <h2 className="text-xl font-semibold text-appBlack mb-4">1. Upload Your Documents</h2>
@@ -199,8 +346,6 @@ const DocumentReader = () => {
                                     ".md",
                                     "application/pdf",
                                     "text/plain",
-
-                                    // Image extensions
                                     ".jpg",
                                     ".jpeg",
                                     ".png",
@@ -208,16 +353,13 @@ const DocumentReader = () => {
                                     ".bmp",
                                     ".webp",
                                     ".svg",
-
-                                    // Image MIME types
                                     "image/jpeg",
                                     "image/png",
                                     "image/gif",
                                     "image/bmp",
                                     "image/webp",
                                     "image/svg+xml"
-                                ]
-                                }
+                                ]}
                             />
                         </section>
 
@@ -250,13 +392,30 @@ const DocumentReader = () => {
                             </section>
                         )}
 
-                        <ProcessingStatus
-                            status={status}
-                            progress={progress}
-                            processingOption={processingOption}
-                            onCancel={handleCancel}
-                            error={error}
-                        />
+                        {status === "processing" && chatMessages.length > 0 && (
+                            <div className="mb-8">
+                                <h2 className="text-xl font-semibold text-appBlack mb-4">Processing Results:</h2>
+                                <div className="space-y-6">
+                                    {chatMessages.map((message, index) => (
+                                        <div key={message.timestamp} className="max-w-[90%]">
+                                            <ResultsDisplay
+                                                results={{
+                                                    processingOption: processingOption,
+                                                    result: message.content
+                                                }}
+                                                onReset={handleReset}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="text-red-500 mb-4">
+                                {error}
+                            </div>
+                        )}
 
                         {isReadyToProcess && status !== "processing" && (
                             <div className="mt-6 flex justify-end">
@@ -268,51 +427,6 @@ const DocumentReader = () => {
                                 </Button>
                             </div>
                         )}
-                    </>
-                ) : (
-                    <>
-                        <ResultsDisplay
-                            results={results}
-                            onReset={handleReset}
-                        />
-                        <div className="mt-8 border rounded-lg p-4">
-                            <div className="h-[400px] overflow-y-auto mb-4 space-y-4">
-                                {chatMessages.map((message, index) => (
-                                    <div
-                                        key={index}
-                                        className={`p-3 rounded-lg ${
-                                            message.role === 'user' 
-                                                ? 'bg-blue-100 ml-auto' 
-                                                : 'bg-gray-100'
-                                        } max-w-[80%]`}
-                                    >
-                                        <p className="text-sm font-medium mb-1">
-                                            {message.role === 'user' ? 'You' : 'AI Assistant'}
-                                        </p>
-                                        <p>{message.content}</p>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex gap-2">
-                                <input
-                                    value={currentQuery}
-                                    onChange={(e) => setCurrentQuery(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSendQuery()}
-                                    placeholder="Ask a question about the document..."
-                                    className="flex-1 p-2 border rounded"
-                                />
-                                <Button
-                                    onClick={handleSendQuery}
-                                    className="bg-appRed hover:bg-appRed/90 text-white"
-                                    disabled={!currentQuery.trim()}
-                                >
-                                    Send
-                                </Button>
-                            </div>
-                            <p className="text-sm text-gray-500 mt-2">
-                                Chat context is limited to the last 5 messages
-                            </p>
-                        </div>
                     </>
                 )}
             </div>

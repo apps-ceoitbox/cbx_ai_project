@@ -1,5 +1,6 @@
 import express from "express";
 import HistoryController from "../controllers/history.controller";
+import ReportHistoryController from "../controllers/report-history.controller";
 
 const router = express.Router();
 
@@ -42,5 +43,15 @@ router.delete(
   HistoryController.deleteCompanyProfileHistoryItem
 );
 router.delete("/company-profile", HistoryController.clearCompanyProfileHistory);
+
+// Report History routes
+router.get("/report", ReportHistoryController.getReportHistory);
+router.get("/report/:id", ReportHistoryController.getReportHistoryItem);
+router.post("/report", ReportHistoryController.saveReportHistory);
+router.delete("/report/:id", ReportHistoryController.deleteReportHistoryItem);
+router.delete("/report", ReportHistoryController.clearReportHistory);
+
+// Admin Report History routes
+router.get("/admin/report", ReportHistoryController.getAllReportHistory);
 
 export default router;

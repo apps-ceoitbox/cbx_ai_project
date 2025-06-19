@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const history_controller_1 = __importDefault(require("../controllers/history.controller"));
+const report_history_controller_1 = __importDefault(require("../controllers/report-history.controller"));
 const router = express_1.default.Router();
 // Mail Sender history routes
 router.get("/mail-sender", history_controller_1.default.getMailSenderHistory);
@@ -28,4 +29,12 @@ router.get("/company-profile/:id", history_controller_1.default.getCompanyProfil
 router.post("/company-profile", history_controller_1.default.saveCompanyProfileHistory);
 router.delete("/company-profile/:id", history_controller_1.default.deleteCompanyProfileHistoryItem);
 router.delete("/company-profile", history_controller_1.default.clearCompanyProfileHistory);
+// Report History routes
+router.get("/report", report_history_controller_1.default.getReportHistory);
+router.get("/report/:id", report_history_controller_1.default.getReportHistoryItem);
+router.post("/report", report_history_controller_1.default.saveReportHistory);
+router.delete("/report/:id", report_history_controller_1.default.deleteReportHistoryItem);
+router.delete("/report", report_history_controller_1.default.clearReportHistory);
+// Admin Report History routes
+router.get("/admin/report", report_history_controller_1.default.getAllReportHistory);
 exports.default = router;

@@ -94,6 +94,15 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        // Add these two keyframes
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        zoomIn: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -102,6 +111,9 @@ const config = {
         "spin-slow": "spin-slow 8s linear infinite",
         "fade-in": "fade-in 0.5s ease-in",
         float: "float 3s ease-in-out infinite",
+        // Add these two animations
+        fadeIn: 'fadeIn 0.3s ease-out forwards',
+        zoomIn: 'zoomIn 0.3s ease-out forwards',
       },
     },
   },

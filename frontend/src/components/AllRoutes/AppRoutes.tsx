@@ -32,7 +32,12 @@ import { Route, Routes } from 'react-router-dom'
 import Profile from '@/pages/Profile';
 import CompanyProfileViewResult from '@/pages/AIAgents/ViewResultsById/CompanyProfileViewResult'
 import ZoomRecordingViewResult from '@/pages/AIAgents/ViewResultsById/ZoomRecordingViewResult'
+import ImageGenerator from '../ImageGeneration/ImageGenerator'
+import ImageDashboard from '../ImageGeneration/ImageDashboard'
+import UserImageDashboard from '../ImageGeneration/UserImageDashboard'
 import UserGeneratedAgentsResult from '@/pages/AIAgents/UserGeneratedAgentsResult/UserGeneratedAgentsResult'
+import ReportAgentAI from '@/pages/AIAgents/report'
+import ReportHistory from '@/pages/AIAgents/report/ReportHistory'
 
 const AppRoutes = () => {
     return (
@@ -73,11 +78,11 @@ const AppRoutes = () => {
                 <Route path="/document-reader-settings" element={<Settings />} />
 
                 {/* AI Agents */}
+                <Route path="/ai-agents/report" element={<ReportAgentAI />} />
+                <Route path="/ai-agents/report/history" element={<ReportHistory />} />
                 <Route path="/ai-agents" element={<AIAgentsPage />} />
                 <Route path="/ai-agents/zoomary" element={<ZoomaryAI />} />
-                {/* <Route path="/ai-agents/zoomary/history" element={<ZoomaryHistory />} /> */}
                 <Route path="/ai-agents/hr" element={<CompanyProfileAI />} />
-                {/* <Route path="/ai-agents/company-profile/history" element={<CompanyProfileHistory />} /> */}
                 <Route path="/ai-agents/resume" element={<ResumeAnalyzer />} />
                 <Route path="/ai-agents/resume/history" element={<ResumeHistory />} />
                 <Route path="/ai-agents/attendance" element={<AttendanceMonitor />} />
@@ -93,6 +98,9 @@ const AppRoutes = () => {
                 <Route path="/generated-agents" element={<UserGeneratedAgentsResult />} />
 
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/image-generation" element={<ImageGenerator />} />
+                <Route path="/image-generation-dashboard" element={<ImageDashboard />} />
+                <Route path="/image-generation-user-dashboard" element={<UserImageDashboard />} />
 
                 {/* Default  */}
                 <Route path="*" element={<NotFound />} />

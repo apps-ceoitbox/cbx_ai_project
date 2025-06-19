@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { History, Calendar, Eye, Search, Users, Settings, ArrowLeft, Download, Copy, Trash, Mail, Loader2 } from 'lucide-react';
+import { History, Calendar, Eye, Search, Users, Settings, ArrowLeft, Download, Copy, Trash, Mail, Loader2, FileType } from 'lucide-react';
 import {
   getAllZoomaryHistory,
   ZoomaryHistoryItem,
@@ -10,6 +10,10 @@ import {
   getAllMailSenderHistory,
   MailSenderHistoryItem,
 } from '@/services/history.service';
+import {
+  getAllReportHistory,
+  ReportHistoryItem,
+} from '@/services/report-history.service';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,9 +32,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAxios } from '@/context/AppContext';
 import SendEmailDialog from '@/components/Custom/SendEmailDialog';
 
-type HistoryType = 'zoomary' | 'company-profile' | 'mail-sender';
+type HistoryType = 'zoomary' | 'company-profile' | 'mail-sender' | 'report';
 
-type HistoryItem = ZoomaryHistoryItem | CompanyProfileHistoryItem | MailSenderHistoryItem;
+type HistoryItem = ZoomaryHistoryItem | CompanyProfileHistoryItem | MailSenderHistoryItem | ReportHistoryItem;
 
 const AIAgentHistories: React.FC = () => {
   const axios = useAxios("admin");
@@ -74,6 +78,15 @@ const AIAgentHistories: React.FC = () => {
           setHistory([]);
           setError('Invalid data format received');
         }
+      } else if (historyType === 'report') {
+        const response = await getAllReportHistory();
+        if (Array.isArray(response)) {
+          setHistory(response);
+        } else {
+          console.error('Expected array but got:', response);
+          setHistory([]);
+          setError('Invalid data format received');
+        }
       }
     } catch (err) {
       setError('Failed to load history. Please try again later.');
@@ -97,6 +110,8 @@ const AIAgentHistories: React.FC = () => {
       } else if (historyType === 'company-profile') {
         setSelectedItem(id);
       } else if (historyType === 'mail-sender') {
+        setSelectedItem(id);
+      } else if (historyType === 'report') {
         setSelectedItem(id);
       }
     } catch (err) {
@@ -123,7 +138,8 @@ const AIAgentHistories: React.FC = () => {
       (item as any).name?.toLowerCase().includes(searchLower) ||
       (item as any).email?.toLowerCase().includes(searchLower) ||
       (item as any).recipient?.toLowerCase().includes(searchLower) ||
-      (item as any).subject?.toLowerCase().includes(searchLower)
+      (item as any).subject?.toLowerCase().includes(searchLower) ||
+      (item as any).fileName?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -250,9 +266,17 @@ const AIAgentHistories: React.FC = () => {
         </html>
       `;
 
+      let subject = "Meeting Summary";
+
+      if (path === 'company-profile') {
+        subject = submission?.companyName || "Company Profile";
+      } else if (path === 'report') {
+        subject = submission?.fileName || "Report";
+      }
+
       await axios.post("/users/email", {
         to: submission?.email,
-        subject: submission?.companyName || "Meeting Summary",
+        subject: subject,
         body: fullHTML,
       });
 
@@ -457,6 +481,91 @@ const AIAgentHistories: React.FC = () => {
             </div>
           </div>
         );
+      } else if (historyType === 'report') {
+        const reportItem = selectedItem as ReportHistoryItem;
+        return (
+          <div className="bg-white rounded-lg p-6 border border-gray-200">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">{reportItem.fileName}</h2>
+              <Button onClick={() => setSelectedItem(null)}
+                style={{ minWidth: "100px", color: "#ffffff", border: "none" }}
+                className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+                variant="ghost">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-6 mb-4 text-sm text-gray-500 flex-wrap">
+              <div className="flex items-center">
+                <Calendar className="w-4 h-4 mr-1" />
+                <span>Created: {formatDate(reportItem.createdAt.toString())}</span>
+              </div>
+              {reportItem.fileType && (
+                <div className="flex items-center">
+                  <FileType className="w-4 h-4 mr-1" />
+                  <span>File Type: {reportItem.fileType}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              {(reportItem.name || reportItem.email) && (
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold mb-2 text-gray-700">User Information</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    {reportItem.name && <p><strong>Name:</strong> {reportItem.name}</p>}
+                    {reportItem.email && <p><strong>Email:</strong> {reportItem.email}</p>}
+                  </div>
+                </div>
+              )}
+
+              <h3 className="text-lg font-semibold mb-2 text-gray-700">Report</h3>
+              <div
+                id="report-content"
+                className="bg-gray-50 p-4 rounded-lg prose max-w-none"
+                dangerouslySetInnerHTML={{ __html: reportItem.report }}
+              />
+            </div>
+            <div className="w-full flex items-center justify-center mt-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={() => copySummaryToClipboard("report-content")}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </Button>
+
+                <Button variant="outline" className="flex items-center"
+                  onClick={() => downloadAsPdf("report-content")}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+
+                <Button
+                  className="bg-primary-red hover:bg-red-700 flex items-center"
+                  onClick={() => handleSendEmail(reportItem, "report")}
+                  disabled={isEmailSending}
+                >
+                  {isEmailSending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Send to Email
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
       } else if (historyType === 'mail-sender') {
         const mailSenderItem = selectedItem as MailSenderHistoryItem;
         return (
@@ -545,6 +654,10 @@ const AIAgentHistories: React.FC = () => {
                   ) : historyType === 'company-profile' ? (
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
                       Company Name
+                    </th>
+                  ) : historyType === 'report' ? (
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
+                      File Name
                     </th>
                   ) : (
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-white  tracking-wider">
@@ -701,6 +814,69 @@ const AIAgentHistories: React.FC = () => {
                         </td>
                       </tr>
                     );
+                  } else if (historyType === 'report') {
+                    const reportItem = item as ReportHistoryItem;
+                    return (
+                      <tr key={reportItem._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{reportItem.fileName}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{reportItem.name || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{reportItem.email || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            <span>{formatDate(reportItem.createdAt?.toString() || '')}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex items-center space-x-3">
+                            <Button onClick={() => handleViewDetails(reportItem)} className="text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="text-red-500" title="Remove">
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Submission</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this Submission? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => {
+                                      axios.delete(`/history/report/${reportItem._id}`)
+                                        .then(() => {
+                                          toast.success("Submission deleted successfully");
+                                          fetchHistory();
+                                        })
+                                        .catch(error => {
+                                          console.error(error);
+                                          toast.error("Failed to delete template");
+                                        });
+                                    }}
+                                    className="bg-red-500 hover:bg-red-600"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </td>
+                      </tr>
+                    );
                   } else if (historyType === 'mail-sender') {
                     const mailSenderItem = item as MailSenderHistoryItem;
                     return (
@@ -786,6 +962,7 @@ const AIAgentHistories: React.FC = () => {
                   {historyType === 'zoomary' && 'Zoomary AI Histories'}
                   {historyType === 'company-profile' && 'Company Profile Histories'}
                   {historyType === 'mail-sender' && 'AI Mail Histories'}
+                  {historyType === 'report' && 'Report History'}
                 </CardTitle>
 
                 <div>
@@ -799,6 +976,7 @@ const AIAgentHistories: React.FC = () => {
                     <SelectContent>
                       <SelectItem value="zoomary">Zoomary AI Histories</SelectItem>
                       <SelectItem value="company-profile">Company Profile Histories</SelectItem>
+                      <SelectItem value="report">Report History</SelectItem>
                       {/* <SelectItem value="mail-sender">AI Mail Histories</SelectItem> */}
                     </SelectContent>
                   </Select>

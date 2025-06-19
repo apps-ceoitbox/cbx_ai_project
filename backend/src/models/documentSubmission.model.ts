@@ -14,8 +14,8 @@ export interface DocumentSubmissionInterface {
   results:object[];
 }
 const documentSubmissionSchema: Schema = new Schema({
-  processingOption: { type: String, required: true },
-  files: { type: [String], required: true },
+  processingOption: { type: String },
+  files: { type: [String] },
   documentType: { type: String, default: "NA" },
   goal: { type: String, default: "NA" },
   promptContent: { type: String, default: "" },
@@ -23,7 +23,7 @@ const documentSubmissionSchema: Schema = new Schema({
   model: { type: String, required: true, default: "" },
   email: { type: String, required: true, default: "" },
   name: { type: String, required: true, default: "" },
-  result: { type: String, required: true, default: "" },
+  result: { type: String, default: "" },
   results: {
     type:[
         {

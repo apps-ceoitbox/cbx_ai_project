@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import Header from "./Header";
-import { ArrowRight, Sparkles, Search, FileText, } from "lucide-react";
+import { ArrowRight, Sparkles, Search, FileText, BarChart3, } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAxios } from "@/context/AppContext";
 
@@ -43,6 +43,15 @@ const agentCategories: AgentCategory[] = [
     description: "Upload multiple resumes and job descriptions to rank candidates.",
     bgImage: "url('https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=2070')"
   },
+  {
+    id: "ReportAgent",
+    title: "Report Agent AI",
+    icon: <BarChart3 />,
+    gradient: "bg-gradient-to-br from-red-700 to-blue-900",
+    color: "bg-red-600",
+    description: "Upload CSV or PDF or Google Sheet link to get analysis.",
+    bgImage: "url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070')"
+  },
   // {
   //   id: "attendance",
   //   title: "Attendance Monitor",
@@ -67,7 +76,6 @@ const AIAgentsPage = () => {
   const { categoryId } = useParams();
   const axios = useAxios("user");
   const [prompt, setPrompt] = useState([]);
-  console.log("prompt", prompt)
 
   const fetchAiAgents = async () => {
     try {
@@ -130,7 +138,11 @@ const AIAgentsPage = () => {
             const matchingPrompt = prompt.find((p) => p.name?.toLowerCase() === category.id?.toLowerCase());
             return matchingPrompt?.visibility;
           }).map((category) => (
-            <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` : `/ai-agents/${category.id === "CompanyProfile" ? "hr" : "resume"}`} className="block">
+            // <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` : `/ai-agents/${category.id === "CompanyProfile" ? "hr" : "resume"}`} className="block">
+            <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` :
+              category.id === "CompanyProfile" ? `/ai-agents/hr` :
+                category.id === "ReportAgent" ? `/ai-agents/report` :
+                  `/ai-agents/${category.id === "ResumeAnalyzer" ? "resume" : category.id}`} className="block" key={category.id}>
               <div
                 key={category.id}
                 className="group relative overflow-hidden rounded-lg border-2 transition-all duration-300 hover:shadow-xl hover:border-red-600 hover:translate-y-[-8px] border-gray-200 bg-white"
@@ -159,7 +171,13 @@ const AIAgentsPage = () => {
                   <div className="mt-auto space-y-2">
                     {/* History buttons removed as requested */}
 
-                    <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` : `/ai-agents/${category.id === "CompanyProfile" ? "hr" : "resume"}`} className="block">
+                    {/* <Link to={
+                      category.id === "zoomary" ? `/ai-agents/zoomary` :
+                        `/ai-agents/${category.id === "CompanyProfile" ? "hr" : "resume"}`} className="block"> */}
+                    <Link to={category.id === "zoomary" ? `/ai-agents/zoomary` :
+                      category.id === "CompanyProfile" ? `/ai-agents/hr` :
+                        category.id === "ReportAgent" ? `/ai-agents/report` :
+                          `/ai-agents/${category.id === "ResumeAnalyzer" ? "resume" : category.id}`} className="block" key={category.id}>
                       <Button
                         variant="outline"
                         className="w-full py-2 rounded-md text-center font-medium transition-all duration-300 group-hover:bg-red-600 group-hover:text-white bg-white/90 text-red-600 border-0"
