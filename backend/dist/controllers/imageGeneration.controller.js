@@ -21,6 +21,30 @@ const ai_model_1 = __importDefault(require("../models/ai.model"));
 const axios_1 = __importDefault(require("axios"));
 dotenv_1.default.config();
 const cloudinary_1 = __importDefault(require("../utils/cloudinary"));
+const generateSingleImageAPI = (prompt, apiKey, modelName) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b, _c, _d, _e, _f;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+    const response = yield axios_1.default.post(apiUrl, {
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+        },
+    }, {
+        headers: { "Content-Type": "application/json" },
+    });
+    const result = response.data;
+    if (result.error) {
+        throw new Error(`Gemini API Error: ${result.error.message || "An unknown error occurred."}`);
+    }
+    const imagePart = (_e = (_d = (_c = (_b = result.candidates) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.content) === null || _d === void 0 ? void 0 : _d.parts) === null || _e === void 0 ? void 0 : _e.find((p) => p.inlineData);
+    console.log(imagePart);
+    if (imagePart && ((_f = imagePart.inlineData) === null || _f === void 0 ? void 0 : _f.data)) {
+        return `data:image/png;base64,${imagePart.inlineData.data}`;
+    }
+    else {
+        throw new Error("No image data found in the Gemini API response.");
+    }
+});
 class generateImageController {
 }
 _a = generateImageController;
@@ -36,140 +60,93 @@ generateImageController.generateImage = (0, asyncHandler_1.asyncHandler)((req, r
     try {
         const { prompt, style, orientation, size, numImages, negativePrompt } = req.body;
         const geminiSetting = yield ai_model_1.default.findOne({ name: /^Gemini/i });
-        if (!geminiSetting) {
-            res.status(404);
-            throw new Error("Gemini AI settings not found in the database.");
-        }
-        const { apiKey } = geminiSetting;
-        if (!apiKey) {
+        if (!geminiSetting || !geminiSetting.apiKey) {
             res.status(500);
-            throw new Error("API key is missing in your AI settings.");
+            throw new Error("Gemini AI settings or API key is missing.");
         }
         const settings = yield imageDashboard_model_1.default.findOneAndUpdate({ findKey: 1 }, {}, { new: true, upsert: true, setDefaultsOnInsert: true });
-        const modelName = (settings === null || settings === void 0 ? void 0 : settings.modelName) || "gemini-1.5-flash-latest";
+        const modelName = (settings === null || settings === void 0 ? void 0 : settings.modelName) || "gemini-2.0-flash-preview-image-generation";
         const extraPrompt = (settings === null || settings === void 0 ? void 0 : settings.extraPrompt) || "";
         let basePrompt = prompt;
-        if (extraPrompt) {
+        if (extraPrompt)
             basePrompt += `, ${extraPrompt}`;
-        }
-        if (style) {
+        if (style)
             basePrompt += `, in ${style} style`;
-        }
-        if (orientation) {
+        if (orientation)
             basePrompt += `, ${orientation} orientation`;
-        }
-        if (size) {
+        if (size)
             basePrompt += `, ${size} size`;
-        }
-        if (negativePrompt) {
+        if (negativePrompt)
             basePrompt += `, but avoid: ${negativePrompt}`;
-        }
-        const desiredNumImages = parseInt(String(numImages)) || 1;
-        const generationPromises = [];
-        for (let i = 0; i < desiredNumImages; i++) {
-            const currentPrompt = `${basePrompt} ${desiredNumImages > 1 ? `(Variation ${i + 1})` : ""}`;
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [
-                    {
-                        parts: [
-                            {
-                                text: currentPrompt,
-                            },
-                        ],
-                    },
-                ],
-                generationConfig: {
-                    responseModalities: ["TEXT", "IMAGE"],
-                },
-            };
-            generationPromises.push(fetch(apiUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            }).then((response) => __awaiter(void 0, void 0, void 0, function* () {
-                var _b;
-                if (!response.ok) {
-                    const errorData = yield response.json();
-                    throw new Error(`Gemini API HTTP Error ${response.status}: ${((_b = errorData.error) === null || _b === void 0 ? void 0 : _b.message) || "Unknown API error"}`);
-                }
-                return response.json();
-            })));
-        }
-        const results = yield Promise.all(generationPromises);
+        const desiredNumImages = parseInt(String(numImages || 1));
         const uploadedImageDetails = [];
-        const clientImageUrls = [];
+        const cloudinaryUrls = [];
         const errorsEncountered = [];
-        for (const [index, result] of results.entries()) {
-            if (result.candidates && result.candidates.length > 0) {
-                let foundImageInCandidate = false;
-                for (const candidate of result.candidates) {
-                    if (candidate.content && candidate.content.parts) {
-                        for (const part of candidate.content.parts) {
-                            if (part.inlineData &&
-                                part.inlineData.mimeType.startsWith("image/")) {
-                                const base64ImageFullString = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-                                try {
-                                    const publicImageUrl = yield cloudinary_1.default.uploadFile(base64ImageFullString, userId);
-                                    uploadedImageDetails.push({ url: publicImageUrl });
-                                    clientImageUrls.push(publicImageUrl);
-                                    foundImageInCandidate = true;
-                                    break;
-                                }
-                                catch (uploadError) {
-                                    errorsEncountered.push(`Image ${index + 1}: Failed to upload to Cloudinary: ${uploadError.message || "Unknown upload error"}`);
-                                    foundImageInCandidate = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (foundImageInCandidate)
-                        break;
-                }
-                if (!foundImageInCandidate) {
-                    errorsEncountered.push(`Image ${index + 1}: No image data found in Gemini response candidate.`);
-                }
+        const descriptors = [
+            "cinematic",
+            "vivid",
+            "dreamlike",
+            "high detail",
+            "surreal lighting",
+            "photo-realistic",
+            "soft focus",
+            "dynamic perspective",
+            "abstract",
+            "hyperrealistic",
+            "illustration",
+            "concept art",
+            "digital painting",
+        ];
+        const generationTasks = Array.from({ length: desiredNumImages }).map((_, i) => __awaiter(void 0, void 0, void 0, function* () {
+            const variation = descriptors[Math.floor(Math.random() * descriptors.length)];
+            const currentPrompt = `${basePrompt}, ${variation}`;
+            try {
+                const base64Image = yield generateSingleImageAPI(currentPrompt, geminiSetting.apiKey, modelName);
+                const imageUrl = yield cloudinary_1.default.uploadFile(base64Image, userId);
+                return { success: true, url: imageUrl };
             }
-            else if (result.error) {
-                errorsEncountered.push(`Image ${index + 1}: Gemini API Error: ${result.error.message || "An unknown error occurred."}`);
+            catch (err) {
+                return { success: false, error: `Image ${i + 1}: ${err.message}` };
+            }
+        }));
+        const results = yield Promise.all(generationTasks);
+        results.forEach((result) => {
+            if (result.success) {
+                uploadedImageDetails.push({ url: result.url });
+                cloudinaryUrls.push(result.url);
             }
             else {
-                errorsEncountered.push(`Image ${index + 1}: Unexpected API response structure or no candidates.`);
+                errorsEncountered.push(result.error);
             }
-        }
+        });
         if (uploadedImageDetails.length > 0) {
-            const newImageGenerationEntry = new imageGeneration_model_1.default({
-                name: name,
-                email: email,
-                prompt: prompt,
+            yield new imageGeneration_model_1.default({
+                name,
+                email,
+                prompt,
                 images: uploadedImageDetails,
-            });
-            yield newImageGenerationEntry.save();
+            }).save();
             res.status(200).json({
                 success: true,
-                imageUrls: clientImageUrls,
-                message: `${uploadedImageDetails.length} image(s) generated and saved successfully.${errorsEncountered.length > 0
-                    ? ` Some images failed or encountered issues: ${errorsEncountered.join("; ")}`
+                imageUrls: cloudinaryUrls,
+                message: `${uploadedImageDetails.length} image(s) generated successfully.${errorsEncountered.length > 0
+                    ? ` Some errors: ${errorsEncountered.join("; ")}`
                     : ""}`,
             });
         }
         else {
             res.status(500).json({
                 success: false,
-                message: `Failed to generate any images. ${errorsEncountered.join("; ")}. Please try again with a different prompt.`,
+                message: `No images generated. ${errorsEncountered.join("; ")}`,
                 errors: errorsEncountered,
             });
         }
     }
     catch (error) {
-        console.error("Error during image generation process:", error);
-        res.status(500).json({
+        console.error("Image generation error:", error);
+        res.status(res.statusCode || 500).json({
             success: false,
-            message: error.message ||
-                "An unexpected error occurred during image generation.",
+            message: error.message || "Unexpected error occurred during image generation.",
             error: error.message,
         });
     }
