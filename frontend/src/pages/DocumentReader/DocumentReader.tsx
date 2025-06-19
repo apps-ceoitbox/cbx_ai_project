@@ -43,6 +43,7 @@ const DocumentReader = () => {
     const [currentQuery, setCurrentQuery] = useState("");
     const [chatStarted, setChatStarted] = useState(false);
     const [showChatInput, setShowChatInput] = useState(false);
+    const [firstChatInputShown, setFirstChatInputShown] = useState(false);
 
     const handleFilesSelected = (selectedFiles: File[]) => {
         setFiles(selectedFiles);
@@ -293,7 +294,10 @@ const DocumentReader = () => {
                         {!showChatInput ? (
                             <div className="sticky bottom-0 bg-white p-4 border-t flex justify-center">
                                 <Button
-                                    onClick={() => setShowChatInput(true)}
+                                    onClick={() => {
+                                        setShowChatInput(true);
+                                        setFirstChatInputShown(true);
+                                    }}
                                     className="bg-appRed hover:bg-appRed/90 text-white"
                                 >
                                     Continue
@@ -302,6 +306,14 @@ const DocumentReader = () => {
                         ) : (
                             <div className="sticky bottom-0 bg-white p-4 border-t">
                                 <div className="flex flex-col gap-2 max-w-5xl mx-auto">
+                                    {/* Info about remaining followups */}
+                                    <div className="mb-1 text-xs text-gray-700 font-medium">
+                                        {5 - chatMessages.filter(m => m.role === 'user').length} followups remaining
+                                    </div>
+                                    {/* Show context info only the first time */}
+                                    {firstChatInputShown && chatMessages.filter(m => m.role === 'user').length === 0 && (
+                                        <div className="mb-1 text-xs text-gray-500">Only the last 5 messages are used as context.</div>
+                                    )}
                                     <div className="flex gap-2">
                                         <input
                                             value={currentQuery}
@@ -319,9 +331,6 @@ const DocumentReader = () => {
                                             Send
                                         </Button>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Only the last 5 messages are used as context. You can ask up to 5 follow-up questions.
-                                    </p>
                                     {chatMessages.filter(m => m.role === 'user').length >= 5 && (
                                         <p className="text-xs text-appRed mt-1">You have reached the maximum of 5 follow-up questions.</p>
                                     )}
