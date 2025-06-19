@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { AiSettingsInterface } from "./ai.model";
 
 export interface PromptInterface {
   _id: string;
@@ -49,4 +48,5 @@ const Prompt = mongoose.model<PromptInterface & Document>(
   "prompt",
   promptSchema
 );
+
 export default Prompt;
