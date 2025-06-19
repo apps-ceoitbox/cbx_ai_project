@@ -321,7 +321,7 @@ function generatePrompt(userAnswers, promptData, user:any={}, type="") {
   - Content must begin with the <div> container as mentioned.
   `;
   // - If the chart is generated, make sure to give it scroll auto if it is too long.
-  return prompt;
+  return prompt;
 }
 
 

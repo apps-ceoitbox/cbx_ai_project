@@ -38,6 +38,7 @@ import UserImageDashboard from '../ImageGeneration/UserImageDashboard'
 import UserGeneratedAgentsResult from '@/pages/AIAgents/UserGeneratedAgentsResult/UserGeneratedAgentsResult'
 import ReportAgentAI from '@/pages/AIAgents/report'
 import ReportHistory from '@/pages/AIAgents/report/ReportHistory'
+import GoogleLoginPage from '@/pages/Login/GoogleLoginPage'
 
 const AppRoutes = () => {
     return (
@@ -48,8 +49,8 @@ const AppRoutes = () => {
                 <Route path="/home" element={<AfterLoginHomePage />} />
 
                 {/* Plan Generator */}
-                {/* <Route path="/login" element={<GoogleLoginPage />} /> */}
-                <Route path="/login" element={<LoginPage />} />
+                <Route path="/login" element={<GoogleLoginPage />} />
+                {/* <Route path="/login" element={<LoginPage />} /> */}
                 <Route path="/audit-login" element={<AuditLoginPage />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/generated-plans" element={<UserGeneratedPlans />} />
