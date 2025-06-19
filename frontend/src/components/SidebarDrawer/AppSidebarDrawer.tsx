@@ -197,7 +197,8 @@ function AppSidebarDrawer() {
                                             Document Reader
                                         </Button>
                                     </Link>
-                                    <Link to="/image-genration-dashboard" onClick={handleMenuItemClick}>
+                                    
+                                    <Link to="/image-generation-dashboard" onClick={handleMenuItemClick}>
                                         <Button
                                             variant="ghost"
                                             className="w-full justify-start gap-3 text-lg py-6 hover:bg-red-100 text-black"

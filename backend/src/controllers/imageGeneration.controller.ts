@@ -13,44 +13,55 @@ import FileUploadController from "../utils/cloudinary";
 const generateSingleImageAPI = async (prompt, apiKey, modelName) => {
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-  const response = await axios.post(
-    apiUrl,
-    {
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseModalities: ["TEXT", "IMAGE"],
+  try {
+    const response = await axios.post(
+      apiUrl,
+      {
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseModalities: ["TEXT", "IMAGE"],
+        },
       },
-    },
-    {
-      headers: { "Content-Type": "application/json" },
-    }
-  );
-
-  const result = response.data;
-
-  if (result.error) {
-    throw new Error(
-      `Gemini API Error: ${
-        result.error.message || "An unknown error occurred."
-      }`
+      {
+        headers: { "Content-Type": "application/json" },
+      }
     );
-  }
 
-  const imagePart = result.candidates?.[0]?.content?.parts?.find(
-    (p) => p.inlineData
-  );
+    const result = response.data;
+    if (result.error) {
+      throw new Error(
+        `Gemini API Error: ${
+          result.error.message || "An unknown error occurred."
+        }`
+      );
+    }
 
-  console.log(imagePart);
+    const imagePart = result.candidates?.[0]?.content?.parts?.find(
+      (p) => p.inlineData
+    );
 
-  if (imagePart && imagePart.inlineData?.data) {
-    return `data:image/png;base64,${imagePart.inlineData.data}`;
-  } else {
-    throw new Error("No image data found in the Gemini API response.");
+    if (imagePart && imagePart.inlineData?.data) {
+      return `data:image/png;base64,${imagePart.inlineData.data}`;
+    } else {
+      console.warn(
+        "No image data found in the successful API response.",
+        result
+      );
+      throw new Error("No image data found in the Gemini API response.");
+    }
+  } catch (error) {
+    if (error.response) {
+      console.error("Error Data:", error.response.data);
+    } else if (error.request) {
+      console.error("Error Request:", error.request);
+    } else {
+      console.error("Error Message:", error.message);
+    }
+    throw new Error("Failed to generate image. Check console for details.");
   }
 };
 
 export default class generateImageController {
-  
   static generateImage = asyncHandler(async (req, res) => {
     const email = req.user?.email;
     const name = req.user?.userName;
@@ -123,6 +134,7 @@ export default class generateImageController {
               geminiSetting.apiKey,
               modelName
             );
+
 
             const imageUrl = await FileUploadController.uploadFile(
               base64Image,

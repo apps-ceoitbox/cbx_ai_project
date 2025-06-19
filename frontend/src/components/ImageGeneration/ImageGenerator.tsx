@@ -22,9 +22,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAxios, useData } from "@/context/AppContext";
 import { toast } from "sonner";
-import Loader from "@/components/Custom/Loader.tsx";
 import { useNavigate } from "react-router-dom";
 import LogoutConfirmationModal from "../Custom/LogoutConfirmationModal";
+import EnhanceLoader from "./EnhanceLoader";
+import ImageGenerationLoader from "./ImageGenerationLoader";
 
 const ImageGenerator = () => {
   const axios = useAxios("user");
@@ -109,7 +110,7 @@ const ImageGenerator = () => {
         console.error("Response headers:", err.response.headers);
         toast.error(
           err.response.data.message ||
-          "An error occurred from the server. Please try again."
+            "An error occurred from the server. Please try again."
         );
       } else if (err.request) {
         console.error("Request data:", err.request);
@@ -153,11 +154,13 @@ const ImageGenerator = () => {
     }
   };
 
-  const downloadImage = async (imageUrl, prompt) => {
+  const downloadImage = async (imageUrl) => {
     if (!imageUrl) {
       console.error("Image URL is missing for download.");
       return;
     }
+
+    console.log(imageUrl);
     try {
       const response = await fetch(imageUrl);
       if (!response.ok) {
@@ -170,9 +173,7 @@ const ImageGenerator = () => {
       const link = document.createElement("a");
       link.href = url;
 
-      const filename = prompt
-        ? `${prompt.substring(0, 50).replace(/[^a-z0-9]/gi, "_")}.png`
-        : "downloaded_image.png";
+      const filename = "downloaded_image.png";
       link.download = filename;
 
       document.body.appendChild(link);
@@ -213,15 +214,16 @@ const ImageGenerator = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("userToken")
-    setUserAuth(p => ({ ...p, user: null, token: null }))
-    toast.success("Logout successful")
-    navigate("/login")
-  }
+    localStorage.removeItem("userToken");
+    setUserAuth((p) => ({ ...p, user: null, token: null }));
+    toast.success("Logout successful");
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen">
-      {(loading || enhancing) && <Loader />}
+      {loading && <ImageGenerationLoader />}
+      {enhancing && <EnhanceLoader />}
       <div className="sticky top-0 z-10 flex justify-end items-center p-4 bg-black shadow-md">
         <Button
           variant="outline"
@@ -281,9 +283,37 @@ const ImageGenerator = () => {
                       type="button"
                       onClick={handleEnhancePrompt}
                       disabled={enhancing}
-                      className="px-6 py-1 text-sm bg-red-500 text-white font-semibold rounded-md shadow hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition-all flex items-center justify-center disabled:bg-red-300 disabled:cursor-not-allowed"
+                      className="px-5 py-1 text-sm font-semibold rounded-2xl bg-gradient-to-r from-red-400 to-red-500 to-red-600 text-white shadow-md hover:from-rose-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-1 transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {enhancing ? <>Enhancing...</> : "✨ Enhance"}
+                      {enhancing ? (
+                        <>
+                          <svg
+                            className="animate-spin h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v8H4z"
+                            ></path>
+                          </svg>
+                          Enhancing...
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-lg">✨</span> Enhance
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -303,15 +333,15 @@ const ImageGenerator = () => {
                       <SelectValue placeholder="Select style" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="realistic">🎨 Realistic</SelectItem>
                       <SelectItem value="anime">🌸 Anime</SelectItem>
                       <SelectItem value="cartoon">🎭 Cartoon</SelectItem>
                       <SelectItem value="oil-painting">
                         🖼️ Oil Painting
                       </SelectItem>
-                      <SelectItem value="watercolor">💧 Watercolor</SelectItem>
-                      <SelectItem value="sketch">✏️ Sketch</SelectItem>
                       <SelectItem value="pixel-art">🎮 Pixel Art</SelectItem>
+                      <SelectItem value="realistic">🎨 Realistic</SelectItem>
+                      <SelectItem value="sketch">✏️ Sketch</SelectItem>
+                      <SelectItem value="watercolor">💧 Watercolor</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -329,13 +359,13 @@ const ImageGenerator = () => {
                       <SelectValue placeholder="Select orientation" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="square">⬜ Square (1:1)</SelectItem>
-                      <SelectItem value="portrait">
-                        📱 Portrait (3:4)
-                      </SelectItem>
                       <SelectItem value="landscape">
                         🖥️ Landscape (4:3)
                       </SelectItem>
+                      <SelectItem value="portrait">
+                        📱 Portrait (3:4)
+                      </SelectItem>
+                      <SelectItem value="square">⬜ Square (1:1)</SelectItem>
                       <SelectItem value="wide">📺 Wide (16:9)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -382,7 +412,7 @@ const ImageGenerator = () => {
                     <SelectContent>
                       <SelectItem value="1">1 Image</SelectItem>
                       <SelectItem value="2">2 Images</SelectItem>
-                      <SelectItem value="4">4 Images</SelectItem>
+                      <SelectItem value="3">3 Images</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -408,14 +438,40 @@ const ImageGenerator = () => {
           <div className="flex justify-center">
             <Button
               onClick={handleSubmit}
-              className="w-full max-w-md h-14 text-lg font-semibold bg-red-500 hover:bg-red-600 transform hover:scale-[1.02] transition-all duration-200 text-white"
               disabled={loading || !formData.prompt}
+              className="w-full max-w-md h-14 px-6 text-lg font-semibold text-white bg-gradient-to-r from-red-500 to-red-600 rounded-2xl shadow-lg hover:shadow-rose-300 hover:scale-[1.03] hover:from-rose-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3"
             >
               {loading ? (
-                <>Creating Magic...</>
+                <>
+                  <svg
+                    className="animate-spin h-6 w-6 text-white mr-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    <path d="M22 4 12 14.01l-3-3" />
+                  </svg>
+                  Creating Magic...
+                  <svg
+                    className="animate-spin h-6 w-6 text-white mr-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    <path d="M22 4 12 14.01l-3-3" />
+                  </svg>
+                </>
               ) : (
                 <>
-                  <Sparkles className="mr-3 h-5 w-5" />
+                  <Sparkles className="h-5 w-5" />
                   Generate Image
                 </>
               )}
@@ -423,60 +479,111 @@ const ImageGenerator = () => {
           </div>
 
           <div className="mt-8" id="generated-images-section">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Generated Images
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+              <span className="bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
+                Generated Images
+              </span>
             </h2>
+
             {loading ? (
-              <div className="text-center text-gray-500 py-10">
-                <p className="text-lg animate-pulse">
-                  Generating images, please wait...
+              <div className="text-center text-gray-600 py-16">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mb-4 animate-spin">
+                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full"></div>
+                </div>
+                <p className="text-xl font-medium text-red-700 animate-pulse">
+                  Generating your masterpiece...
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  This may take a few moments
                 </p>
               </div>
             ) : imageUrls.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {imageUrls.map((imageUrl, index) => (
                   <Card
                     key={index}
-                    className="relative overflow-hidden group shadow-lg hover:shadow-xl transition-shadow duration-300"
+                    className="relative overflow-hidden group shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 bg-white border-2 border-red-100 hover:border-red-300 rounded-2xl"
                   >
-                    <img
-                      src={imageUrl}
-                      alt={`Generated Image ${index + 1}`}
-                      className="w-full h-auto object-cover rounded-t-md aspect-square"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="flex space-x-4">
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="p-2 rounded-full transform hover:scale-110 transition-transform duration-200"
-                          onClick={() => openModal(imageUrl)} // Changed to open the modal
-                          title="View Image"
-                        >
-                          <Eye className="w-6 h-6 text-blue-500" />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="p-2 rounded-full transform hover:scale-110 transition-transform duration-200"
-                          onClick={() => downloadImage(imageUrl, index)}
-                          title="Download Image"
-                        >
-                          <Download className="w-6 h-6 text-red-500" />
-                        </Button>
+                    <div className="relative">
+                      <img
+                        src={imageUrl}
+                        alt={`Generated Image ${index + 1}`}
+                        className="w-full h-auto object-cover rounded-t-2xl"
+                        style={{
+                          aspectRatio: "auto", // Maintain original aspect ratio
+                          minHeight: "200px",
+                          maxHeight: "500px",
+                        }}
+                        loading="lazy"
+                      />
+
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                      {/* Action buttons */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-100 scale-90">
+                        <div className="flex space-x-4">
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="w-14 h-14 rounded-full bg-white/90 hover:bg-white shadow-2xl transform hover:scale-110 transition-all duration-300 border-2 border-red-200 hover:border-red-400"
+                            onClick={() => openModal(imageUrl)}
+                            title="View Full Size"
+                          >
+                            <Eye className="w-6 h-6 text-red-600" />
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="w-14 h-14 rounded-full bg-white/90 hover:bg-white shadow-2xl transform hover:scale-110 transition-all duration-300 border-2 border-red-200 hover:border-red-400"
+                            onClick={() => downloadImage(imageUrl)}
+                            title="Download Image"
+                          >
+                            <Download className="w-6 h-6 text-red-600" />
+                          </Button>
+                        </div>
                       </div>
+                    </div>
+
+                    {/* Card footer with subtle info */}
+                    <div className="p-4 bg-gradient-to-r from-red-50 to-red-100">
+                      <p className="text-sm font-medium text-red-800 text-center">
+                        Image {index + 1}
+                      </p>
                     </div>
                   </Card>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-500 p-12 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-                <p className="text-lg">
-                  No images generated yet. Enter a prompt and click "Generate
-                  Image"!
-                </p>
-                <p className="mt-2 text-sm">Your creations will appear here.</p>
+              <div className="text-center p-16 border-2 border-dashed border-red-200 rounded-2xl bg-gradient-to-br from-red-50 to-pink-50 shadow-inner">
+                <div className="max-w-md mx-auto">
+                  <div className="w-24 h-24 bg-gradient-to-r from-red-400 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <svg
+                      className="w-12 h-12 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-red-700 mb-4">
+                    Ready to Create Magic?
+                  </h3>
+                  <p className="text-lg text-red-600 mb-2">
+                    No images generated yet. Enter a prompt and click "Generate
+                    Image"!
+                  </p>
+                  <p className="text-sm text-red-500">
+                    Your beautiful creations will appear here in all their
+                    glory.
+                  </p>
+                </div>
               </div>
             )}
           </div>

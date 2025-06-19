@@ -24,25 +24,39 @@ const cloudinary_1 = __importDefault(require("../utils/cloudinary"));
 const generateSingleImageAPI = (prompt, apiKey, modelName) => __awaiter(void 0, void 0, void 0, function* () {
     var _b, _c, _d, _e, _f;
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-    const response = yield axios_1.default.post(apiUrl, {
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            responseModalities: ["TEXT", "IMAGE"],
-        },
-    }, {
-        headers: { "Content-Type": "application/json" },
-    });
-    const result = response.data;
-    if (result.error) {
-        throw new Error(`Gemini API Error: ${result.error.message || "An unknown error occurred."}`);
+    try {
+        const response = yield axios_1.default.post(apiUrl, {
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+                responseModalities: ["TEXT", "IMAGE"],
+            },
+        }, {
+            headers: { "Content-Type": "application/json" },
+        });
+        const result = response.data;
+        if (result.error) {
+            throw new Error(`Gemini API Error: ${result.error.message || "An unknown error occurred."}`);
+        }
+        const imagePart = (_e = (_d = (_c = (_b = result.candidates) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.content) === null || _d === void 0 ? void 0 : _d.parts) === null || _e === void 0 ? void 0 : _e.find((p) => p.inlineData);
+        if (imagePart && ((_f = imagePart.inlineData) === null || _f === void 0 ? void 0 : _f.data)) {
+            return `data:image/png;base64,${imagePart.inlineData.data}`;
+        }
+        else {
+            console.warn("No image data found in the successful API response.", result);
+            throw new Error("No image data found in the Gemini API response.");
+        }
     }
-    const imagePart = (_e = (_d = (_c = (_b = result.candidates) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.content) === null || _d === void 0 ? void 0 : _d.parts) === null || _e === void 0 ? void 0 : _e.find((p) => p.inlineData);
-    console.log(imagePart);
-    if (imagePart && ((_f = imagePart.inlineData) === null || _f === void 0 ? void 0 : _f.data)) {
-        return `data:image/png;base64,${imagePart.inlineData.data}`;
-    }
-    else {
-        throw new Error("No image data found in the Gemini API response.");
+    catch (error) {
+        if (error.response) {
+            console.error("Error Data:", error.response.data);
+        }
+        else if (error.request) {
+            console.error("Error Request:", error.request);
+        }
+        else {
+            console.error("Error Message:", error.message);
+        }
+        throw new Error("Failed to generate image. Check console for details.");
     }
 });
 class generateImageController {
