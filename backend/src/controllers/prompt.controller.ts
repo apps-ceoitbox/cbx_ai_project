@@ -189,7 +189,7 @@ export default class PromptController {
           <div class="email-container">
             <h1>Your Report is Ready</h1>
             <p>Hi ${req.user?.userName},</p>
-            <p>We’ve prepared your ${prompt?.heading || 'requested'} report. You can view it by clicking the button below.</p>
+            <p>We've prepared your ${prompt?.heading || 'requested'} report. You can view it by clicking the button below.</p>
             <div class="btn-container">
               <a href="https://ai.ceoitbox.com/view/${submission?._id}" target="_blank" class="view-button" style="color: #ffffff">
                 View Your Report
@@ -246,6 +246,51 @@ export default class PromptController {
     // res
     //   .status(HttpStatusCodes.OK)
     //   .json({ message: "Response generated successfully", data: response });
+  });
+
+  static generateResponseByAIWithContext = asyncHandler(async (req, res) => {
+    const { context, toolId, questions } = req.body;
+    const prompt = await Prompt.findOne({ _id: toolId });
+    const apiProvider = await AiSettings.findOne({
+      name: prompt.defaultAiProvider.name,
+    });
+
+    const ai = new AI({
+      name: apiProvider?.name as ApiProvider["name"],
+      model: prompt.defaultAiProvider.model,
+      apiKey: apiProvider.apiKey,
+      temperature: apiProvider.temperature,
+      maxTokens: apiProvider.maxTokens,
+    });
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Transfer-Encoding", "chunked");
+    let finalText = "";
+    await ai.generateResponseWithContext(
+      context,
+      false,
+      true,
+      (text) => {
+        finalText += text;
+        res.write(text);
+      }
+    );
+
+    // Optionally, save the follow-up in Submission (append to results or similar)
+    const submission = await Submission.findOneAndUpdate(
+      { toolID: toolId, email: req.user.email },
+      {
+        $push: {
+          results: [
+            ...(context ? context.slice(-2) : []), // last user and assistant message
+            { role: 'assistant', response: finalText }
+          ]
+        }
+      },
+      { new: true, sort: { date: -1 } }
+    );
+
+    res.end();
   });
 }
 

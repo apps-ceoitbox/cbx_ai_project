@@ -35,16 +35,24 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const documentSubmissionSchema = new mongoose_1.Schema({
-    processingOption: { type: String, required: true },
-    files: { type: [String], required: true },
+    processingOption: { type: String },
+    files: { type: [String] },
     documentType: { type: String, default: "NA" },
     goal: { type: String, default: "NA" },
-    promptContent: { type: String, required: true, default: "" },
+    promptContent: { type: String, default: "" },
     aiProvider: { type: String, required: true, default: "" },
     model: { type: String, required: true, default: "" },
     email: { type: String, required: true, default: "" },
     name: { type: String, required: true, default: "" },
-    result: { type: String, required: true, default: "" },
+    result: { type: String, default: "" },
+    results: {
+        type: [
+            {
+                role: { type: String, enum: ['user', 'system'] },
+                response: { type: String }
+            }
+        ]
+    }
 }, { timestamps: true });
 const DocumentSubmission = mongoose_1.default.model("documentSubmission", documentSubmissionSchema);
 exports.default = DocumentSubmission;

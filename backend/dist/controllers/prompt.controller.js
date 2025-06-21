@@ -183,7 +183,7 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
           <div class="email-container">
             <h1>Your Report is Ready</h1>
             <p>Hi ${(_d = req.user) === null || _d === void 0 ? void 0 : _d.userName},</p>
-            <p>We’ve prepared your ${(prompt === null || prompt === void 0 ? void 0 : prompt.heading) || 'requested'} report. You can view it by clicking the button below.</p>
+            <p>We've prepared your ${(prompt === null || prompt === void 0 ? void 0 : prompt.heading) || 'requested'} report. You can view it by clicking the button below.</p>
             <div class="btn-container">
               <a href="https://ai.ceoitbox.com/view/${submission === null || submission === void 0 ? void 0 : submission._id}" target="_blank" class="view-button" style="color: #ffffff">
                 View Your Report
@@ -237,6 +237,37 @@ PromptController.generateResponseByAI = (0, asyncHandler_1.asyncHandler)((req, r
     // res
     //   .status(HttpStatusCodes.OK)
     //   .json({ message: "Response generated successfully", data: response });
+}));
+PromptController.generateResponseByAIWithContext = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { context, toolId, questions } = req.body;
+    const prompt = yield prompt_model_1.default.findOne({ _id: toolId });
+    const apiProvider = yield ai_model_1.default.findOne({
+        name: prompt.defaultAiProvider.name,
+    });
+    const ai = new AI_1.AI({
+        name: apiProvider === null || apiProvider === void 0 ? void 0 : apiProvider.name,
+        model: prompt.defaultAiProvider.model,
+        apiKey: apiProvider.apiKey,
+        temperature: apiProvider.temperature,
+        maxTokens: apiProvider.maxTokens,
+    });
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Transfer-Encoding", "chunked");
+    let finalText = "";
+    yield ai.generateResponseWithContext(context, false, true, (text) => {
+        finalText += text;
+        res.write(text);
+    });
+    // Optionally, save the follow-up in Submission (append to results or similar)
+    const submission = yield submission_model_1.default.findOneAndUpdate({ toolID: toolId, email: req.user.email }, {
+        $push: {
+            results: [
+                ...(context ? context.slice(-2) : []), // last user and assistant message
+                { role: 'assistant', response: finalText }
+            ]
+        }
+    }, { new: true, sort: { date: -1 } });
+    res.end();
 }));
 exports.default = PromptController;
 function generatePrompt(userAnswers, promptData, user = {}, type = "") {

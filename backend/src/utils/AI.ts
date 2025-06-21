@@ -5,6 +5,18 @@ const aiInstructions = {
     report: "Write a structured report that includes a title, summary, list of key insights, and thought-provoking questions. Maintain a formal tone and organize it into clear sections."
 };
 
+const styleInstructions = `
+You are an AI document assistant. Always reply in valid HTML only, using these style rules:
+- All text should use #2c3e50
+- Accent color is #c0392b (red)
+- Font: 'Segoe UI', sans-serif
+- Add spacing (20px+), clean font sizes, and soft box shadows
+- Table rows should alternate background colors (#f9f9f9, #fff)
+- Any HTML tag used (like h1, p, table, etc.) must have its CSS explicitly defined inline, including font size, font weight, colors, padding, margins, etc. — do not rely on browser defaults.
+- DO NOT include Markdown, JavaScript, external styles, or comments.
+- The final HTML should look clean, readable, modern, and styled with inline CSS only.
+- Content must begin with the <div> container as mentioned.
+`;
 
 import { Mistral } from '@mistralai/mistralai';
 import OpenAI from "openai";
@@ -256,14 +268,13 @@ export class AI {
             }
         }
     }
-    async generateResponseWithContext(context: object[], JSON = false, stream = false, streamCallback: (data: string) => void = () => { }) {
-        console.log({context})
+    async generateResponseWithContext(context: any, JSON = false, stream = false, streamCallback: (data: string) => void = () => { }) {
         switch (this.apiProvider.name) {
             case "ChatGPT (OpenAI)": { // Done
                 if (stream) {
                     const response = await this.ai.chat.completions.create({
                         model: this.apiProvider.model,
-                        messages: context,
+                        messages: [{ role: 'system', content: styleInstructions }, ...context],
                         temperature: this.apiProvider.temperature,
                         max_tokens: this.apiProvider.maxTokens,
                         stream: true,
@@ -281,7 +292,7 @@ export class AI {
 
                 const response = await this.ai.chat.completions.create({
                     model: this.apiProvider.model,
-                    messages: context,
+                    messages: [{ role: 'system', content: styleInstructions }, ...context],
                     temperature: this.apiProvider.temperature,
                     max_tokens: this.apiProvider.maxTokens,
                 });
@@ -293,16 +304,13 @@ export class AI {
 
             case "Claude (Anthropic)": { // Done
                 if (stream) {
-                    const contextWithStyle = [...context] as any;
-                    const messages = contextWithStyle.map(msg => ({
-                        role: msg.role  === 'assistant' ? 'assistant' : (msg.role === 'system' ? 'system' : 'user'),
-                        content: [{ type: 'text', text: msg.content }]
-                    }));
-                    console.log(messages)
+                    const filteredContext = context.filter(msg => msg.role !== 'system');
                     const response = await this.ai.messages.create({
                         model: this.apiProvider.model,
                         max_tokens: this.apiProvider.maxTokens,
-                        messages: messages,
+                        temperature: this.apiProvider.temperature,
+                        system: styleInstructions,
+                        messages: filteredContext,
                         stream: true
                     });
                     let finalText = "";
@@ -321,6 +329,7 @@ export class AI {
                     model: this.apiProvider.model,
                     max_tokens: this.apiProvider.maxTokens,
                     temperature: this.apiProvider.temperature,
+                    system: styleInstructions,
                     messages: context,
                     stream: true,
                 });
@@ -339,7 +348,10 @@ export class AI {
             case "Gemini (Google)": { // Done
                 if (stream) {
                     const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
-                    const response = await model.generateContentStream(context);
+                    const response = await model.generateContentStream([
+                        ...context.map(msg => msg.content),
+                        styleInstructions
+                    ]);
                     let finalText = "";
 
                     for await (const chunk of response.stream) {
@@ -352,7 +364,10 @@ export class AI {
                 }
 
                 const model = this.ai.getGenerativeModel({ model: this.apiProvider.model });
-                const response = await model.generateContent(context);
+                const response = await model.generateContent([
+                    styleInstructions,
+                    ...context.map(msg => msg.content)
+                ]);
                 if (JSON) {
                     return this.parseResponseToJSON(response.response.text());
                 }
@@ -364,7 +379,7 @@ export class AI {
                 if (stream) {
                     const response = await this.ai.chat.completions.create({
                         model: this.apiProvider.model,
-                        messages: context,
+                        messages: [{ role: 'system', content: styleInstructions }, ...context],
                         temperature: this.apiProvider.temperature,
                         max_tokens: this.apiProvider.maxTokens,
                         stream: true,
@@ -382,7 +397,7 @@ export class AI {
 
                 const response = await this.ai.chat.completions.create({
                     model: "sonar-pro",
-                    messages: context,
+                    messages: [{ role: 'system', content: styleInstructions }, ...context],
                     temperature: this.apiProvider.temperature,
                     max_tokens: this.apiProvider.maxTokens,
                 });
@@ -398,7 +413,7 @@ export class AI {
                     const client = new Mistral({ apiKey: this.apiProvider.apiKey });
                     const chatResponse = await client.chat.complete({
                         model: this.apiProvider.model || "mistral-large-latest",
-                        messages: context as any,
+                        messages: [{ role: 'system', content: styleInstructions }, ...context],
                     });
                     if (JSON) {
                         streamCallback(this.parseResponseToJSON(chatResponse.choices[0].message.content as string))
@@ -411,7 +426,7 @@ export class AI {
                 const client = new Mistral({ apiKey: this.apiProvider.apiKey });
                 const chatResponse = await client.chat.complete({
                     model: this.apiProvider.model || "mistral-large-latest",
-                    messages: context as any,
+                    messages: [{ role: 'system', content: styleInstructions }, ...context],
                 });
                 if (JSON) {
                     return this.parseResponseToJSON(chatResponse.choices[0].message.content as string);
@@ -425,7 +440,14 @@ export class AI {
 
                 const payload = {
                     model: this.apiProvider.model,
-                    messages: context,
+                    messages: [
+                        { "role": "system", "content": "Assistant is a large language model trained by OpenAI." },
+                        { "role": "user", "content": styleInstructions },
+                        ...context.map(msg => ({
+                            role: msg.role,
+                            content: msg.content
+                        }))
+                    ],
                     temperature: this.apiProvider.temperature,
                     max_tokens: this.apiProvider.maxTokens,
                 };
@@ -468,23 +490,10 @@ export class AI {
     }
 
     async processDocumentWithContext(files: any[], processingOption: string, documentType: string, goal: string, promptContent: string, context: { role: string; content: string }[] = [], stream = false, streamCallback: (data: string) => void = () => { }) {
-        console.log({context})
-        const styleSystemMessage = {
-            role: 'system',
-            content: `You are an AI document assistant. Always reply in valid HTML only, using these style rules:
-- All text should use #2c3e50
-- Accent color is #c0392b (red)
-- Font: 'Segoe UI', sans-serif
-- Add spacing (20px+), clean font sizes, and soft box shadows
-- Table rows should alternate background colors (#f9f9f9, #fff)
-- Any HTML tag used (like h1, p, table, etc.) must have its CSS explicitly defined inline, including font size, font weight, colors, padding, margins, etc. — do not rely on browser defaults.
-- DO NOT include Markdown, JavaScript, external styles, or comments.
-- The final HTML should look clean, readable, modern, and styled with inline CSS only.
-- Content must begin with the <div> container as mentioned.`
-        };
+        const styleInstructions = '...style instructions...';
         if (processingOption === "chat") {
             // Use context as the only messages (chat mode), but always append style instructions
-            const contextWithStyle = [...context, styleSystemMessage];
+            const contextWithStyle = [...context, { role: 'system', content: styleInstructions }];
             switch (this.apiProvider.name) {
                 case "Gemini (Google)": {
                     const model: GenerativeModel = this.ai.getGenerativeModel({ model: this.apiProvider.model });
@@ -609,6 +618,7 @@ export class AI {
                                     data: file.base64,
                                 },
                             })),
+                            styleInstructions,
                             newPrompt
                         ]);
                         let finalText = "";
@@ -629,6 +639,7 @@ export class AI {
                                 data: file.base64,
                             },
                         })),
+                        styleInstructions,
                         newPrompt
                     ]);
                     return this.parseResponse(response.response.text());
@@ -643,45 +654,45 @@ export class AI {
                         return upload.id;
                     }));
 
-                    const assistant = await this.ai.assistants.retrieve(this.apiProvider.model);
-                    const thread = await this.ai.threads.create();
+                const assistant = await this.ai.assistants.retrieve(this.apiProvider.model);
+                const thread = await this.ai.threads.create();
 
-                    // Add context messages first
-                    for (const message of context) {
-                        await this.ai.threads.messages.create(thread.id, message);
-                    }
+                // Add context messages first
+                for (const message of context) {
+                    await this.ai.threads.messages.create(thread.id, message);
+                }
 
-                    await this.ai.threads.messages.create(thread.id, {
-                        role: 'user',
-                        content: newPrompt,
-                        file_ids: fileIds,
-                    });
+                await this.ai.threads.messages.create(thread.id, {
+                    role: 'user',
+                    content: newPrompt,
+                    file_ids: fileIds,
+                });
 
-                    const run = await this.ai.threads.runs.create(thread.id, {
-                        assistant_id: assistant.id,
-                    });
+                const run = await this.ai.threads.runs.create(thread.id, {
+                    assistant_id: assistant.id,
+                });
 
-                    if (stream) {
-                        let status;
-                        do {
-                            const updatedRun = await this.ai.threads.runs.retrieve(thread.id, run.id);
-                            status = updatedRun.status;
-                            if (status === 'completed') {
-                                const messages = await this.ai.threads.messages.list(thread.id);
-                                const content = messages.data[0].content[0].text.value;
-                                streamCallback(content);
-                                return this.parseResponse(content);
-                            }
-                            await new Promise((r) => setTimeout(r, 2000));
-                        } while (status !== 'completed');
-                    }
-
+                if (stream) {
                     let status;
                     do {
                         const updatedRun = await this.ai.threads.runs.retrieve(thread.id, run.id);
                         status = updatedRun.status;
+                        if (status === 'completed') {
+                            const messages = await this.ai.threads.messages.list(thread.id);
+                            const content = messages.data[0].content[0].text.value;
+                            streamCallback(content);
+                            return this.parseResponse(content);
+                        }
                         await new Promise((r) => setTimeout(r, 2000));
                     } while (status !== 'completed');
+                }
+
+                let status;
+                do {
+                    const updatedRun = await this.ai.threads.runs.retrieve(thread.id, run.id);
+                    status = updatedRun.status;
+                    await new Promise((r) => setTimeout(r, 2000));
+                } while (status !== 'completed');
 
                     const messages = await this.ai.threads.messages.list(thread.id);
                     return this.parseResponse(messages.data[0].content[0].text.value);
@@ -782,6 +793,7 @@ export class AI {
                                 data: file.base64,
                             },
                         })),
+                        styleInstructions,
                         newPrompt
                     ]);
 
@@ -803,6 +815,7 @@ export class AI {
                             data: file.base64,
                         },
                     })),
+                    styleInstructions,
                     newPrompt
                 ]);
 

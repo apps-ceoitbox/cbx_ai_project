@@ -9,6 +9,7 @@ const router = (0, express_1.Router)();
 router.get("/", document_controller_1.default.getSettings);
 router.post("/", document_controller_1.default.saveSettings);
 router.post("/process", document_controller_1.default.processDocument);
+router.post("/process-with-context", document_controller_1.default.processDocumentWithContext);
 router.get("/submissions", document_controller_1.default.getDocumentSubmission);
 router.get("/user-submissions", document_controller_1.default.getDocumentUserSubmission);
 exports.default = router;

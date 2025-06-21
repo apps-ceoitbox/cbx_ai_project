@@ -10,6 +10,7 @@ router.get("/", prompt_controller_1.default.getAllPrompts);
 router.get("/:id", prompt_controller_1.default.getPromptById);
 router.post("/", prompt_controller_1.default.createPrompt);
 router.post("/generate", prompt_controller_1.default.generateResponseByAI);
+router.post("/generate-with-context", prompt_controller_1.default.generateResponseByAIWithContext);
 router.post("/duplicate", prompt_controller_1.default.duplicatePrompt);
 router.post("/toggle-visibility/:id", prompt_controller_1.default.toggleVisibility);
 router.patch("/:id", prompt_controller_1.default.updatePrompt);
