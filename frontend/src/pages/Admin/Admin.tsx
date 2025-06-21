@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -391,7 +390,7 @@ export default function AdminDashboard() {
           <div class="email-container">
             <h1>Your Report is Ready</h1>
             <p>Hi ${submission?.name},</p>
-            <p>We’ve prepared your ${submission?.tool || 'requested'} report. You can view it by clicking the button below.</p>
+            <p>We've prepared your ${submission?.tool || 'requested'} report. You can view it by clicking the button below.</p>
             <div class="btn-container">
               <a href="https://ai.ceoitbox.com/view/${submission?._id}" target="_blank" class="view-button" style="color: #ffffff">
                 View Your Report
@@ -1068,7 +1067,7 @@ export default function AdminDashboard() {
                                       {/* Question Tab */}
                                       <TabsContent value="question" style={{ overflowY: "auto", maxHeight: "70vh" }}>
                                         <div className="space-y-6 px-4 py-6">
-                                          {Object.entries(submission?.questionsAndAnswers).map(([question, answer], index) => (
+                                          {Object?.entries(submission?.questionsAndAnswers || {})?.map(([question, answer], index) => (
                                             <div key={index} className="bg-gray-50 p-4 rounded shadow">
                                               <p className="font-semibold text-gray-800 mb-2">Q {index + 1}. {question}</p>
                                               <p className="text-gray-600"><b>Ans.</b> {answer as string}</p>
@@ -1763,9 +1762,6 @@ export default function AdminDashboard() {
                       defaultValue={currentPrompt?.promptTemplate || ""}
                       onChange={(e) => handleChangePrompt("promptTemplate", e.target.value)}
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Use placeholders: {"{objective}"}, {"{user_info}"}, {"{knowledge_base}"}, {"{query}"}
-                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -1993,9 +1989,6 @@ export default function AdminDashboard() {
                       defaultValue={currentPrompt?.promptTemplate || ""}
                       onChange={(e) => handleChangePrompt("promptTemplate", e.target.value)}
                     />
-                    <p className="text-sm text-muted-foreground">
-                      Use placeholders: {"{objective}"}, {"{user_info}"}, {"{knowledge_base}"}, {"{query}"}
-                    </p>
                   </div>
 
                   <div className="space-y-2">

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -18,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { PromptInterface } from "../Admin/Admin"
+import { ResultsDisplay } from "@/components/DocumentReader/ResultsDisplay";
 
 
 // Sample report data
@@ -45,7 +45,7 @@ export function formatBoldText(text) {
 export default function ReportPage() {
   const nav = useNavigate();
   const params = useParams();
-  const { userAuth, generateResponse, submissionID } = useData();
+  const { userAuth, generateResponse, submissionID, apiLink } = useData();
   const [isLoading, setIsLoading] = useState(true);
   const [report, setReport] = useState<any>(null);
   const axios = useAxios("user");
@@ -54,6 +54,12 @@ export default function ReportPage() {
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [emailSuccessOpen, setEmailSuccessOpen] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
+  // Chat state
+  const [chatMessages, setChatMessages] = useState([]);
+  const [currentQuery, setCurrentQuery] = useState("");
+  // const [showChatInput, setShowChatInput] = useState(false);
+  // const [firstChatInputShown, setFirstChatInputShown] = useState(false);
+  // const assistantMsgIndexRef = useRef(null);
 
 
   useEffect(() => {
@@ -72,7 +78,6 @@ export default function ReportPage() {
 
     return () => clearTimeout(timer)
   }, [userAuth?.user, tool, toolId, nav])
-
 
   const handleDownloadPDF = () => {
     // Get the report content element
@@ -193,7 +198,7 @@ export default function ReportPage() {
           <div class="email-container">
             <h1>Your Report is Ready</h1>
             <p>Hi ${userAuth?.user?.userName},</p>
-            <p>We’ve prepared your ${tool?.heading || 'requested'} report. You can view it by clicking the button below.</p>
+            <p>We've prepared your ${tool?.heading || 'requested'} report. You can view it by clicking the button below.</p>
             <div class="btn-container">
               <a href="https://ai.ceoitbox.com/view/${submissionID}" target="_blank" class="view-button" style="color: #ffffff">
                 View Your Report
@@ -253,6 +258,77 @@ export default function ReportPage() {
     }
   };
 
+  // Chat follow-up handler
+  const handleSendQuery = async () => {
+    if (!currentQuery.trim()) return;
+    const userMsg = { role: "user", content: currentQuery, timestamp: Date.now() };
+
+    // Add user message first
+    setChatMessages(prev => [...prev, userMsg]);
+    setCurrentQuery("");
+    // setShowChatInput(true);
+
+    // Wait for state to update
+    await new Promise(r => setTimeout(r, 0));
+
+    // Add empty assistant message
+    const assistantMsg = { role: "assistant", content: "", timestamp: Date.now() };
+    setChatMessages(prev => [...prev, assistantMsg]);
+
+    // Wait for state to update
+    await new Promise(r => setTimeout(r, 0));
+
+    try {
+      // Get current messages for context (including the user message we just added)
+      const currentMessages = chatMessages.concat([userMsg]);
+      const messageContext = currentMessages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      const res = await fetch(`${apiLink}prompt/generate-with-context`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${userAuth?.token}`,
+        },
+        body: JSON.stringify({
+          toolId: toolId,
+          context: messageContext,
+        }),
+      });
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let streamedContent = "";
+      console.log(res)
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        streamedContent += chunk;
+        console.log({streamedContent})
+        setChatMessages(prev => {
+          const newMessages = [...prev];
+          const lastIndex = newMessages.length - 1;
+          if (newMessages[lastIndex] && newMessages[lastIndex].role === "assistant") {
+            newMessages[lastIndex] = {
+              ...newMessages[lastIndex],
+              content: streamedContent,
+            };
+          }
+          console.log("this is the newMessage", newMessages)
+          return newMessages;
+        });
+        await new Promise(r => setTimeout(r, 0));
+      }
+    } catch (err) {
+      toast.error("Failed to get response from AI");
+      console.error("Error in chat:", err);
+    }
+  };
+  console.log({chatMessages})
 
   if (!userAuth?.user) {
     return <Navigate to="/login" />
@@ -357,6 +433,65 @@ export default function ReportPage() {
                 </Button>
               </CardFooter>
             </Card>
+            {/* Chat UI below the report */}
+            <div className="mt-10 space-y-6">
+              <h2 className="text-xl font-semibold text-appBlack mb-4">Ask Follow-up Questions</h2>
+              <div className="space-y-4">
+                {chatMessages.map((message) => (
+                  <div
+                    key={message.timestamp}
+                    className={`w-full ${message.role === "user" ? "flex justify-end" : ""}`}
+                  >
+                    {message.role === "user" ? (
+                      <div className="max-w-[80%] bg-appRed/10 rounded-lg p-4">
+                        <p className="text-sm font-medium mb-1 text-appRed">You</p>
+                        <p>{message.content}</p>
+                      </div>
+                    ) : (
+                      <div className="max-w-[90%]">
+                        <ResultsDisplay
+                          results={{
+                            processingOption: "report",
+                            result: message.content,
+                          }}
+                          onReset={() => {}}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* Only allow one follow-up question */}
+              <div className="sticky bottom-0 bg-white p-4 border-t">
+                <div className="flex flex-col gap-2 max-w-5xl mx-auto">
+                  <div className="mb-1 text-xs text-gray-700 font-medium">
+                    {chatMessages.filter((m) => m.role === "user").length === 0
+                      ? "1 follow-up allowed"
+                      : "No more follow-ups allowed"}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      value={currentQuery}
+                      onChange={(e) => setCurrentQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleSendQuery()}
+                      placeholder="Ask a follow-up question about your report..."
+                      className="flex-1 p-2 border rounded"
+                      disabled={chatMessages.filter((m) => m.role === "user").length >= 1}
+                    />
+                    <Button
+                      onClick={handleSendQuery}
+                      className="bg-primary-red hover:bg-red-700 text-white"
+                      disabled={!currentQuery.trim() || chatMessages.filter((m) => m.role === "user").length >= 1}
+                    >
+                      Send
+                    </Button>
+                  </div>
+                  {chatMessages.filter((m) => m.role === "user").length >= 1 && (
+                    <p className="text-xs text-primary-red mt-1">You have reached the maximum of 1 follow-up question.</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="text-center py-12">

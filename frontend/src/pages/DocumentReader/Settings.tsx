@@ -346,7 +346,9 @@ const Settings = () => {
                                         <SelectLabel>AI Providers</SelectLabel>
                                         {
                                             apiProviders.map(item => {
-                                                return <SelectItem value={item.name}>{item.name}</SelectItem>
+                                                if(item.name == "Claude (Anthropic)" || item.name == "Gemini (Google)"){
+                                                    return <SelectItem value={item.name}>{item.name}</SelectItem>
+                                                }
                                             })
                                         }
                                     </SelectGroup>
