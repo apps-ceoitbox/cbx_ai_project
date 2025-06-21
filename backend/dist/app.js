@@ -26,7 +26,7 @@ app.use((0, cors_1.default)({
         }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(express_1.default.static(path_1.default.join(__dirname, "../../frontend/dist")));

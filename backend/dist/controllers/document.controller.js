@@ -20,6 +20,7 @@ const asyncHandler_1 = require("../utils/asyncHandler");
 const errorCodes_1 = require("../utils/errorCodes");
 const documentSettings_model_1 = __importDefault(require("../models/documentSettings.model"));
 const documentSubmission_model_1 = __importDefault(require("../models/documentSubmission.model"));
+const AI_2 = require("../utils/AI");
 dotenv_1.default.config();
 class DocumentController {
 }
@@ -43,7 +44,7 @@ DocumentController.getDocumentSubmission = (0, asyncHandler_1.asyncHandler)((req
     res.send({ message: "Document Submission fetched successfully", data: data });
 }));
 DocumentController.getDocumentUserSubmission = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const data = yield documentSubmission_model_1.default.find({ email: req.user.email });
+    const data = yield documentSubmission_model_1.default.find({ email: req.user.email }).sort({ createdAt: -1 });
     res.send({ message: "Document Submission fetched successfully", data: data });
 }));
 DocumentController.processDocument = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -76,5 +77,76 @@ DocumentController.processDocument = (0, asyncHandler_1.asyncHandler)((req, res)
     };
     // DocumentSubmission.create(submissionData);
     res.send(result);
+}));
+DocumentController.processDocumentWithContext = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
+    const { files, processingOption, documentType, goal, context } = req.body;
+    function stripHtml(html) {
+        return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
+    }
+    const documentSettings = yield documentSettings_model_1.default.findOne({ name: "Document" });
+    const aiSettings = yield ai_model_1.default.findOne({
+        name: documentSettings === null || documentSettings === void 0 ? void 0 : documentSettings.aiProvider.name,
+    });
+    const ai = new AI_1.AI({
+        name: aiSettings === null || aiSettings === void 0 ? void 0 : aiSettings.name,
+        model: (_b = documentSettings === null || documentSettings === void 0 ? void 0 : documentSettings.aiProvider) === null || _b === void 0 ? void 0 : _b.model,
+        apiKey: aiSettings === null || aiSettings === void 0 ? void 0 : aiSettings.apiKey,
+        temperature: aiSettings === null || aiSettings === void 0 ? void 0 : aiSettings.temperature,
+        maxTokens: aiSettings === null || aiSettings === void 0 ? void 0 : aiSettings.maxTokens,
+    });
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Transfer-Encoding", "chunked");
+    let finalText = "";
+    yield ai.processDocumentWithContext(files, processingOption, documentType, goal, (documentSettings === null || documentSettings === void 0 ? void 0 : documentSettings.promptContent) || "", context, true, (text) => {
+        finalText += text;
+        res.write(text);
+    });
+    const estimatedTokens = (0, AI_2.estimateTokens)(goal || "", finalText);
+    // Find existing submission or create new one
+    let submission;
+    if (processingOption === "chat") {
+        // For chat, update the existing submission with new messages
+        const lastUserMessage = context[context.length - 1];
+        submission = yield documentSubmission_model_1.default.findOneAndUpdate({ email: req.user.email }, {
+            $push: {
+                results: [
+                    {
+                        role: lastUserMessage.role,
+                        response: lastUserMessage.content[0].text // Extract text from the new format
+                    },
+                    {
+                        role: 'assistant',
+                        response: finalText
+                    }
+                ]
+            }
+        }, { new: true, sort: { createdAt: -1 } });
+    }
+    else {
+        // For initial document processing, create new submission
+        submission = yield documentSubmission_model_1.default.create({
+            name: req.user.userName,
+            email: req.user.email,
+            company: req.user.companyName,
+            date: new Date(),
+            apiUsed: aiSettings === null || aiSettings === void 0 ? void 0 : aiSettings.name,
+            processingOption,
+            documentType,
+            goal,
+            result: finalText,
+            tokensUsed: estimatedTokens.totalTokens,
+            promptContent: documentSettings.promptContent,
+            aiProvider: documentSettings.aiProvider.name,
+            model: documentSettings.aiProvider.model,
+            results: [
+                {
+                    role: 'system',
+                    response: finalText
+                }
+            ]
+        });
+    }
+    res.end();
 }));
 exports.default = DocumentController;
