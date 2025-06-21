@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { CustomizationForm } from "@/components/DocumentReader/CustomizationForm";
 import { ResultsDisplay } from "@/components/DocumentReader/ResultsDisplay";
 import { FileUploadZone } from "@/components/DocumentReader/FileUploadZone";
-import { ProcessingStatus } from "@/components/DocumentReader/ProcessingStatus";
 import { ProcessingOptions, ProcessingOptionType } from "@/components/DocumentReader/ProcessingOptions";
 // import { processDocument } from "../services/documentProcessingService";
 import Header from "./Header";
@@ -36,12 +35,10 @@ const DocumentReader = () => {
     const [documentType, setDocumentType] = useState("");
     const [goal, setGoal] = useState("");
     const [status, setStatus] = useState<"idle" | "processing" | "complete" | "error">("idle");
-    const [progress, setProgress] = useState(0);
-    const [results, setResults] = useState<any>(null);
+    // const [results, setResults] = useState<any>(null);
     const [error, setError] = useState<string | undefined>();
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
     const [currentQuery, setCurrentQuery] = useState("");
-    const [chatStarted, setChatStarted] = useState(false);
     const [showChatInput, setShowChatInput] = useState(false);
     const [firstChatInputShown, setFirstChatInputShown] = useState(false);
 
@@ -58,8 +55,8 @@ const DocumentReader = () => {
         setDocumentType("");
         setGoal("");
         setStatus("idle");
-        setProgress(0);
-        setResults(null);
+        // setProgress(0);
+        // setResults(null);
         setError(undefined);
         setChatMessages([]);
     };
@@ -77,7 +74,7 @@ const DocumentReader = () => {
 
         try {
             setStatus("processing");
-            setProgress(0);
+            // setProgress(0);
 
             let tempFiles: any[] = files.map((file) => fileToBase64(file));
             tempFiles = await Promise.all(tempFiles);
@@ -149,20 +146,20 @@ const DocumentReader = () => {
         setShowChatInput(false);
     };
 
-    const handleCancel = () => {
-        setStatus("idle");
-        toast.info("Document processing cancelled");
-    };
+    // const handleCancel = () => {
+    //     setStatus("idle");
+    //     toast.info("Document processing cancelled");
+    // };
 
     const isReadyToProcess = files.length > 0 && processingOption !== null;
 
-    const handleStartChat = () => {
-        if (results && results.result) {
-            setChatMessages([{ role: 'assistant', content: results.result, timestamp: Date.now() }]);
-            setChatStarted(true);
-            setShowChatInput(false);
-        }
-    };
+    // const handleStartChat = () => {
+    //     if (results && results.result) {
+    //         setChatMessages([{ role: 'assistant', content: results.result, timestamp: Date.now() }]);
+    //         setChatStarted(true);
+    //         setShowChatInput(false);
+    //     }
+    // };
 
     const handleSendQuery = async () => {
         if (!currentQuery.trim()) return;
@@ -265,7 +262,7 @@ const DocumentReader = () => {
                         </div>
 
                         <div className="space-y-6">
-                            {chatMessages.map((message, index) => (
+                            {chatMessages.map((message) => (
                                 <div 
                                     key={message.timestamp} 
                                     className={`w-full ${message.role === 'user' ? 'flex justify-end' : ''}`}
@@ -405,7 +402,7 @@ const DocumentReader = () => {
                             <div className="mb-8">
                                 <h2 className="text-xl font-semibold text-appBlack mb-4">Processing Results:</h2>
                                 <div className="space-y-6">
-                                    {chatMessages.map((message, index) => (
+                                    {chatMessages.map((message)=> (
                                         <div key={message.timestamp} className="max-w-[90%]">
                                             <ResultsDisplay
                                                 results={{
