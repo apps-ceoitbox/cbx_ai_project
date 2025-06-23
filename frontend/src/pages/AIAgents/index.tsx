@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import Header from "./Header";
-import { ArrowRight, Sparkles, Search, FileText, BarChart3, } from "lucide-react";
+import { ArrowRight, Sparkles, Search, FileText, BarChart3, CalendarSearch, ArrowLeft, } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAxios } from "@/context/AppContext";
 
@@ -51,6 +51,15 @@ const agentCategories: AgentCategory[] = [
     color: "bg-red-600",
     description: "Upload CSV or PDF or Google Sheet link to get analysis.",
     bgImage: "url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070')"
+  },
+  {
+    id: "attendance",
+    title: "AI Attendance Anomaly",
+    icon: <CalendarSearch />,
+    gradient: "bg-gradient-to-br from-red-700 to-blue-900",
+    color: "bg-red-600",
+    description: "Upload attendance data to detect unusual attendance patterns.",
+    bgImage: "url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070')"
   },
   // {
   //   id: "attendance",
@@ -106,7 +115,12 @@ const AIAgentsPage = () => {
         <div className="container py-8">
           <div className="flex items-center mb-8">
             <Link to="/ai-agents">
-              <Button variant="outline" className="mr-4 border-gray-300 hover:border-red-600 hover:text-red-600">← Back</Button>
+            <Button style={{ minWidth: "100px", color: "#ffffff", border: "none", marginLeft: "40px" }}
+        className="bg-primary-red  hover:bg-red-700 transition-colors duration-200"
+        variant="ghost">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
             </Link>
             <h1 className="text-3xl font-bold text-gray-800">
               {categoryId.charAt(0).toUpperCase() + categoryId.slice(1)} AI Agents

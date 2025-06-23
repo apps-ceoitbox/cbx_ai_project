@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Settings, AlertCircle, Save, Sparkles, Search, FileText, Eye, EyeOff, BarChart3 } from "lucide-react";
+import { Settings, AlertCircle, Save, Sparkles, Search, FileText, Eye, EyeOff, BarChart3, CalendarSearch } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -61,6 +61,14 @@ const agentCategories: AgentCategory[] = [
     color: "bg-red-600",
     description: "Upload CSV or PDF or Google Sheet link to get analysis."
   },
+  {
+    id: "attendance",
+    title: "Attendance Anomaly",
+    icon: <CalendarSearch />,
+    gradient: "bg-gradient-to-br from-red-600 to-blue-800",
+    color: "bg-red-600",
+    description: "Upload attendance data to detect unusual attendance patterns."
+  },
   // {  
   //   id: "mail",
   //   title: "AI Mail Sender",
@@ -73,6 +81,146 @@ const agentCategories: AgentCategory[] = [
 
 // AI Model types for AI agents
 type AIModelType = "gemini" | "openai" | "anthropic" | "groq";
+
+// Attendance Anomaly Settings Component
+const AttendanceAnomalySettings = () => {
+  const axios = useAxios("admin");
+  const [apiProviders, setApiProviders] = useState([]);
+  const [selectedProviderId, setSelectedProviderId] = useState<string>("");
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [selectedModel, setSelectedModel] = useState<AIModelType>(() => {
+    const saved = localStorage.getItem('attendance_model');
+    return (saved as AIModelType) || "gemini";
+  });
+
+  const saveSettings = async () => {
+    if (!selectedProviderId || !selectedModel) {
+      toast.error("Please select a provider and model");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const provider = apiProviders?.find((p) => p._id === selectedProviderId);
+
+      if (!provider) {
+        toast.error("Selected provider not found");
+        setIsSaving(false);
+        return;
+      }
+
+      const payload = {
+        name: "attendance",
+        aiProvider: {
+          name: provider.name,
+          model: selectedModel,
+        },
+        apikey: provider.apiKey,
+      };
+
+      await axios.post("/aiagentsettings/addAiCredentials", payload);
+
+      toast.success("Settings saved successfully");
+    } catch (error: any) {
+      console.error("Save error:", error);
+      toast.error(error?.response?.data?.message || "Failed to save settings");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    axios.get("/aiSettings").then(res => {
+      setApiProviders(res?.data?.data.filter(item => {
+        return item.apiKey && item.models.length > 0
+      }))
+    })
+  }, [])
+
+  useEffect(() => {
+    if (apiProviders.length === 0) return;
+
+    axios.get("/aiagentsettings").then((res) => {
+      const settings = res?.data?.data;
+
+      if (!Array.isArray(settings)) return;
+
+      const attendanceSetting = settings?.find(item => item.name === "attendance");
+
+      if (!attendanceSetting) return;
+
+      setSelectedModel(attendanceSetting.aiProvider?.model || "");
+
+      const provider = apiProviders?.find(
+        (p) => p.name === attendanceSetting.aiProvider?.name
+      );
+
+      if (provider?._id) {
+        setSelectedProviderId(provider._id);
+      }
+    });
+  }, [apiProviders]);
+
+  const selectedProvider = apiProviders?.find((p) => p._id === selectedProviderId);
+
+  return (
+    <div className="ml-12 mt-2 space-y-6">
+      <div className="flex items-center gap-8">
+        <div className="min-w-[40%]">
+          <Select
+            value={selectedProviderId}
+            onValueChange={(value) => {
+              setSelectedProviderId(value);
+              setSelectedModel("gemini" as AIModelType);
+            }}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select AI Provider" />
+            </SelectTrigger>
+            <SelectContent>
+              {apiProviders.map((provider) => (
+                <SelectItem key={provider._id} value={provider._id}>
+                  {provider.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Model Select */}
+        <div className="min-w-[40%]">
+          <Select
+            value={selectedModel}
+            onValueChange={(value) => setSelectedModel(value as any)}
+            disabled={!selectedProvider}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select AI Model" />
+            </SelectTrigger>
+            <SelectContent>
+              {selectedProvider?.models.map((model) => (
+                <SelectItem key={model} value={model}>
+                  {model}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="ml-0">
+        <Button
+          onClick={saveSettings}
+          className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+          disabled={isSaving}
+        >
+          <Save size={16} />
+          {isSaving ? "Saving..." : "Save Attendance Anomaly Settings"}
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 // Zoomary Settings Component
 const ZoomarySettings = () => {
@@ -135,10 +283,10 @@ const ZoomarySettings = () => {
 7. Follow - ups and Next Steps
   `;
 
-  // Initialize promptContent with default if empty
+  // Initialize promptContent with empty string
   useEffect(() => {
     if (!promptContent) {
-      setPromptContent(defaultPromptContent);
+      setPromptContent("");
     }
   }, []);
 
@@ -352,10 +500,10 @@ Follow these guidelines:
 
 If certain information is not available, indicate this clearly rather than making assumptions.`;
 
-  // Initialize promptContent with default if empty
+  // Initialize promptContent with empty string
   useEffect(() => {
     if (!promptContent) {
-      setPromptContent(defaultPromptContent);
+      setPromptContent("");
     }
   }, []);
 
@@ -743,10 +891,10 @@ Style Rules:
 ✅ Goal:
 Generate a complete, styled, printable HTML report focused on visualizations, insights, and analysis that provides actionable intelligence based on the uploaded data. The report should be comprehensive, detailed, and visually appealing.`;
 
-  // Initialize promptContent with default if empty
+  // Initialize promptContent with empty string
   useEffect(() => {
     if (!promptContent) {
-      setPromptContent(defaultPromptContent);
+      setPromptContent("");
     }
   }, []);
 
@@ -1123,6 +1271,8 @@ const AIAgentSettingsPage = () => {
                       <ResumeAnalyzerSettings />
                     ) : agent.id === "ReportAgent" ? (
                       <ReportAgentSettings />
+                    ) : agent.id === "attendance" ? (
+                      <AttendanceAnomalySettings />
                     ) : (
                       <div className="ml-12 mt-2 bg-red-50 border border-red-100 rounded-lg p-6">
                         <div className="flex items-start gap-3">
