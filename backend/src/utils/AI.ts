@@ -490,7 +490,6 @@ export class AI {
     }
 
     async processDocumentWithContext(files: any[], processingOption: string, documentType: string, goal: string, promptContent: string, context: { role: string; content: string }[] = [], stream = false, streamCallback: (data: string) => void = () => { }) {
-        const styleInstructions = '...style instructions...';
         if (processingOption === "chat") {
             // Use context as the only messages (chat mode), but always append style instructions
             const contextWithStyle = [...context, { role: 'system', content: styleInstructions }];

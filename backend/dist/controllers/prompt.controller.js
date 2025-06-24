@@ -269,6 +269,42 @@ PromptController.generateResponseByAIWithContext = (0, asyncHandler_1.asyncHandl
     }, { new: true, sort: { date: -1 } });
     res.end();
 }));
+PromptController.enhancePromptWithContext = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { initialResponse, userPrompt } = req.body;
+    if (!initialResponse || !userPrompt) {
+        res.status(400).json({ success: false, message: "Both initialResponse and userPrompt are required." });
+        return;
+    }
+    // Find Gemini AI settings
+    const geminiSettings = yield ai_model_1.default.findOne({ name: /^Gemini/i });
+    if (!geminiSettings) {
+        res.status(500).json({ success: false, message: "Gemini AI settings not found." });
+        return;
+    }
+    // Prepare context for Gemini
+    const context = [
+        { role: "assistant", content: initialResponse },
+        { role: "user", content: userPrompt }
+    ];
+    // Prompt Gemini to enhance the user's prompt based on the previous result
+    const enhanceInstruction = `Rewrite the user's follow-up question to be more detailed, clear, and specific, using the context of the previous AI response. Only output the improved version of the user's question, as plain text. Do not include any explanations or formatting, just the improved question.`;
+    context.unshift({ role: "system", content: enhanceInstruction });
+    try {
+        const ai = new AI_1.AI({
+            name: "Gemini (Google)",
+            model: geminiSettings.model || "gemini-1.5-flash-latest",
+            apiKey: geminiSettings.apiKey,
+            temperature: geminiSettings.temperature,
+            maxTokens: geminiSettings.maxTokens,
+        });
+        const enhancedPrompt = yield ai.generateResponseWithContext(context, false, false);
+        res.status(200).json({ success: true, enhancedPrompt });
+    }
+    catch (error) {
+        console.error("Error enhancing prompt with Gemini:", error);
+        res.status(500).json({ success: false, message: "Failed to enhance prompt.", error: (error === null || error === void 0 ? void 0 : error.message) || error });
+    }
+}));
 exports.default = PromptController;
 function generatePrompt(userAnswers, promptData, user = {}, type = "") {
     let tempPromptData = promptData.promptTemplate || "";

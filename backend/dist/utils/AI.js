@@ -583,7 +583,6 @@ class AI {
         return __awaiter(this, arguments, void 0, function* (files, processingOption, documentType, goal, promptContent, context = [], stream = false, streamCallback = () => { }) {
             var _a, e_11, _b, _c, _d, e_12, _e, _f, _g, e_13, _h, _j, _k, e_14, _l, _m, _o, e_15, _p, _q;
             var _r, _s, _t;
-            const styleInstructions = '...style instructions...';
             if (processingOption === "chat") {
                 // Use context as the only messages (chat mode), but always append style instructions
                 const contextWithStyle = [...context, { role: 'system', content: styleInstructions }];
