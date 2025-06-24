@@ -57,6 +57,8 @@ export default function ReportPage() {
   // Chat state
   const [chatMessages, setChatMessages] = useState([]);
   const [currentQuery, setCurrentQuery] = useState("");
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   // const [showChatInput, setShowChatInput] = useState(false);
   // const [firstChatInputShown, setFirstChatInputShown] = useState(false);
   // const assistantMsgIndexRef = useRef(null);
@@ -278,6 +280,7 @@ export default function ReportPage() {
     // Wait for state to update
     await new Promise(r => setTimeout(r, 0));
 
+    setIsStreaming(true);
     try {
       // Get current messages for context (including the user message we just added)
       const currentMessages = chatMessages.concat([userMsg]);
@@ -323,11 +326,43 @@ export default function ReportPage() {
         });
         await new Promise(r => setTimeout(r, 0));
       }
+      setIsStreaming(false);
     } catch (err) {
       toast.error("Failed to get response from AI");
       console.error("Error in chat:", err);
+      setIsStreaming(false);
     }
   };
+
+  // Enhance Prompt handler
+  const handleEnhancePrompt = async () => {
+    if (!currentQuery.trim()) return;
+    setIsEnhancing(true);
+    try {
+      const res = await fetch(`${apiLink}prompt/enchance-prompt`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${userAuth?.token}`,
+        },
+        body: JSON.stringify({
+          initialResponse: generateResponse,
+          userPrompt: currentQuery,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.enhancedPrompt) {
+        setCurrentQuery(data.enhancedPrompt);
+      } else {
+        toast.error(data.message || "Failed to enhance prompt");
+      }
+    } catch (err) {
+      toast.error("Failed to enhance prompt");
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
   console.log({chatMessages})
 
   if (!userAuth?.user) {
@@ -395,7 +430,7 @@ export default function ReportPage() {
                 className="pt-6" />
 
               <CardFooter className="flex flex-wrap gap-4 justify-center mt-6">
-                <Button variant="outline" className="flex items-center" onClick={handleDownloadPDF}>
+                <Button variant="outline" className="flex items-center" onClick={handleDownloadPDF} disabled={isStreaming}>
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>
@@ -404,6 +439,7 @@ export default function ReportPage() {
                   variant="outline"
                   className="flex items-center"
                   onClick={handleCopyContent}
+                  disabled={isStreaming}
                 >
                   <Copy className="mr-2 h-4 w-4" />
                   Copy
@@ -417,7 +453,7 @@ export default function ReportPage() {
                 <Button
                   className="bg-primary-red hover:bg-red-700 flex items-center"
                   onClick={handleSendEmail}
-                  disabled={isEmailSending}
+                  disabled={isEmailSending || isStreaming}
                 >
                   {isEmailSending ? (
                     <>
@@ -455,6 +491,7 @@ export default function ReportPage() {
                             result: message.content,
                           }}
                           onReset={() => {}}
+                          isStreaming={isStreaming}
                         />
                       </div>
                     )}
@@ -469,15 +506,33 @@ export default function ReportPage() {
                       ? "1 follow-up allowed"
                       : "No more follow-ups allowed"}
                   </div>
-                  <div className="flex gap-2">
-                    <input
+                  <div className="flex gap-2 relative items-center">
+                    <textarea
                       value={currentQuery}
                       onChange={(e) => setCurrentQuery(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleSendQuery()}
+                      onKeyPress={(e) => e.key === "Enter" && !e.shiftKey && handleSendQuery()}
                       placeholder="Ask a follow-up question about your report..."
-                      className="flex-1 p-2 border rounded"
+                      className="flex-1 p-2 border rounded pr-10 resize-none leading-tight min-h-[40px] max-h-[120px]"
+                      rows={3}
+                      style={{overflow: 'auto'}}
                       disabled={chatMessages.filter((m) => m.role === "user").length >= 1}
                     />
+                    {/* Enhance Prompt Button */}
+                    <Button
+                      type="button"
+                      className="absolute right-24 flex items-center justify-center h-8 w-fit px-1 rounded border border-gray-300 bg-primary-red text-white transition-colors duration-150 focus:outline-none"
+                      style={{ top: '50%', transform: 'translateY(-50%)' }}
+                      title="Enhance Prompt"
+                      tabIndex={-1}
+                      disabled={!currentQuery.trim() || chatMessages.filter((m) => m.role === "user").length >= 1 || isEnhancing}
+                      onClick={handleEnhancePrompt}
+                    >
+                      {isEnhancing ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        "Enchance Prompt"
+                      )}
+                    </Button>
                     <Button
                       onClick={handleSendQuery}
                       className="bg-primary-red hover:bg-red-700 text-white"

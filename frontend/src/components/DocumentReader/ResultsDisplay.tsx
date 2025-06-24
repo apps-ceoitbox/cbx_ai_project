@@ -14,11 +14,22 @@ interface ResultsDisplayProps {
         result: any;
     };
     onReset: () => void;
+    isStreaming?: boolean;
+}
+
+// Utility to clean code fences from HTML string
+function cleanCodeFences(htmlString: string): string {
+    if (typeof htmlString !== 'string') return '';
+    return htmlString
+        .replace(/^\s*```(?:html)?\s*/i, '')
+        .replace(/\s*```\s*$/i, '')
+        .trim();
 }
 
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     results,
     onReset,
+    isStreaming = false,
 }) => {
     const axios = useAxios("user");
     const { userAuth } = useData();
@@ -169,25 +180,26 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
 
     const renderContent = () => {
+        const cleanedResult = cleanCodeFences(results.result);
         switch (results.processingOption) {
             case "summarize":
                 return (
-                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
+                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: cleanedResult }} className="max-w-none" />
                 );
 
             case "questions":
                 return (
-                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
+                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: cleanedResult }} className="max-w-none" />
                 );
 
             case "insights":
                 return (
-                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
+                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: cleanedResult }} className="max-w-none" />
                 );
 
             case "report":
                 return (
-                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: results.result }} className="max-w-none" />
+                    <div id="report-content" ref={contentRef} dangerouslySetInnerHTML={{ __html: cleanedResult }} className="max-w-none" />
                 );
 
             default:
@@ -206,20 +218,10 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <CardContent>{renderContent()}</CardContent>
                 <CardFooter className="flex justify-between flex-wrap gap-2">
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={handleCopyToClipboard}>
-                            {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                            {copied ? "Copied" : "Copy"}
-                        </Button>
-                        {results.processingOption !== "report" && (
-                            <Button variant="outline" onClick={handleDownload}>
-                                <Download className="mr-2 h-4 w-4" />
-                                Download
-                            </Button>
-                        )}
                         <Button
                             className="bg-primary-red hover:bg-red-700 flex items-center"
                             onClick={() => handleSendEmail(results)}
-                            disabled={isEmailSending}
+                            disabled={isEmailSending || isStreaming}
                         >
                             {isEmailSending ? (
                                 <>
@@ -233,6 +235,16 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                                 </>
                             )}
                         </Button>
+                        <Button variant="outline" onClick={handleCopyToClipboard} disabled={isStreaming}>
+                            {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                            {copied ? "Copied" : "Copy"}
+                        </Button>
+                        {results.processingOption !== "report" && (
+                            <Button variant="outline" onClick={handleDownload} disabled={isStreaming}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                            </Button>
+                        )}
                     </div>
                     <Button
                         variant="default"

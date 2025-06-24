@@ -292,6 +292,46 @@ export default class PromptController {
 
     res.end();
   });
+
+  static enhancePromptWithContext = asyncHandler(async (req, res) => {
+    const { initialResponse, userPrompt } = req.body;
+    if (!initialResponse || !userPrompt) {
+      res.status(400).json({ success: false, message: "Both initialResponse and userPrompt are required." });
+      return;
+    }
+
+    // Find Gemini AI settings
+    const geminiSettings = await AiSettings.findOne({ name: /^Gemini/i });
+    if (!geminiSettings) {
+      res.status(500).json({ success: false, message: "Gemini AI settings not found." });
+      return;
+    }
+
+    // Prepare context for Gemini
+    const context = [
+      { role: "assistant", content: initialResponse },
+      { role: "user", content: userPrompt }
+    ];
+
+    // Prompt Gemini to enhance the user's prompt based on the previous result
+    const enhanceInstruction = `Rewrite the user's follow-up question to be more detailed, clear, and specific, using the context of the previous AI response. Only output the improved version of the user's question, as plain text. Do not include any explanations or formatting, just the improved question.`;
+    context.unshift({ role: "system", content: enhanceInstruction });
+
+    try {
+      const ai = new AI({
+        name: "Gemini (Google)",
+        model: geminiSettings.model || "gemini-1.5-flash-latest",
+        apiKey: geminiSettings.apiKey,
+        temperature: geminiSettings.temperature,
+        maxTokens: geminiSettings.maxTokens,
+      });
+      const enhancedPrompt = await ai.generateResponseWithContext(context, false, false);
+      res.status(200).json({ success: true, enhancedPrompt });
+    } catch (error) {
+      console.error("Error enhancing prompt with Gemini:", error);
+      res.status(500).json({ success: false, message: "Failed to enhance prompt.", error: error?.message || error });
+    }
+  });
 }
 
 function generatePrompt(userAnswers, promptData, user:any={}, type="") {

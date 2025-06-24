@@ -7,6 +7,7 @@ router.get("/:id", PromptController.getPromptById);
 router.post("/", PromptController.createPrompt);
 router.post("/generate", PromptController.generateResponseByAI);
 router.post("/generate-with-context", PromptController.generateResponseByAIWithContext);
+router.post("/enchance-prompt", PromptController.enhancePromptWithContext);
 router.post("/duplicate", PromptController.duplicatePrompt);
 router.post("/toggle-visibility/:id", PromptController.toggleVisibility);
 router.patch("/:id", PromptController.updatePrompt);

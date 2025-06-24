@@ -41,6 +41,8 @@ const DocumentReader = () => {
     const [currentQuery, setCurrentQuery] = useState("");
     const [showChatInput, setShowChatInput] = useState(false);
     const [firstChatInputShown, setFirstChatInputShown] = useState(false);
+    const [isEnhancing, setIsEnhancing] = useState(false);
+    const [isStreaming, setIsStreaming] = useState(false);
 
     const handleFilesSelected = (selectedFiles: File[]) => {
         setFiles(selectedFiles);
@@ -74,6 +76,7 @@ const DocumentReader = () => {
 
         try {
             setStatus("processing");
+            setIsStreaming(true);
             // setProgress(0);
 
             let tempFiles: any[] = files.map((file) => fileToBase64(file));
@@ -130,11 +133,13 @@ const DocumentReader = () => {
             }
 
             setStatus("complete");
+            setIsStreaming(false);
             toast.success("Document processed successfully");
             setShowChatInput(false);
         } catch (err) {
             console.error("Error processing document:", err);
             setStatus("error");
+            setIsStreaming(false);
             setError(err instanceof Error ? err.message : "Unknown error occurred");
             toast.error("Failed to process document");
         }
@@ -176,6 +181,7 @@ const DocumentReader = () => {
         setShowChatInput(true);
 
         try {
+            setIsStreaming(true);
             // Format context as [{ role: 'user'|'system', response: string }]
             const messageContext = chatMessages.map(msg => ({
                 role: msg.role,
@@ -232,9 +238,43 @@ const DocumentReader = () => {
                     return newMessages;
                 });
             }
+            setIsStreaming(false);
         } catch (err) {
             toast.error("Failed to get response from AI");
             console.error("Error in chat:", err);
+            setIsStreaming(false);
+        }
+    };
+
+    // Enhance Prompt handler
+    const handleEnhancePrompt = async () => {
+        if (!currentQuery.trim()) return;
+        setIsEnhancing(true);
+        try {
+            // Get the initial AI response (first assistant message)
+            const initialResponse = chatMessages.find(msg => msg.role === 'assistant')?.content || "";
+            
+            const res = await fetch(`${axios.defaults.baseURL}/prompt/enchance-prompt`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${userAuth?.token}`,
+                },
+                body: JSON.stringify({
+                    initialResponse: initialResponse,
+                    userPrompt: currentQuery,
+                }),
+            });
+            const data = await res.json();
+            if (data.success && data.enhancedPrompt) {
+                setCurrentQuery(data.enhancedPrompt);
+            } else {
+                toast.error(data.message || "Failed to enhance prompt");
+            }
+        } catch (err) {
+            toast.error("Failed to enhance prompt");
+        } finally {
+            setIsEnhancing(false);
         }
     };
 
@@ -267,12 +307,7 @@ const DocumentReader = () => {
                                     key={message.timestamp} 
                                     className={`w-full ${message.role === 'user' ? 'flex justify-end' : ''}`}
                                 >
-                                    {message.role === 'user' ? (
-                                        <div className="max-w-[80%] bg-appRed/10 rounded-lg p-4">
-                                            <p className="text-sm font-medium mb-1 text-appRed">You</p>
-                                            <p>{message.content}</p>
-                                        </div>
-                                    ) : (
+                                    {message.role === 'assistant' ? (
                                         <div className="max-w-[90%]">
                                             <ResultsDisplay
                                                 results={{
@@ -280,7 +315,13 @@ const DocumentReader = () => {
                                                     result: message.content
                                                 }}
                                                 onReset={handleReset}
+                                                isStreaming={isStreaming}
                                             />
+                                        </div>
+                                    ) : (
+                                        <div className="max-w-[80%] bg-appRed/10 rounded-lg p-4">
+                                            <p className="text-sm font-medium mb-1 text-appRed">You</p>
+                                            <p>{message.content}</p>
                                         </div>
                                     )}
                                 </div>
@@ -311,15 +352,33 @@ const DocumentReader = () => {
                                     {firstChatInputShown && chatMessages.filter(m => m.role === 'user').length === 0 && (
                                         <div className="mb-1 text-xs text-gray-500">Only the last 5 messages are used as context.</div>
                                     )}
-                                    <div className="flex gap-2">
-                                        <input
+                                    <div className="flex gap-2 relative items-center">
+                                        <textarea
                                             value={currentQuery}
                                             onChange={(e) => setCurrentQuery(e.target.value)}
-                                            onKeyPress={(e) => e.key === 'Enter' && handleSendQuery()}
+                                            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendQuery()}
                                             placeholder="Ask a follow-up question... (last 5 chats are used as context)"
-                                            className="flex-1 p-2 border rounded"
+                                            className="flex-1 p-2 border rounded pr-24 resize-none leading-tight min-h-[40px] max-h-[120px]"
+                                            rows={3}
+                                            style={{overflow: 'auto'}}
                                             disabled={chatMessages.filter(m => m.role === 'user').length >= 5}
                                         />
+                                        {/* Enhance Prompt Button */}
+                                        <Button
+                                            type="button"
+                                            className="absolute right-20 flex items-center justify-center h-8 w-fit px-2 rounded border border-gray-300 bg-primary-red text-white transition-colors duration-150 focus:outline-none"
+                                            style={{ top: '50%', transform: 'translateY(-50%)' }}
+                                            title="Enhance Prompt"
+                                            tabIndex={-1}
+                                            disabled={!currentQuery.trim() || chatMessages.filter((m) => m.role === "user").length >= 5 || isEnhancing}
+                                            onClick={handleEnhancePrompt}
+                                        >
+                                            {isEnhancing ? (
+                                                <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
+                                            ) : (
+                                                "Enhance"
+                                            )}
+                                        </Button>
                                         <Button
                                             onClick={handleSendQuery}
                                             className="bg-appRed hover:bg-appRed/90 text-white"
@@ -404,13 +463,21 @@ const DocumentReader = () => {
                                 <div className="space-y-6">
                                     {chatMessages.map((message)=> (
                                         <div key={message.timestamp} className="max-w-[90%]">
-                                            <ResultsDisplay
-                                                results={{
-                                                    processingOption: processingOption,
-                                                    result: message.content
-                                                }}
-                                                onReset={handleReset}
-                                            />
+                                            {message.role === 'assistant' ? (
+                                                <ResultsDisplay
+                                                    results={{
+                                                        processingOption: processingOption,
+                                                        result: message.content
+                                                    }}
+                                                    onReset={handleReset}
+                                                    isStreaming={isStreaming}
+                                                />
+                                            ) : (
+                                                <div className="max-w-[80%] bg-appRed/10 rounded-lg p-4">
+                                                    <p className="text-sm font-medium mb-1 text-appRed">You</p>
+                                                    <p>{message.content}</p>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
