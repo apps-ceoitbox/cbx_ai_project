@@ -8,6 +8,14 @@ import { ProcessingOptions, ProcessingOptionType } from "@/components/DocumentRe
 // import { processDocument } from "../services/documentProcessingService";
 import Header from "./Header";
 import { useAxios, useData } from "@/context/AppContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea";
 
 function fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -43,6 +51,10 @@ const DocumentReader = () => {
     const [firstChatInputShown, setFirstChatInputShown] = useState(false);
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [isStreaming, setIsStreaming] = useState(false);
+
+    // Enhance prompt modal states
+    const [isEnhanceModalOpen, setIsEnhanceModalOpen] = useState(false);
+    const [enhancedPrompt, setEnhancedPrompt] = useState("");
 
     const handleFilesSelected = (selectedFiles: File[]) => {
         setFiles(selectedFiles);
@@ -254,7 +266,7 @@ const DocumentReader = () => {
             // Get the initial AI response (first assistant message)
             const initialResponse = chatMessages.find(msg => msg.role === 'assistant')?.content || "";
             
-            const res = await fetch(`${axios.defaults.baseURL}/prompt/enchance-prompt`, {
+            const res = await fetch(`${axios.defaults.baseURL}/prompt/enchance-prompt-with-context`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -267,7 +279,8 @@ const DocumentReader = () => {
             });
             const data = await res.json();
             if (data.success && data.enhancedPrompt) {
-                setCurrentQuery(data.enhancedPrompt);
+                setEnhancedPrompt(data.enhancedPrompt);
+                setIsEnhanceModalOpen(true);
             } else {
                 toast.error(data.message || "Failed to enhance prompt");
             }
@@ -345,8 +358,24 @@ const DocumentReader = () => {
                             <div className="sticky bottom-0 bg-white p-4 border-t">
                                 <div className="flex flex-col gap-2 max-w-5xl mx-auto">
                                     {/* Info about remaining followups */}
+                                    <div className="flex justify-between mr-[70px]">
                                     <div className="mb-1 text-xs text-gray-700 font-medium">
                                         {5 - chatMessages.filter(m => m.role === 'user').length} followups remaining
+                                    </div>
+                                        <Button
+                                            type="button"
+                                            className="h-6 w-fit px-2 rounded border border-gray-300 bg-primary-red text-white transition-colors duration-150 focus:outline-none"
+                                            title="Enhance Prompt"
+                                            tabIndex={-1}
+                                            disabled={!currentQuery.trim() || chatMessages.filter((m) => m.role === "user").length >= 5 || isEnhancing}
+                                            onClick={handleEnhancePrompt}
+                                        >
+                                            {isEnhancing ? (
+                                                <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
+                                            ) : (
+                                                "Enhance"
+                                            )}
+                                        </Button>
                                     </div>
                                     {/* Show context info only the first time */}
                                     {firstChatInputShown && chatMessages.filter(m => m.role === 'user').length === 0 && (
@@ -364,21 +393,6 @@ const DocumentReader = () => {
                                             disabled={chatMessages.filter(m => m.role === 'user').length >= 5}
                                         />
                                         {/* Enhance Prompt Button */}
-                                        <Button
-                                            type="button"
-                                            className="absolute right-20 flex items-center justify-center h-8 w-fit px-2 rounded border border-gray-300 bg-primary-red text-white transition-colors duration-150 focus:outline-none"
-                                            style={{ top: '50%', transform: 'translateY(-50%)' }}
-                                            title="Enhance Prompt"
-                                            tabIndex={-1}
-                                            disabled={!currentQuery.trim() || chatMessages.filter((m) => m.role === "user").length >= 5 || isEnhancing}
-                                            onClick={handleEnhancePrompt}
-                                        >
-                                            {isEnhancing ? (
-                                                <div className="w-4 h-4 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
-                                            ) : (
-                                                "Enhance"
-                                            )}
-                                        </Button>
                                         <Button
                                             onClick={handleSendQuery}
                                             className="bg-appRed hover:bg-appRed/90 text-white"
@@ -503,6 +517,37 @@ const DocumentReader = () => {
                     </>
                 )}
             </div>
+
+            {/* Enhance Prompt Dialog */}
+            <Dialog open={isEnhanceModalOpen} onOpenChange={setIsEnhanceModalOpen}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Enhanced Prompt</DialogTitle>
+                    </DialogHeader>
+                    <Textarea
+                        id="enhanced-prompt"
+                        placeholder="Enhanced prompt will appear here"
+                        className="min-h-[150px] flex-1"
+                        value={enhancedPrompt || ""}
+                        onChange={(e) => setEnhancedPrompt(e.target.value)}
+                    />
+                    <DialogFooter>
+                        <Button
+                            onClick={() => {
+                                setCurrentQuery(enhancedPrompt);
+                                toast.success("Prompt Replaced!");
+                                setIsEnhanceModalOpen(false);
+                            }}
+                            className="bg-primary-red hover:bg-red-700 text-white"
+                        >
+                            Replace
+                        </Button>
+                        <Button variant="outline" onClick={() => setIsEnhanceModalOpen(false)}>
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

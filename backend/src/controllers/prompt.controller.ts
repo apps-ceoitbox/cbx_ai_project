@@ -332,6 +332,40 @@ export default class PromptController {
       res.status(500).json({ success: false, message: "Failed to enhance prompt.", error: error?.message || error });
     }
   });
+
+  static enhancePrompt = asyncHandler(async (req, res) => {
+    const { userPrompt } = req.body;
+    if (!userPrompt) {
+      res.status(400).send("userPrompt is required.");
+      return;
+    }
+
+    // Find Gemini AI settings
+    const geminiSettings = await AiSettings.findOne({ name: /^Gemini/i });
+    if (!geminiSettings) {
+      res.status(500).send("Gemini AI settings not found.");
+      return;
+    }
+
+    // System instruction for Gemini
+    const enhanceInstruction = `Rewrite the user's question to be more detailed, clear, and specific. Only output the improved version of the user's question, as plain text. Do not include any explanations or formatting, just the improved question.`;
+    const prompt = `${enhanceInstruction}\n\nUser's question:\n${userPrompt}`;
+
+    try {
+      const ai = new AI({
+        name: "Gemini (Google)",
+        model: geminiSettings.model || "gemini-1.5-flash-latest",
+        apiKey: geminiSettings.apiKey,
+        temperature: geminiSettings.temperature,
+        maxTokens: geminiSettings.maxTokens,
+      });
+      const enhancedPrompt = await ai.generateResponse(prompt, false, false);
+      res.status(200).type("text/plain").send(enhancedPrompt);
+    } catch (error) {
+      console.error("Error enhancing prompt with Gemini:", error);
+      res.status(500).type("text/plain").send("Failed to enhance prompt.");
+    }
+  });
 }
 
 function generatePrompt(userAnswers, promptData, user:any={}, type="") {

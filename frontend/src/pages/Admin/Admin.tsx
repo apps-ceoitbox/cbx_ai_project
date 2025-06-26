@@ -167,6 +167,10 @@ export default function AdminDashboard() {
     group: "",
   })
 
+  const [isEnhanceModalOpen, setIsEnhanceModalOpen] = useState(false);
+  const [enhancedPrompt, setEnhancedPrompt] = useState("");
+  const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
+
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -1754,12 +1758,35 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="prompt-template">Prompt Template</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="prompt-template">Prompt Template</Label>
+                      <Button
+                        type="button"
+                        className="bg-primary-red hover:bg-red-700 text-white h-fit"
+                        disabled={isEnhancingPrompt || !currentPrompt?.promptTemplate?.trim()}
+                        onClick={async () => {
+                          setIsEnhancingPrompt(true);
+                          try {
+                            const res = await axios.post("/prompt/enchance-prompt", {
+                              userPrompt: currentPrompt?.promptTemplate,
+                            }, { responseType: "text" });
+                            setEnhancedPrompt(res.data);
+                            setIsEnhanceModalOpen(true);
+                          } catch (err) {
+                            toast.error("Failed to enhance prompt");
+                          } finally {
+                            setIsEnhancingPrompt(false);
+                          }
+                        }}
+                      >
+                        {isEnhancingPrompt ? "Enhancing..." : "Enhance Prompt"}
+                      </Button>
+                    </div>
                     <Textarea
                       id="prompt-template"
                       placeholder="Design the prompt that will be sent to the AI"
-                      className="min-h-[100px]"
-                      defaultValue={currentPrompt?.promptTemplate || ""}
+                      className="min-h-[100px] flex-1"
+                      value={currentPrompt?.promptTemplate || ""}
                       onChange={(e) => handleChangePrompt("promptTemplate", e.target.value)}
                     />
                   </div>
@@ -1981,12 +2008,35 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="prompt-template">Prompt Template</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="prompt-template">Prompt Template</Label>
+                      <Button
+                        type="button"
+                        className="bg-primary-red hover:bg-red-700 text-white h-[25px]"
+                        disabled={isEnhancingPrompt || !currentPrompt?.promptTemplate?.trim()}
+                        onClick={async () => {
+                          setIsEnhancingPrompt(true);
+                          try {
+                            const res = await axios.post("/prompt/enchance-prompt", {
+                              userPrompt: currentPrompt?.promptTemplate,
+                            }, { responseType: "text" });
+                            setEnhancedPrompt(res.data);
+                            setIsEnhanceModalOpen(true);
+                          } catch (err) {
+                            toast.error("Failed to enhance prompt");
+                          } finally {
+                            setIsEnhancingPrompt(false);
+                          }
+                        }}
+                      >
+                        {isEnhancingPrompt ? "Enhancing..." : "Enhance Prompt"}
+                      </Button>
+                    </div>
                     <Textarea
                       id="prompt-template"
                       placeholder="Design the prompt that will be sent to the AI"
-                      className="min-h-[100px]"
-                      defaultValue={currentPrompt?.promptTemplate || ""}
+                      className="min-h-[100px] flex-1"
+                      value={currentPrompt?.promptTemplate || ""}
                       onChange={(e) => handleChangePrompt("promptTemplate", e.target.value)}
                     />
                   </div>
@@ -2120,6 +2170,43 @@ export default function AdminDashboard() {
               className="w-full bg-primary-red hover:bg-red-700 text-white"
               onClick={() => setEmailSuccessOpen(false)}
             >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Enhance Prompt Dialog */}
+      <Dialog open={isEnhanceModalOpen} onOpenChange={setIsEnhanceModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Enhanced Prompt</DialogTitle>
+          </DialogHeader>
+          {/* <div className="whitespace-pre-wrap break-words border rounded p-3 bg-gray-50 max-h-96 overflow-auto">
+            {enhancedPrompt}
+          </div> */}
+          <Textarea
+                      id="prompt-template"
+                      placeholder="Design the prompt that will be sent to the AI"
+                      className="min-h-[150px] flex-1"
+                      value={enhancedPrompt || ""}
+                      onChange={(e) => setEnhancedPrompt(e.target.value)}
+                    />
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                // navigator.clipboard.writeText(enhancedPrompt);
+                setCurrentPrompt((prev)=>{
+                  return {...prev, promptTemplate:enhancedPrompt}
+                })
+                toast.success("Prompt Replaced!");
+                setIsEnhanceModalOpen(false)
+              }}
+              className="bg-primary-red hover:bg-red-700 text-white"
+            >
+              Replace
+            </Button>
+            <Button variant="outline" onClick={() => setIsEnhanceModalOpen(false)}>
               Close
             </Button>
           </DialogFooter>

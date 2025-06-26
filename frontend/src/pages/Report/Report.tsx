@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { PromptInterface } from "../Admin/Admin"
 import { ResultsDisplay } from "@/components/DocumentReader/ResultsDisplay";
+import { Textarea } from "@/components/ui/textarea";
 
 
 // Sample report data
@@ -59,6 +60,9 @@ export default function ReportPage() {
   const [currentQuery, setCurrentQuery] = useState("");
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  // Enhance prompt modal states
+  const [isEnhanceModalOpen, setIsEnhanceModalOpen] = useState(false);
+  const [enhancedPrompt, setEnhancedPrompt] = useState("");
   // const [showChatInput, setShowChatInput] = useState(false);
   // const [firstChatInputShown, setFirstChatInputShown] = useState(false);
   // const assistantMsgIndexRef = useRef(null);
@@ -339,7 +343,7 @@ export default function ReportPage() {
     if (!currentQuery.trim()) return;
     setIsEnhancing(true);
     try {
-      const res = await fetch(`${apiLink}prompt/enchance-prompt`, {
+      const res = await fetch(`${apiLink}prompt/enchance-prompt-with-context`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -352,7 +356,8 @@ export default function ReportPage() {
       });
       const data = await res.json();
       if (data.success && data.enhancedPrompt) {
-        setCurrentQuery(data.enhancedPrompt);
+        setEnhancedPrompt(data.enhancedPrompt);
+        setIsEnhanceModalOpen(true);
       } else {
         toast.error(data.message || "Failed to enhance prompt");
       }
@@ -425,7 +430,7 @@ export default function ReportPage() {
 
               </CardHeader>
 
-              <CardContent dangerouslySetInnerHTML={{ __html: generateResponse }}
+              <CardContent dangerouslySetInnerHTML={{ __html: cleanCodeFences(generateResponse) }}
                 id="report-contents"
                 className="pt-6" />
 
@@ -584,6 +589,37 @@ export default function ReportPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Enhance Prompt Dialog */}
+      <Dialog open={isEnhanceModalOpen} onOpenChange={setIsEnhanceModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Enhanced Prompt</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            id="enhanced-prompt"
+            placeholder="Enhanced prompt will appear here"
+            className="min-h-[150px] flex-1"
+            value={enhancedPrompt || ""}
+            onChange={(e) => setEnhancedPrompt(e.target.value)}
+          />
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setCurrentQuery(enhancedPrompt);
+                toast.success("Prompt Replaced!");
+                setIsEnhanceModalOpen(false);
+              }}
+              className="bg-primary-red hover:bg-red-700 text-white"
+            >
+              Replace
+            </Button>
+            <Button variant="outline" onClick={() => setIsEnhanceModalOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -598,3 +634,11 @@ export default function ReportPage() {
 //     .replace(/\s*```\s*$/i, '')
 //     .trim();
 // }
+
+function cleanCodeFences(htmlString: string): string {
+  if (typeof htmlString !== 'string') return '';
+  return htmlString
+    .replace(/^\s*```(?:html)?\s*/i, '')
+    .replace(/\s*```\s*$/i, '')
+    .trim();
+}
