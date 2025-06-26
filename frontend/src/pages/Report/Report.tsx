@@ -506,10 +506,27 @@ export default function ReportPage() {
               {/* Only allow one follow-up question */}
               <div className="sticky bottom-0 bg-white p-4 border-t">
                 <div className="flex flex-col gap-2 max-w-5xl mx-auto">
+                  <div className="flex justify-between">
                   <div className="mb-1 text-xs text-gray-700 font-medium">
                     {chatMessages.filter((m) => m.role === "user").length === 0
                       ? "1 follow-up allowed"
                       : "No more follow-ups allowed"}
+                  </div>
+                  {/* Enhance Prompt Button */}
+                  <Button
+                      type="button"
+                      className="flex items-center mr-[70px] justify-center h-6 w-fit px-1 rounded border border-gray-300 bg-primary-red text-white transition-colors duration-150 focus:outline-none"
+                      title="Enhance Prompt"
+                      tabIndex={-1}
+                      disabled={!currentQuery.trim() || chatMessages.filter((m) => m.role === "user").length >= 1 || isEnhancing}
+                      onClick={handleEnhancePrompt}
+                    >
+                      {isEnhancing ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        "Enchance Prompt"
+                      )}
+                    </Button>
                   </div>
                   <div className="flex gap-2 relative items-center">
                     <textarea
@@ -522,22 +539,6 @@ export default function ReportPage() {
                       style={{overflow: 'auto'}}
                       disabled={chatMessages.filter((m) => m.role === "user").length >= 1}
                     />
-                    {/* Enhance Prompt Button */}
-                    <Button
-                      type="button"
-                      className="absolute right-24 flex items-center justify-center h-8 w-fit px-1 rounded border border-gray-300 bg-primary-red text-white transition-colors duration-150 focus:outline-none"
-                      style={{ top: '50%', transform: 'translateY(-50%)' }}
-                      title="Enhance Prompt"
-                      tabIndex={-1}
-                      disabled={!currentQuery.trim() || chatMessages.filter((m) => m.role === "user").length >= 1 || isEnhancing}
-                      onClick={handleEnhancePrompt}
-                    >
-                      {isEnhancing ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        "Enchance Prompt"
-                      )}
-                    </Button>
                     <Button
                       onClick={handleSendQuery}
                       className="bg-primary-red hover:bg-red-700 text-white"
