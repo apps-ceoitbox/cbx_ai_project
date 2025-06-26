@@ -20,6 +20,7 @@ const imageGeneration_model_1 = __importDefault(require("../models/imageGenerati
 const ai_model_1 = __importDefault(require("../models/ai.model"));
 const axios_1 = __importDefault(require("axios"));
 dotenv_1.default.config();
+const ARTISLY_API_KEY = "your-artisly-api-key-here";
 const cloudinary_1 = __importDefault(require("../utils/cloudinary"));
 const generateSingleImageAPI = (prompt, apiKey, modelName) => __awaiter(void 0, void 0, void 0, function* () {
     var _b, _c, _d, _e, _f;
@@ -29,6 +30,10 @@ const generateSingleImageAPI = (prompt, apiKey, modelName) => __awaiter(void 0, 
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: {
                 responseModalities: ["TEXT", "IMAGE"],
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 2048,
             },
         }, {
             headers: { "Content-Type": "application/json" },
@@ -459,6 +464,27 @@ generateImageController.downloadImage = (0, asyncHandler_1.asyncHandler)((req, r
     catch (err) {
         console.error("Download error:", err);
         res.status(500).send("Failed to download image.");
+    }
+}));
+generateImageController.generateArtislyImage = (0, asyncHandler_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _b;
+    try {
+        const { prompt } = req.body;
+        const response = yield axios_1.default.post("https://api.artisly.ai/v1/generate", {
+            prompt,
+            style: "realistic",
+        }, {
+            headers: {
+                Authorization: `Bearer ${ARTISLY_API_KEY}`,
+                "Content-Type": "application/json",
+            },
+        });
+        // Respond with the image URL
+        res.status(200).json({ imageUrl: response.data.imageUrl });
+    }
+    catch (error) {
+        console.error("Failed to generate image from Artisly:", ((_b = error.response) === null || _b === void 0 ? void 0 : _b.data) || error.message);
+        res.status(500).json({ error: "Image generation failed" });
     }
 }));
 exports.default = generateImageController;
