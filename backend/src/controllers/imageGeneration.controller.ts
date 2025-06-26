@@ -8,9 +8,15 @@ import { FilterQuery } from "mongoose";
 
 dotenv.config();
 
+const ARTISLY_API_KEY = "your-artisly-api-key-here";
+
 import FileUploadController from "../utils/cloudinary";
 
-const generateSingleImageAPI = async (prompt, apiKey, modelName) => {
+const generateSingleImageAPI = async (
+  prompt: string,
+  apiKey: string,
+  modelName: string
+) => {
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   try {
@@ -20,6 +26,10 @@ const generateSingleImageAPI = async (prompt, apiKey, modelName) => {
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
           responseModalities: ["TEXT", "IMAGE"],
+          temperature: 0.7, 
+          topK: 40, 
+          topP: 0.95, 
+          maxOutputTokens: 2048, 
         },
       },
       {
@@ -28,6 +38,7 @@ const generateSingleImageAPI = async (prompt, apiKey, modelName) => {
     );
 
     const result = response.data;
+
     if (result.error) {
       throw new Error(
         `Gemini API Error: ${
@@ -49,7 +60,7 @@ const generateSingleImageAPI = async (prompt, apiKey, modelName) => {
       );
       throw new Error("No image data found in the Gemini API response.");
     }
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       console.error("Error Data:", error.response.data);
     } else if (error.request) {
@@ -134,7 +145,6 @@ export default class generateImageController {
               geminiSetting.apiKey,
               modelName
             );
-
 
             const imageUrl = await FileUploadController.uploadFile(
               base64Image,
@@ -551,6 +561,35 @@ Do NOT write a story or explain your reasoning. Only output the single, comma-se
     } catch (err) {
       console.error("Download error:", err);
       res.status(500).send("Failed to download image.");
+    }
+  });
+
+  static generateArtislyImage = asyncHandler(async (req, res) => {
+    try {
+      const { prompt } = req.body;
+
+      const response = await axios.post(
+        "https://api.artisly.ai/v1/generate",
+        {
+          prompt,
+          style: "realistic",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${ARTISLY_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Respond with the image URL
+      res.status(200).json({ imageUrl: response.data.imageUrl });
+    } catch (error: any) {
+      console.error(
+        "Failed to generate image from Artisly:",
+        error.response?.data || error.message
+      );
+      res.status(500).json({ error: "Image generation failed" });
     }
   });
 }
