@@ -1,6 +1,3 @@
-
-
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -19,6 +16,10 @@ import {
   FolderX
 } from "lucide-react";
 import Header from "./Header"
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
+import { Input } from "@/components/ui/input"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 export interface PromptInterface {
   _id: string;
@@ -52,7 +53,7 @@ const CategoryCard = ({ category, onClick, icon }) => {
           backgroundImage: "url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070')",
           backgroundPattern: "radial-gradient(circle, rgba(255,0,0,0.1) 10%, transparent 10.5%), radial-gradient(circle, rgba(255,0,0,0.1) 10%, transparent 10.5%)",
           backgroundSize: "cover, 20px 20px",
-          backgroundPosition: "center, 0 0"
+          backgroundPosition: "center, 0 0",
         };
       case 'Marketing':
         return {
@@ -150,6 +151,59 @@ const CategoryCard = ({ category, onClick, icon }) => {
   );
 };
 
+// Tool card component with consistent height and "see more" functionality
+const ToolCard = ({ tool, onClick }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <Card
+      className={`flex flex-col justify-between h-70 hover:shadow-lg transition-all duration-300 cursor-pointer border-2 ${
+        isHovered ? "border-red-600 shadow-lg" : "border-gray-200"
+      }`}
+      onClick={() => onClick(tool._id)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="flex-1 flex flex-col">
+        <CardHeader className="pb-2">
+          <div className="flex gap-2">
+            <div className={`p-1.5 flex items-start h-fit rounded-full bg-red-600 text-white transition-transform duration-300 ${
+              isHovered ? "scale-110" : ""
+            }`}>
+              <FileText className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base font-semibold line-clamp-2">{tool.heading}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col px-4 pb-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex-1">
+                  <CardDescription className="text-sm leading-relaxed line-clamp-3 cursor-help">
+                    {tool.objective}
+                  </CardDescription>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs whitespace-pre-line">
+                {tool.objective}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </CardContent>
+      </div>
+      <CardFooter className="pt-2">
+        <Button 
+          variant="ghost" 
+          className="w-full text-red-600 hover:bg-red-50 font-medium text-sm py-2"
+        >
+          Start Now
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
+
 export default function Dashboard() {
   const { userAuth } = useData();
   const axios = useAxios("user");
@@ -158,6 +212,9 @@ export default function Dashboard() {
   const [tools, setTools] = useState<PromptInterface[]>([])
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [searchDebounced, setSearchDebounced] = useState("");
+  const [toolName, setToolName] = useState("__all__");
 
   const handleToolClick = (toolId: string) => {
     nav(`/tools/${toolId}`)
@@ -179,20 +236,44 @@ export default function Dashboard() {
     fetchTools()
   }, [])
 
-
   useEffect(() => {
     if (!userAuth.user) {
       nav("/login")
     }
   }, [userAuth, nav])
 
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchDebounced(search);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Reset filters when category changes
+  useEffect(() => {
+    setSearch("");
+    setSearchDebounced("");
+    setToolName("__all__");
+  }, [selectedCategory]);
 
   if (!userAuth.user) {
     return null
   }
 
-  const filteredTools = tools?.filter(tool => tool.category == selectedCategory && tool.visibility)
-
+  // Filter tools by category, search, and toolName
+  const filteredTools = tools?.filter(tool => {
+    if (tool.category !== selectedCategory || !tool.visibility) return false;
+    if (toolName !== "__all__" && tool.heading !== toolName) return false;
+    if (searchDebounced) {
+      const s = searchDebounced.toLowerCase();
+      return (
+        tool.heading.toLowerCase().includes(s) ||
+        tool.objective.toLowerCase().includes(s)
+      );
+    }
+    return true;
+  });
 
   const categoryIcons = {
     Operations: <Settings className="h-6 w-6" />,
@@ -203,7 +284,6 @@ export default function Dashboard() {
     Strategy: <BarChart className="h-6 w-6" />,
     Compliances: <ShieldCheck className="h-6 w-6" />,
   };
-
 
   return (
     <div className="w-full min-h-screen bg-gray-50">
@@ -243,10 +323,40 @@ export default function Dashboard() {
           ))}
         </div>}
 
-        {selectedCategory && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {selectedCategory && <>
+        <div className="mb-6 flex justify-end grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <Label htmlFor="tool-search">Search Tools</Label>
+            <Input
+              id="tool-search"
+              placeholder="Type to search..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="tool-dropdown">Filter by Tool Name</Label>
+            <Select
+              value={toolName}
+              onValueChange={setToolName}
+            >
+              <SelectTrigger id="tool-dropdown" className="mt-1">
+                <SelectValue placeholder="All tools" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All tools</SelectItem>
+                {Array.from(new Set(tools.filter(t => t.category === selectedCategory && t.visibility).map(t => t.heading))).map(name => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {
             filteredTools.length === 0 ?
-              <div className="w-full flex flex-col col-span-3 items-center justify-center text-gray-500 py-8 gap-2">
+              <div className="w-full flex flex-col col-span-full items-center justify-center text-gray-500 py-8 gap-2">
                 <FolderX className="w-10 h-10 text-red-600" />
                 <div className="text-lg font-semibold">No tools found</div>
                 <div className="text-sm text-center max-w-md">
@@ -254,34 +364,16 @@ export default function Dashboard() {
                 </div>
               </div>
               :
-              tools.filter(tool => tool.category == selectedCategory && tool.visibility).map((tool) => (
-                <Card
+              filteredTools.map((tool) => (
+                <ToolCard
                   key={tool._id}
-                  className="flex flex-col justify-between h-full hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-red-600"
-                  onClick={() => handleToolClick(tool._id)}
-                >
-                  <div>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-full bg-red-600 text-white">
-                          <FileText className="h-6 w-6" />
-                        </div>
-                        <CardTitle className="text-xl">{tool.heading}</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-base">{tool.objective}</CardDescription>
-                    </CardContent>
-                  </div>
-                  <CardFooter>
-                    <Button variant="ghost" className="w-full text-red-600 hover:bg-red-50">
-                      Start Now
-                    </Button>
-                  </CardFooter>
-                </Card>
+                  tool={tool}
+                  onClick={handleToolClick}
+                />
               ))
           }
-        </div>}
+        </div>
+        </>}
         {isLoading &&
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <Loader2 className="h-16 w-16 text-primary-red animate-spin" />

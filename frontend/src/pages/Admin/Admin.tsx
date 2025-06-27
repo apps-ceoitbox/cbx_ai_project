@@ -77,6 +77,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import DynamicPagination from "@/components/dynamicPagination"
 import MultiSelect from "@/components/MultipleSelect/MultipleSelect"
+import { TooltipProvider } from "@radix-ui/react-tooltip"
 
 // import { Document, Packer, Paragraph, HeadingLevel } from "docx"
 // import { saveAs } from "file-saver"
@@ -962,7 +963,7 @@ export default function AdminDashboard() {
                             <TableCell className="py-2">{submission.company || "--"}</TableCell>
                             <TableCell className="py-2">{submission.tool}</TableCell>
                             <TableCell className="py-2">{submission?.category || "--"}</TableCell>
-                            <TableCell className="py-2">{submission.apiUsed}</TableCell>
+                            <TableCell className="py-2"><TooltipProvider delayDuration={300}><Tooltip><TooltipTrigger>{submission?.apiUsed?.split(" ")[0]}</TooltipTrigger><TooltipContent>{submission?.apiUsed}</TooltipContent></Tooltip></TooltipProvider></TableCell>
                             <TableCell className="py-2">{submission.tokensUsed}</TableCell>
                             <TableCell className="py-2">{formatDateTime(submission.date)}</TableCell>
                             <TableCell className="py-2">
@@ -1458,8 +1459,8 @@ export default function AdminDashboard() {
                           <TableHead className="text-white font-[700]">Objective</TableHead>
                           <TableHead className="text-white font-[700]">Default AI</TableHead>
                           <TableHead className="text-white font-[700]">Group</TableHead>
-                          <TableHead className="text-white font-[700]">Created</TableHead>
-                          <TableHead className="text-white font-[700]">Last Modified</TableHead>
+                          {/* <TableHead className="text-white font-[700]">Created</TableHead>
+                          <TableHead className="text-white font-[700]">Last Modified</TableHead> */}
                           <TableHead className="text-white font-[700]">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -1479,8 +1480,9 @@ export default function AdminDashboard() {
                               </div>
 
                             </TableCell>
-                            <TableCell>
 
+                            <TableCell>
+                              <TooltipProvider delayDuration={0}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="max-w-[200px] truncate cursor-pointer">
@@ -1491,13 +1493,23 @@ export default function AdminDashboard() {
                                   {prompt.objective || "--"}
                                 </TooltipContent>
                               </Tooltip>
+                              </TooltipProvider>
                             </TableCell>
                             <TableCell>
-                              {prompt.defaultAiProvider.name} ({prompt.defaultAiProvider.model})
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                  {prompt.defaultAiProvider?.name?.split(" ")[0]}
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                  {prompt.defaultAiProvider.name} ({prompt.defaultAiProvider.model})
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </TableCell>
                             <TableCell style={{ whiteSpace: "nowrap" }}>{prompt?.category || "--"}</TableCell>
-                            <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.createdAt)}</TableCell>
-                            <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.updatedAt)}</TableCell>
+                            {/* <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.createdAt)}</TableCell>
+                            <TableCell style={{ whiteSpace: "nowrap" }}>{formatDateTime(prompt.updatedAt)}</TableCell> */}
                             <TableCell>
                               <div className="flex space-x-2">
 

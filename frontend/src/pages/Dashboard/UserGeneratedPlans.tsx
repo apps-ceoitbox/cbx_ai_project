@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dialog"
 import Header from "./Header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import cleanCodeFences from "@/services/cleanCode"
 
 const UserGeneratedPlans: React.FC = () => {
     const { userAuth, setUserAuth } = useData();
@@ -186,8 +187,8 @@ const UserGeneratedPlans: React.FC = () => {
     //         })
     // }
 
-    const handleDownloadPDF = (submission) => {
-        const reportElement = document.getElementById('report-content')
+    const handleDownloadPDF = (submission, elementId = 'report-content') => {
+        const reportElement = document.getElementById(elementId)
 
         if (!reportElement) {
             toast.error("Could not generate PDF. Please try again.")
@@ -327,7 +328,7 @@ const UserGeneratedPlans: React.FC = () => {
             submission.generatedContent.sections.forEach(section => {
                 // Strip markdown bold syntax from strings for DOCX
                 const title = section.title.replace(/\*\*/g, '')
-                const content = section.content.replace(/\*\*/g, '')
+                const content = cleanCodeFences(section.content.replace(/\*\*/g, ''))
 
                 sectionParagraphs.push(
                     new Paragraph({
@@ -388,53 +389,6 @@ const UserGeneratedPlans: React.FC = () => {
 
         setIsEmailSending(true);
         try {
-            const reportElement = document.getElementById('report-content');
-
-            if (!reportElement) {
-                toast.error("Content not found. Please try again.");
-                setIsEmailSending(false);
-                return;
-            }
-
-            // const options = {
-            //     margin: [10, 10, 10, 10],
-            //     filename: `${submission?.title || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`,
-            //     image: { type: 'jpeg', quality: 0.98 },
-            //     html2canvas: { scale: 2, useCORS: true },
-            //     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            // }
-
-            // const worker = html2pdf().set(options).from(reportElement);
-
-            // Get PDF as base64
-            // const blob = await worker.outputPdf("blob");
-            // const pdfFile = new File([blob], 'report.pdf', { type: 'application/pdf' });
-            // let base64PDF = await fileToBase64(pdfFile)
-
-
-            // Extract styled HTML content from report
-            //     const fullHTML = `
-            //     <!DOCTYPE html>
-            //     <html>
-            //       <head>
-            //         <style>
-            //           body {
-            //             background-color: #fff;
-            //             padding: 24px;
-            //             color: #2c3e50;
-            //             font-family: 'Segoe UI', sans-serif;
-            //             font-size: 16px;
-            //             line-height: 1.6;
-            //           }
-            //         </style>
-            //       </head>
-            //       <body>
-            //            <p>Dear ${userAuth?.user?.userName},</p>
-            //            <p>Please find enclosed the ${submission?.tool} Plan as requested by you.</p>
-            //            ${reportElement.innerHTML}
-            //       </body>
-            //     </html>
-            //   `;
             const fullHTML = `
         <!DOCTYPE html>
         <html>
@@ -488,7 +442,7 @@ const UserGeneratedPlans: React.FC = () => {
             <div class="email-container">
               <h1>Your Report is Ready</h1>
               <p>Hi ${submission?.name},</p>
-              <p>We’ve prepared your ${submission?.tool || 'requested'} report. You can view it by clicking the button below.</p>
+              <p>We've prepared your ${submission?.tool || 'requested'} report. You can view it by clicking the button below.</p>
               <div class="btn-container">
                 <a href="https://ai.ceoitbox.com/view/${submission?._id}" target="_blank" class="view-button" style="color: #ffffff">
                   View Your Report
@@ -698,6 +652,13 @@ const UserGeneratedPlans: React.FC = () => {
                                 {filteredSubmissions?.length > 0 ? (
                                     filteredSubmissions?.map((submission) => (
                                         <TableRow key={submission.id} className="h-8 px-2">
+                                            {/* Hidden report content for PDF download */}
+                                            <td style={{ display: "none" }}>
+                                                <div
+                                                    id={`report-content-${submission._id}`}
+                                                    dangerouslySetInnerHTML={{ __html: cleanCodeFences(submission?.generatedContent) }}
+                                                />
+                                            </td>
                                             <TableCell className="py-2">{submission?.tool}</TableCell>
                                             <TableCell className="py-2">{submission?.category || "--"}</TableCell>
                                             <TableCell className="py-2">{formatDateTime(submission?.date)}</TableCell>
@@ -708,12 +669,10 @@ const UserGeneratedPlans: React.FC = () => {
                                                             <Button className=" text-black hover:text-red-500 hover:border-red-500" variant="outline" size="sm" title="View">
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
-
                                                         </DialogTrigger>
                                                         <DialogContent
-                                                            style={{ zIndex: 999 }}
                                                             // className="max-w-[90vw] sm:max-w-[80vw] md:max-w-[80vw] max-h-[90vh] overflow-auto" 
-                                                            style={{ maxWidth: "90vw", maxHeight: "90vh" }}
+                                                            style={{ maxWidth: "90vw", maxHeight: "90vh", zIndex: 999 }}
                                                         >
                                                             <Tabs defaultValue="result" className="w-full" style={{ overflow: "hidden" }}>
                                                                 <TabsList className="mb-4 mt-3 w-full" >
@@ -747,7 +706,7 @@ const UserGeneratedPlans: React.FC = () => {
                                                                             </CardHeader>
 
                                                                             <CardContent
-                                                                                dangerouslySetInnerHTML={{ __html: submission?.generatedContent }}
+                                                                                dangerouslySetInnerHTML={{ __html: cleanCodeFences(submission?.generatedContent) }}
                                                                                 id="report-content"
                                                                                 className="pt-6 "
                                                                                 style={{ padding: "0px" }}
@@ -759,7 +718,7 @@ const UserGeneratedPlans: React.FC = () => {
                                                                                 <Button
                                                                                     variant="outline"
                                                                                     className="flex items-center"
-                                                                                    onClick={() => handleDownloadPDF(submission)}
+                                                                                    onClick={() => handleDownloadPDF(submission, `report-content-${submission._id}`)}
                                                                                 >
                                                                                     <Download className="mr-2 h-4 w-4" />
                                                                                     Download PDF
@@ -818,6 +777,33 @@ const UserGeneratedPlans: React.FC = () => {
 
                                                         </DialogContent>
                                                     </Dialog>
+                                                    {/* Download Button (outside dialog) */}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        title="Download PDF"
+                                                        onClick={() => handleDownloadPDF(submission, `report-content-${submission._id}`)}
+                                                         className=" text-black hover:text-red-500 hover:border-red-500"
+                                                    >
+                                                        <Download className="h-4 w-4" />
+                                                    </Button>
+                                                    {/* Email Button (outside dialog) */}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className=" text-black hover:text-red-500 hover:border-red-500"
+                                                        title="Send to Email"
+                                                        onClick={() => handleSendEmail(submission)}
+                                                        disabled={isEmailSending}
+                                                    >
+                                                        {isEmailSending ? (
+                                                            <>
+                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            </>
+                                                        ) : (
+                                                            <Mail className="h-4 w-4" />
+                                                        )}
+                                                    </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
